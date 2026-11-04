@@ -1,0 +1,179 @@
+[
+  {
+    "id": "gold-01",
+    "brand_kit_id": "kettle-and-co",
+    "content": "Enjoy a comforting cup of Masala Chai brewed from organic estate tea leaves.",
+    "expected_violation_count": 0,
+    "expected_rule_ids": [],
+    "notes": "Clean draft - should pass with zero findings"
+  },
+  {
+    "id": "gold-02",
+    "brand_kit_id": "kettle-and-co",
+    "content": "This cheap tea offers great morning energy for everyone.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["TERM-001"],
+    "notes": "Banned term: cheap"
+  },
+  {
+    "id": "gold-03",
+    "brand_kit_id": "kettle-and-co",
+    "content": "Taste the miracle blend that rejuvenates your spirit instantly.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["TERM-001"],
+    "notes": "Banned term: miracle"
+  },
+  {
+    "id": "gold-04",
+    "brand_kit_id": "kettle-and-co",
+    "content": "Discover how Kettle & Co. brews authentic Masala Chai.",
+    "expected_violation_count": 0,
+    "expected_rule_ids": [],
+    "notes": "Clean draft - correctly formatted brand name and product title"
+  },
+  {
+    "id": "gold-05",
+    "brand_kit_id": "kettle-and-co",
+    "content": "Welcome to Kettle and Co, makers of spiced masala chai.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["TERM-002"],
+    "notes": "Product casing and brand ampersand violation"
+  },
+  {
+    "id": "gold-06",
+    "brand_kit_id": "kettle-and-co",
+    "content": "Appreciate the rich flavor and deep color of our harvest.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["TERM-003"],
+    "notes": "American spelling instead of en-IN (flavor/color)"
+  },
+  {
+    "id": "gold-07",
+    "brand_kit_id": "kettle-and-co",
+    "content": "We proudly brew the best tea in India without compromise.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["CLAIM-3.1"],
+    "notes": "Unsubstantiated superlative claim: best"
+  },
+  {
+    "id": "gold-08",
+    "brand_kit_id": "kettle-and-co",
+    "content": "Our herbal blend is clinically proven to cure chronic stress.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["CLAIM-4.2"],
+    "notes": "Prohibited medical cure / clinical health claim"
+  },
+  {
+    "id": "gold-09",
+    "brand_kit_id": "kettle-and-co",
+    "content": "Get 20% off all artisan gift packs this festive Diwali weekend.",
+    "content_type": "Promotional Email",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["MSG-001"],
+    "notes": "Promotional email missing mandatory disclaimer: Offer valid while stocks last. T&Cs apply."
+  },
+  {
+    "id": "gold-10",
+    "brand_kit_id": "kettle-and-co",
+    "content": "Masala Chai 250 g is available now at ₹299 across retail partners.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["F-15"],
+    "notes": "Contradicted/expired fact: ₹299 expired on 2026-06-30 (active is ₹349)"
+  },
+  {
+    "id": "gold-11",
+    "brand_kit_id": "kettle-and-co",
+    "content": "Masala Chai 250 g is available now at ₹349 with free shipping above ₹499.",
+    "expected_violation_count": 0,
+    "expected_rule_ids": [],
+    "notes": "Clean draft with accurate, active approved pricing and shipping facts"
+  },
+  {
+    "id": "gold-12",
+    "brand_kit_id": "ledgerleaf",
+    "content": "Track monthly expenses and reconcile statements seamlessly with LedgerLeaf.",
+    "expected_violation_count": 0,
+    "expected_rule_ids": [],
+    "notes": "Clean draft - standard feature description"
+  },
+  {
+    "id": "gold-13",
+    "brand_kit_id": "ledgerleaf",
+    "content": "Invest through our smart algorithmic portfolios for guaranteed returns.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["CLAIM-1.1"],
+    "notes": "Prohibited financial promise: guaranteed returns"
+  },
+  {
+    "id": "gold-14",
+    "brand_kit_id": "ledgerleaf",
+    "content": "Open an account today with zero fees and risk-free automated rebalancing.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["CLAIM-1.1"],
+    "notes": "Prohibited claims: zero fees and risk-free"
+  },
+  {
+    "id": "gold-15",
+    "brand_kit_id": "ledgerleaf",
+    "content": "Historic portfolios delivered 14.2% annualized return over five years.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["CLAIM-1.4", "MSG-010"],
+    "notes": "Performance yield figures without statutory market risk disclaimer"
+  },
+  {
+    "id": "gold-16",
+    "brand_kit_id": "ledgerleaf",
+    "content": "Historic portfolios delivered 14.2% annualized return over five years. Investments are subject to market risks. Read all scheme-related documents carefully.",
+    "expected_violation_count": 0,
+    "expected_rule_ids": [],
+    "notes": "Clean draft - performance yield accompanied by required statutory disclaimer"
+  },
+  {
+    "id": "gold-17",
+    "brand_kit_id": "ledgerleaf",
+    "content": "Upgrade your account to LeafSave for instant tax filing.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["TERM-010"],
+    "notes": "Deprecated product brand name: LeafSave"
+  },
+  {
+    "id": "gold-18",
+    "brand_kit_id": "ledgerleaf",
+    "content": "Try Ledger Leaf+ today for automated multi-currency insights.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["TERM-010"],
+    "notes": "Malformed product name: Ledger Leaf+ instead of LedgerLeaf Plus"
+  },
+  {
+    "id": "gold-19",
+    "brand_kit_id": "ledgerleaf",
+    "content": "Connect up to 10 accounts for free with our standard starter tier.",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["F-31"],
+    "notes": "Contradicted fact: free tier allows 5 linked accounts, not 10"
+  },
+  {
+    "id": "gold-20",
+    "brand_kit_id": "ledgerleaf",
+    "content": "LedgerLeaf Plus costs ₹199 per month, while the free tier includes 5 linked accounts. Live support is available 9 AM to 6 PM IST, Monday to Saturday.",
+    "expected_violation_count": 0,
+    "expected_rule_ids": [],
+    "notes": "Clean draft - exact alignment with active approved facts F-30, F-31, F-32"
+  },
+  {
+    "id": "gold-21",
+    "brand_kit_id": "kettle-and-co",
+    "content": "BUY OUR AMAZING TEA RIGHT NOW OR REGRET IT FOREVER!",
+    "expected_violation_count": 1,
+    "expected_rule_ids": ["TONE-001"],
+    "notes": "All-caps shouting violation"
+  },
+  {
+    "id": "gold-22",
+    "brand_kit_id": "kettle-and-co",
+    "content": "Introducing our winter collection crafted with care. Created with AI assistance and reviewed by our team.",
+    "expected_violation_count": 0,
+    "expected_rule_ids": [],
+    "notes": "Clean draft with proper AI disclosure compliance"
+  }
+]

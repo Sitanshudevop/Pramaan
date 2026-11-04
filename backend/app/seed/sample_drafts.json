@@ -1,0 +1,56 @@
+[
+  {
+    "id": "sample-1",
+    "name": "Kettle & Co. - Health & Superlative Claims",
+    "brand_kit_id": "kettle-and-co",
+    "content": "Meet our new Masala Chai: 100% pesticide-free and clinically proven to cure stress! Order today and taste the best tea in India.",
+    "content_type": "Promotional Email",
+    "ai_declared": false,
+    "purpose_card": {
+      "goal": "Announce our new premium spiced blend to retail customers",
+      "audience": "Tea enthusiasts and everyday chai drinkers across urban India",
+      "key_message": "Authentic, pure artisanal Masala Chai made with certified organic tea leaves",
+      "call_to_action": "Order today on our official website",
+      "locked_phrases": ["Masala Chai"],
+      "content_type": "Promotional Email",
+      "ai_declared": false
+    },
+    "description": "Contains medical health claim ('cure stress', 'clinically proven'), absolute claim ('100%'), unsubstantiated superlative ('best tea in India'), and missing promotional disclaimer."
+  },
+  {
+    "id": "sample-2",
+    "name": "Kettle & Co. - Stale Price & Tone Issue",
+    "brand_kit_id": "kettle-and-co",
+    "content": "GET YOUR HANDS ON OUR CHEAP TEA NOW! Masala Chai 250 g is just ₹299 for a limited time! DO NOT MISS THIS HUGE DEAL!",
+    "content_type": "Social Media Post",
+    "ai_declared": true,
+    "purpose_card": {
+      "goal": "Flash sale weekend announcement",
+      "audience": "Returning customers and newsletter subscribers",
+      "key_message": "Fresh batch of Masala Chai at fair prices",
+      "call_to_action": "Buy now on our online store",
+      "locked_phrases": ["Masala Chai"],
+      "content_type": "Social Media Post",
+      "ai_declared": true
+    },
+    "description": "Contains expired price ('₹299' instead of active ₹349), banned term ('cheap'), all-caps shouting violating tone guidelines, and undeclared required AI disclosure line."
+  },
+  {
+    "id": "sample-3",
+    "name": "LedgerLeaf - Rebrand & Guaranteed Returns",
+    "brand_kit_id": "ledgerleaf",
+    "content": "LeafSave is now Ledger Leaf+! Enjoy guaranteed returns and zero fees. Link up to 10 accounts for free.",
+    "content_type": "In-App Announcement",
+    "ai_declared": false,
+    "purpose_card": {
+      "goal": "Rebrand communication and feature update",
+      "audience": "Individual investors and personal budgeting app users",
+      "key_message": "Transition from LeafSave to LedgerLeaf Plus with higher account syncing limits",
+      "call_to_action": "Upgrade to LedgerLeaf Plus",
+      "locked_phrases": ["LedgerLeaf Plus"],
+      "content_type": "In-App Announcement",
+      "ai_declared": false
+    },
+    "description": "Contains deprecated product name ('LeafSave'), malformed product casing ('Ledger Leaf+'), prohibited financial guarantees ('guaranteed returns', 'zero fees'), incorrect free tier quota ('10 accounts' instead of 5), and missing statutory market risk disclaimer."
+  }
+]

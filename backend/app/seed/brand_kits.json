@@ -1,0 +1,261 @@
+[
+  {
+    "id": "kettle-and-co",
+    "name": "Kettle & Co.",
+    "tagline": "D2C artisan tea rooted in everyday ritual",
+    "industry": "Food & Beverage (D2C)",
+    "description": "Fictional artisanal tea brand celebrating authentic Indian tea traditions with uncompromised quality and clean labeling.",
+    "voice_tone": "Warm, plain, grounded, never medical or sensational",
+    "target_reading_level": 8,
+    "primary_color": "#1F7A5C",
+    "rules": [
+      {
+        "id": "TERM-001",
+        "category": "Terminology",
+        "title": "Banned promotional terms",
+        "text": "Never use sensationalist or misleading terms: 'cheap', 'guaranteed', or 'miracle'. Use 'accessible value' or specific descriptors instead.",
+        "banned_terms": ["cheap", "guaranteed", "miracle"],
+        "severity": "Blocker",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Brand Governance Team",
+        "source": "Kettle & Co. Brand Lexicon v1.0"
+      },
+      {
+        "id": "TERM-002",
+        "category": "Terminology",
+        "title": "Product name casing & typography",
+        "text": "Always write 'Masala Chai' in Title Case and 'Kettle & Co.' with an ampersand (&), never 'Kettle and Co' or 'Kettle & company'.",
+        "severity": "Major",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Editorial Lead",
+        "source": "Brand Style Guide Section 2.1"
+      },
+      {
+        "id": "TERM-003",
+        "category": "Terminology",
+        "title": "Indian English (en-IN) spelling conventions",
+        "text": "Adhere strictly to Indian English spellings: 'flavour' (not flavor), 'colour' (not color), 'organise' (not organize).",
+        "severity": "Minor",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Editorial Lead",
+        "source": "Kettle & Co. Spelling Dictionary 2026"
+      },
+      {
+        "id": "CLAIM-3.1",
+        "category": "Promotional claims",
+        "title": "Unsubstantiated superlatives restriction",
+        "text": "Do not make unsupported superlative claims such as 'best', 'number one', or '#1' unless an active, approved fact in the facts register substantiates the ranking with verifiable third-party certification.",
+        "severity": "Major",
+        "version": "1.2",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Legal & Compliance",
+        "source": "Advertising Standards Policy 3.1"
+      },
+      {
+        "id": "CLAIM-4.2",
+        "category": "Promotional claims",
+        "title": "Medical & health claims prohibition",
+        "text": "Health, curative, or medical efficacy claims ('cure', 'clinically proven', 'treats', 'detox') are strictly prohibited without an approved regulatory clinical trial dossier.",
+        "severity": "Blocker",
+        "version": "2.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Legal & Compliance",
+        "source": "FSSAI & Advertising Compliance Register 2026"
+      },
+      {
+        "id": "MSG-001",
+        "category": "Messaging",
+        "title": "Mandatory promotional email disclaimer",
+        "text": "All promotional communications offering discounts, bundles, or gifts must include: 'Offer valid while stocks last. T&Cs apply.'",
+        "severity": "Major",
+        "version": "1.1",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Marketing Operations",
+        "source": "Sales Promotion Mandates 2026"
+      },
+      {
+        "id": "TONE-001",
+        "category": "Tone and voice",
+        "title": "Calm readability & shouting prohibition",
+        "text": "Maintain friendly, humble, and conversational copy. Avoid all-caps shouting (3 or more consecutive capitalized words) and keep text readability at or below Grade 8.",
+        "severity": "Minor",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Brand Lead",
+        "source": "Tone of Voice Blueprint 2026"
+      },
+      {
+        "id": "AI-001",
+        "category": "AI and disclosure",
+        "title": "Mandatory AI content disclosure",
+        "text": "Any external marketing asset drafted with generative AI tools must include: 'Created with AI assistance and reviewed by our team.'",
+        "severity": "Major",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-02-01",
+        "owner": "Brand Governance Team",
+        "source": "Responsible AI & Ethics Standard 2026"
+      }
+    ],
+    "facts": [
+      {
+        "id": "F-12",
+        "subject": "Organic Ingredients",
+        "value": "Made with certified organic tea leaves",
+        "unit": "certification",
+        "valid_from": "2026-01-01",
+        "valid_to": "2027-12-31",
+        "permitted_wording": "Made with 100% certified organic estate tea leaves",
+        "owner": "Sourcing Director",
+        "source": "Organic India Certification Audit 2026",
+        "status": "active"
+      },
+      {
+        "id": "F-14",
+        "subject": "Masala Chai 250g Price",
+        "value": "₹349",
+        "unit": "INR",
+        "valid_from": "2026-07-01",
+        "valid_to": "2026-12-31",
+        "permitted_wording": "Masala Chai 250 g is priced at ₹349 (inclusive of all taxes)",
+        "owner": "Revenue Lead",
+        "source": "Price Schedule H2-2026",
+        "status": "active"
+      },
+      {
+        "id": "F-15",
+        "subject": "Masala Chai 250g Historic Price",
+        "value": "₹299",
+        "unit": "INR",
+        "valid_from": "2025-01-01",
+        "valid_to": "2026-06-30",
+        "permitted_wording": "Historic introductory price ₹299 (Expired)",
+        "owner": "Revenue Lead",
+        "source": "Price Schedule H1-2026",
+        "status": "superseded"
+      },
+      {
+        "id": "F-16",
+        "subject": "Free Shipping Threshold",
+        "value": "₹499",
+        "unit": "INR",
+        "valid_from": "2026-01-01",
+        "valid_to": "2026-12-31",
+        "permitted_wording": "Free domestic shipping on orders over ₹499",
+        "owner": "Logistics Lead",
+        "source": "Fulfillment Policy 2026",
+        "status": "active"
+      }
+    ]
+  },
+  {
+    "id": "ledgerleaf",
+    "name": "LedgerLeaf",
+    "tagline": "Intelligent automated accounting & wealth management for modern professionals",
+    "industry": "Financial Technology (Fintech)",
+    "description": "Fictional fintech platform offering compliant expense tracking, verified portfolio insights, and automated bank reconciliation.",
+    "voice_tone": "Precise, calm, compliant, transparent, non-sensational",
+    "target_reading_level": 9,
+    "primary_color": "#3B4BC8",
+    "rules": [
+      {
+        "id": "CLAIM-1.1",
+        "category": "Promotional claims",
+        "title": "Unsubstantiated financial promises prohibition",
+        "text": "Never promise 'guaranteed returns', 'risk-free' investment, or 'zero fees' without an explicit, active fact registration and regulatory disclosure.",
+        "banned_terms": ["guaranteed returns", "risk-free", "zero fees"],
+        "severity": "Blocker",
+        "version": "2.1",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Chief Compliance Officer",
+        "source": "SEBI Compliance Directives 2026"
+      },
+      {
+        "id": "CLAIM-1.4",
+        "category": "Promotional claims",
+        "title": "Mandatory risk disclaimer on performance figures",
+        "text": "Any mention of investment returns, percentage gains, or historic yields must be accompanied by the statutory risk notice.",
+        "severity": "Major",
+        "version": "1.3",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Legal & Risk",
+        "source": "Financial Promotion Standard 1.4"
+      },
+      {
+        "id": "MSG-010",
+        "category": "Messaging",
+        "title": "Mandatory investment market risk disclaimer",
+        "text": "Must include exact disclaimer: 'Investments are subject to market risks. Read all scheme-related documents carefully.'",
+        "severity": "Blocker",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Compliance Lead",
+        "source": "Statutory Financial Mandates 2026"
+      },
+      {
+        "id": "TERM-010",
+        "category": "Terminology",
+        "title": "Product nomenclature & deprecated brand names",
+        "text": "Always write 'LedgerLeaf Plus' (with space and word Plus). Never write 'Ledger Leaf+' or 'LedgerLeaf+'. The previous name 'LeafSave' is deprecated and must not be used.",
+        "banned_terms": ["LeafSave", "Ledger Leaf+", "LedgerLeaf+"],
+        "severity": "Major",
+        "version": "2.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Product Marketing",
+        "source": "Rebranding Architecture Memo 2026"
+      }
+    ],
+    "facts": [
+      {
+        "id": "F-30",
+        "subject": "LedgerLeaf Plus Subscription Price",
+        "value": "₹199 per month",
+        "unit": "INR/month",
+        "valid_from": "2026-01-01",
+        "valid_to": "2026-12-31",
+        "permitted_wording": "LedgerLeaf Plus subscription is ₹199 per month billed monthly or annually",
+        "owner": "Pricing Lead",
+        "source": "Product Commercial Catalog 2026",
+        "status": "active"
+      },
+      {
+        "id": "F-31",
+        "subject": "Free Tier Account Limit",
+        "value": "5 linked accounts",
+        "unit": "accounts",
+        "valid_from": "2026-01-01",
+        "valid_to": "2026-12-31",
+        "permitted_wording": "Free tier enables up to 5 linked bank and credit accounts",
+        "owner": "Product Lead",
+        "source": "Product Feature Matrix 2026",
+        "status": "active"
+      },
+      {
+        "id": "F-32",
+        "subject": "Customer Support Operating Hours",
+        "value": "9 AM to 6 PM IST, Monday to Saturday",
+        "unit": "hours",
+        "valid_from": "2026-01-01",
+        "valid_to": "2026-12-31",
+        "permitted_wording": "Live support desk available 9 AM to 6 PM IST, Monday through Saturday",
+        "owner": "Customer Operations",
+        "source": "Support SLA Guidelines 2026",
+        "status": "active"
+      }
+    ]
+  }
+]
