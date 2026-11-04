@@ -55,25 +55,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {/* Mobile Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-60 border-r border-border bg-surface flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-56 border-r border-border bg-surface flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-label="Application Sidebar"
       >
         {/* Brand Header */}
-        <div className="h-14 border-b border-border flex items-center px-4 justify-between">
+        <div className="h-14 border-b border-border/80 flex items-center px-4 justify-between">
           <NavLink to="/" className="flex items-center space-x-2.5 font-semibold text-text">
-            <span className="w-6 h-6 rounded bg-accent text-white flex items-center justify-center font-bold text-xs tracking-wider">
+            {/* Small orange-gradient rounded square logo */}
+            <span
+              className="w-7 h-7 rounded-[8px] flex items-center justify-center font-bold text-xs tracking-wider shadow-sm text-on-orange"
+              style={{ background: 'var(--grad-accent)' }}
+            >
               प्र
             </span>
-            <span className="tracking-tight text-base font-bold">Pramaan</span>
+            <span className="tracking-tight text-base font-bold text-text">Pramaan</span>
           </NavLink>
         </div>
 
@@ -81,10 +85,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
           {/* Group A: Product */}
           <div>
-            <div className="px-2 mb-2 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+            <div className="px-2.5 mb-2 text-[10px] font-bold tracking-wider text-text-muted uppercase">
               Product
             </div>
-            <nav className="space-y-0.5">
+            <nav className="space-y-1">
               {PRODUCT_NAV.map((item) => (
                 <NavLink
                   key={item.path}
@@ -92,10 +96,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   end={item.path === '/'}
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-btn text-xs font-medium transition-colors ${
+                    `flex items-center space-x-2.5 px-3 py-1.5 rounded-pill text-xs transition-colors ${
                       isActive
-                        ? 'bg-accent-soft text-accent font-semibold'
-                        : 'text-text-muted hover:text-text hover:bg-surface-2'
+                        ? 'bg-surface-dark text-white dark:bg-orange-500/15 dark:text-orange-text font-semibold shadow-sm'
+                        : 'text-text-muted hover:text-text hover:bg-surface-2 font-medium'
                     }`
                   }
                 >
@@ -108,7 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
           {/* Group B: Plan */}
           <div>
-            <div className="px-2 mb-2 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+            <div className="px-2.5 mb-2 text-[10px] font-bold tracking-wider text-text-muted uppercase">
               Plan (PRAMAAN_CONTENT)
             </div>
             <nav className="space-y-0.5">
@@ -118,10 +122,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   to={item.path}
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `flex items-center space-x-2.5 px-2.5 py-1.5 rounded-btn text-xs font-medium transition-colors ${
+                    `flex items-center space-x-2.5 px-3 py-1.5 rounded-pill text-xs transition-colors ${
                       isActive
-                        ? 'bg-accent-soft text-accent font-semibold'
-                        : 'text-text-muted hover:text-text hover:bg-surface-2'
+                        ? 'bg-surface-dark text-white dark:bg-orange-500/15 dark:text-orange-text font-semibold shadow-sm'
+                        : 'text-text-muted hover:text-text hover:bg-surface-2 font-medium'
                     }`
                   }
                 >
@@ -134,12 +138,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer info */}
-        <div className="p-3 border-t border-border bg-surface-2 text-[11px] text-text-muted">
-          <div className="font-medium text-text">CodeNexus India 2026</div>
+        <div className="p-3 border-t border-border/80 bg-surface-2 text-[11px] text-text-muted">
+          <div className="font-semibold text-text">CodeNexus India 2026</div>
           <div className="text-[10px]">Team: DOOM_CODER (Solo)</div>
         </div>
       </aside>
     </>
   );
 };
-

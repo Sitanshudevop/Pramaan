@@ -5,10 +5,12 @@ import {
   ArrowRight,
   AlertCircle,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 import { getBrandKits, getSampleDrafts, createReview } from '../lib/api';
 import { useApp } from '../lib/context';
 import { SampleDraft } from '../lib/types';
+import { PillSelect, Chip } from '../components/ui';
 
 export const NewReview: React.FC = () => {
   const navigate = useNavigate();
@@ -114,236 +116,233 @@ export const NewReview: React.FC = () => {
     reviewMutation.mutate();
   };
 
+  const kitOptions =
+    brandKits?.map((k) => ({
+      value: k.id,
+      label: `${k.name} (${k.industry})`,
+    })) || [];
+
+  const contentTypeOptions = [
+    { value: 'Promotional Email', label: 'Promotional Email' },
+    { value: 'Social Media Post', label: 'Social Media Post' },
+    { value: 'In-App Announcement', label: 'In-App Announcement' },
+    { value: 'Landing Page Copy', label: 'Landing Page Copy' },
+  ];
+
   return (
-    <div className="max-w-reading mx-auto space-y-8">
-      {/* Title */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-text">New Content Review</h1>
-        <p className="text-sm text-text-muted mt-1">
-          Submit draft copy alongside creator intent to evaluate guidelines, terminology, and facts.
+    <div className="max-w-[800px] mx-auto py-6 sm:py-8 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-extrabold tracking-tight text-text">New Content Review</h1>
+        <p className="text-xs text-text-muted max-w-md mx-auto leading-relaxed">
+          Evaluate draft copy against active rules, claims policies, and approved facts before publishing.
         </p>
       </div>
 
-      {/* One-Click Sample Presets */}
+      {/* Quick Judge Sample Text Buttons */}
       {samples && samples.length > 0 && (
-        <div className="p-4 rounded-card border border-border bg-surface space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-text uppercase tracking-wider">
-              Quick Judge Testing (One-Click Samples)
-            </span>
-            <span className="text-[11px] text-text-muted">Pre-fills draft & purpose card</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            {samples.map((s, idx) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => applySample(s)}
-                className="text-left p-3 rounded-btn border border-border bg-surface-2 hover:border-accent/40 transition-colors text-xs space-y-1"
-              >
-                <div className="font-semibold text-text flex items-center justify-between">
-                  <span>Sample {idx + 1}</span>
-                  <span className="text-[10px] text-accent font-medium">{s.brand_kit_id}</span>
-                </div>
-                <div className="text-text-muted line-clamp-2 text-[11px]">{s.description}</div>
-              </button>
-            ))}
-          </div>
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-1 pb-2">
+          <span className="text-[11px] font-semibold text-text-muted mr-1">Try Sample:</span>
+          {samples.map((s, idx) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => applySample(s)}
+              className="px-3 py-1 rounded-pill text-xs font-medium border border-border bg-surface text-text hover:border-orange-500/50 hover:bg-surface-2 transition-all shadow-xs flex items-center space-x-1"
+            >
+              <Sparkles className="w-3 h-3 text-orange-text" />
+              <span>Sample {idx + 1} ({s.brand_kit_id === 'kettle-and-co' ? 'Kettle & Co.' : 'LedgerLeaf'})</span>
+            </button>
+          ))}
         </div>
       )}
 
-      {/* Main Review Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {formError && (
-          <div className="p-3.5 rounded-card bg-danger/10 border border-danger/20 text-danger text-xs flex items-start space-x-2.5">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>{formError}</span>
-          </div>
-        )}
+      {/* Single Centered Main Card */}
+      <div className="p-6 sm:p-8 rounded-card border border-border bg-surface shadow-floating">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {formError && (
+            <div className="p-3.5 rounded-inner bg-danger/10 border border-danger/30 text-danger text-xs flex items-start space-x-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span className="font-medium">{formError}</span>
+            </div>
+          )}
 
-        {/* Step 1: Brand Kit & Metadata */}
-        <div className="p-5 rounded-card border border-border bg-surface space-y-4">
-          <h2 className="text-sm font-semibold text-text flex items-center space-x-2">
-            <span className="w-5 h-5 rounded-full bg-accent text-white text-[10px] flex items-center justify-center font-bold">
-              1
-            </span>
-            <span>Target Brand & Format</span>
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Section: Configuration Controls (Pill Selects) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-border/80">
             <div>
-              <label htmlFor="brand-kit-select" className="block text-xs font-medium text-text mb-1">Brand Kit</label>
-              <select
-                id="brand-kit-select"
+              <label className="block text-xs font-semibold text-text mb-1.5">
+                Target Brand Kit
+              </label>
+              <PillSelect
                 value={selectedKit}
-                onChange={(e) => {
-                  setSelectedKit(e.target.value);
-                  if (e.target.value === 'kettle-and-co') setLockedPhrasesStr('Masala Chai');
+                onChange={(val) => {
+                  setSelectedKit(val);
+                  if (val === 'kettle-and-co') setLockedPhrasesStr('Masala Chai');
                   else setLockedPhrasesStr('LedgerLeaf Plus');
                 }}
-                disabled={loadingKits}
-                className="w-full px-3 py-2 rounded-btn border border-border bg-surface-2 text-text text-xs focus:ring-1 focus:ring-accent"
-              >
-                {brandKits?.map((k) => (
-                  <option key={k.id} value={k.id}>
-                    {k.name} ({k.industry})
-                  </option>
-                ))}
-              </select>
+                options={kitOptions}
+                ariaLabel="Brand Kit selection"
+                className="w-full"
+              />
             </div>
 
             <div>
-              <label htmlFor="content-type-select" className="block text-xs font-medium text-text mb-1">Content Type</label>
-              <select
-                id="content-type-select"
+              <label className="block text-xs font-semibold text-text mb-1.5">
+                Content Format
+              </label>
+              <PillSelect
                 value={contentType}
-                onChange={(e) => setContentType(e.target.value)}
-                className="w-full px-3 py-2 rounded-btn border border-border bg-surface-2 text-text text-xs focus:ring-1 focus:ring-accent"
-              >
-                <option value="Promotional Email">Promotional Email</option>
-                <option value="Social Media Post">Social Media Post</option>
-                <option value="In-App Announcement">In-App Announcement</option>
-                <option value="Landing Page Copy">Landing Page Copy</option>
-              </select>
+                onChange={setContentType}
+                options={contentTypeOptions}
+                ariaLabel="Content Type selection"
+                className="w-full"
+              />
             </div>
           </div>
-        </div>
 
-        {/* Step 2: Purpose Card */}
-        <div className="p-5 rounded-card border border-border bg-surface space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-text flex items-center space-x-2">
-              <span className="w-5 h-5 rounded-full bg-accent text-white text-[10px] flex items-center justify-center font-bold">
-                2
+          {/* Section: Draft Copy Input */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label htmlFor="content-input" className="text-xs font-semibold text-text">
+                Draft Content (Text)
+              </label>
+              <span className="text-[11px] font-mono text-text-muted">
+                {content.length} / 20,000 chars
               </span>
-              <span>Creator Purpose Card</span>
-            </h2>
-            <span className="text-[11px] text-text-muted">Guards suggestions against intent drift</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="goal-input" className="block text-xs font-medium text-text mb-1">Primary Goal</label>
-              <input
-                id="goal-input"
-                type="text"
-                placeholder="e.g. Announce new spiced blend"
-                value={goal}
-                onChange={(e) => setGoal(e.target.value)}
-                className="w-full px-3 py-2 rounded-btn border border-border bg-surface-2 text-text text-xs focus:ring-1 focus:ring-accent"
-              />
             </div>
-
-            <div>
-              <label htmlFor="audience-input" className="block text-xs font-medium text-text mb-1">Target Audience</label>
-              <input
-                id="audience-input"
-                type="text"
-                placeholder="e.g. Urban tea enthusiasts"
-                value={audience}
-                onChange={(e) => setAudience(e.target.value)}
-                className="w-full px-3 py-2 rounded-btn border border-border bg-surface-2 text-text text-xs focus:ring-1 focus:ring-accent"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="key-message-input" className="block text-xs font-medium text-text mb-1">Key Message (Must Convey)</label>
-            <input
-              id="key-message-input"
-              type="text"
-              placeholder="e.g. Authentic artisanal Masala Chai from organic tea leaves"
-              value={keyMessage}
-              onChange={(e) => setKeyMessage(e.target.value)}
-              className="w-full px-3 py-2 rounded-btn border border-border bg-surface-2 text-text text-xs focus:ring-1 focus:ring-accent"
+            <textarea
+              id="content-input"
+              rows={5}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Paste promotional copy, announcement, or email text here to run checks..."
+              className="w-full p-4 rounded-inner border border-border bg-surface-2 text-text text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder:text-text-muted/60 font-sans resize-y transition-colors"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="cta-input" className="block text-xs font-medium text-text mb-1">Call to Action (CTA)</label>
-              <input
-                id="cta-input"
-                type="text"
-                placeholder="e.g. Order today on our website"
-                value={cta}
-                onChange={(e) => setCta(e.target.value)}
-                className="w-full px-3 py-2 rounded-btn border border-border bg-surface-2 text-text text-xs focus:ring-1 focus:ring-accent"
-              />
+          {/* Section: Purpose Card in Two Columns on Desktop */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
+                Creator Purpose Card
+              </span>
+              <Chip variant="accent" size="sm">
+                Intent Preserved
+              </Chip>
             </div>
 
-            <div>
-              <label htmlFor="locked-phrases-input" className="block text-xs font-medium text-text mb-1">
-                Must-Keep Locked Phrases (comma-separated)
-              </label>
-              <input
-                id="locked-phrases-input"
-                type="text"
-                placeholder="e.g. Masala Chai, Kettle & Co."
-                value={lockedPhrasesStr}
-                onChange={(e) => setLockedPhrasesStr(e.target.value)}
-                className="w-full px-3 py-2 rounded-btn border border-border bg-surface-2 text-text text-xs focus:ring-1 focus:ring-accent"
-              />
+            <div className="p-5 rounded-inner bg-surface-2 border border-border/70 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="goal-input" className="block text-[11px] font-semibold text-text mb-1">
+                  Primary Goal
+                </label>
+                <input
+                  id="goal-input"
+                  type="text"
+                  placeholder="e.g. Announce new product launch"
+                  value={goal}
+                  onChange={(e) => setGoal(e.target.value)}
+                  className="w-full px-3.5 py-1.5 rounded-pill border border-border bg-surface text-text text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder:text-text-muted/60"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="audience-input" className="block text-[11px] font-semibold text-text mb-1">
+                  Target Audience
+                </label>
+                <input
+                  id="audience-input"
+                  type="text"
+                  placeholder="e.g. Health-conscious professionals"
+                  value={audience}
+                  onChange={(e) => setAudience(e.target.value)}
+                  className="w-full px-3.5 py-1.5 rounded-pill border border-border bg-surface text-text text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder:text-text-muted/60"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="keymessage-input" className="block text-[11px] font-semibold text-text mb-1">
+                  Key Message
+                </label>
+                <input
+                  id="keymessage-input"
+                  type="text"
+                  placeholder="e.g. Fresh organic ingredients"
+                  value={keyMessage}
+                  onChange={(e) => setKeyMessage(e.target.value)}
+                  className="w-full px-3.5 py-1.5 rounded-pill border border-border bg-surface text-text text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder:text-text-muted/60"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="cta-input" className="block text-[11px] font-semibold text-text mb-1">
+                  Call to Action (CTA)
+                </label>
+                <input
+                  id="cta-input"
+                  type="text"
+                  placeholder="e.g. Order today on our website"
+                  value={cta}
+                  onChange={(e) => setCta(e.target.value)}
+                  className="w-full px-3.5 py-1.5 rounded-pill border border-border bg-surface text-text text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder:text-text-muted/60"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label htmlFor="locked-input" className="block text-[11px] font-semibold text-text mb-1">
+                  Locked Phrases (Comma-separated; AI suggestions must preserve)
+                </label>
+                <input
+                  id="locked-input"
+                  type="text"
+                  placeholder="e.g. Masala Chai, Kettle & Co."
+                  value={lockedPhrasesStr}
+                  onChange={(e) => setLockedPhrasesStr(e.target.value)}
+                  className="w-full px-3.5 py-1.5 rounded-pill border border-border bg-surface text-text text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder:text-text-muted/60"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-border flex items-center space-x-2">
+          {/* AI Disclosure Toggle */}
+          <div className="flex items-center space-x-2.5 pt-1">
             <input
               type="checkbox"
               id="ai-declaration"
               checked={aiDeclared}
               onChange={(e) => setAiDeclared(e.target.checked)}
-              className="rounded border-border text-accent focus:ring-accent"
+              className="w-4 h-4 rounded text-orange-500 focus:ring-orange-500 accent-orange-500 cursor-pointer"
             />
             <label htmlFor="ai-declaration" className="text-xs text-text cursor-pointer select-none">
-              I used generative AI assistance in drafting this content
+              Declare AI assistance was used in drafting this content (recorded in disclosure ledger)
             </label>
           </div>
-        </div>
 
-        {/* Step 3: Content Paste */}
-        <div className="p-5 rounded-card border border-border bg-surface space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-text flex items-center space-x-2">
-              <span className="w-5 h-5 rounded-full bg-accent text-white text-[10px] flex items-center justify-center font-bold">
-                3
-              </span>
-              <span>Draft Content</span>
-            </h2>
-            <span className="text-[11px] text-text-muted">{content.length} / 20,000 characters</span>
+          {/* Submit Action Button */}
+          <div className="pt-4 border-t border-border flex items-center justify-between">
+            <span className="text-[11px] text-text-muted hidden sm:inline">
+              Deterministic + AI Proof-or-Abstain verification
+            </span>
+            <button
+              type="submit"
+              disabled={reviewMutation.isPending || loadingKits}
+              className="inline-flex items-center justify-center space-x-2 px-7 py-3 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange font-semibold text-xs hover:opacity-95 shadow-md transition-all active:scale-[0.99] disabled:opacity-50 ml-auto focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              {reviewMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Running Verification...</span>
+                </>
+              ) : (
+                <>
+                  <span>Run Review</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
           </div>
-
-          <textarea
-            rows={7}
-            placeholder="Paste your content text here (plain text or Markdown)..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            maxLength={20000}
-            className="w-full p-3 rounded-btn border border-border bg-surface-2 text-text text-xs font-sans focus:ring-1 focus:ring-accent leading-relaxed"
-          />
-        </div>
-
-        {/* Submit */}
-        <div className="flex items-center justify-end space-x-3 pt-2">
-          <button
-            type="submit"
-            disabled={reviewMutation.isPending}
-            className="inline-flex items-center space-x-2 px-6 py-2.5 rounded-btn bg-accent text-white font-medium text-sm hover:opacity-95 disabled:opacity-50 transition-opacity"
-          >
-            {reviewMutation.isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Running Checks...</span>
-              </>
-            ) : (
-              <>
-                <span>Run Review</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

@@ -97,5 +97,35 @@ When a creator submits text and a purpose card to `POST /api/reviews`:
 - **Pure Functions for Checks**: Every check in `app/checks/` takes `(text, rules, facts, purpose_card)` and outputs `list[Finding]`. No database calls, no network requests, no state mutations. This guarantees 100% test reproducibility and sub-millisecond execution.
 - **Proof-or-Abstain Principle**: Rather than relying on AI self-consistency, verification happens strictly in deterministic Python code. A finding without valid evidence is dropped or flagged for human review.
 - **Role Switcher with Server-Side Enforcement**: Eliminates authentication friction for judges while maintaining zero-trust server boundaries via `require(permission)` dependencies on every mutating route.
-- **Single Accent Color Theme System**: Modern, editorial design system using CSS variables with strict WCAG AA contrast (4.5:1) in both light and dark themes. Zero external font layout shifts via fallback system stacks.
+- **Design System with Warm Minimalist Palette**: Replaced single-accent indigo with a warm black, soft grey, floating cards, and burnt-orange gradient visual language. All tokens are centralized in CSS variables and mapped via Tailwind.
+
+---
+
+## 4. Design System Architecture
+
+### Visual Language & Aesthetic Principles
+Pramaan uses an editorial, high-contrast, minimalist design language:
+- **Canvas & Surfaces**: Soft warm grey (`#EFEDEA`) in light mode; deep warm black (`#0D0C0B`) in dark mode. Floating cards (`#FFFFFF` with diffuse `shadow-floating` in light mode; `#171513` in dark mode). A dedicated near-black feature card (`#14110F` / `#1B1815`) hosts key analytical gauges.
+- **Burnt-Orange Accent**: A single warm gradient (`linear-gradient(135deg, #FFB27F 0%, #FF8A4C 45%, #F26B2A 100%)`) used selectively for analytical arcs, progress sheens, and subtle decorative backdrops.
+- **Big Numerals**: Key metrics render in bold tabular figures with superscript units and trend chips.
+- **Pill Controls**: Rounded containers with solid active pills (`rounded-pill`, 9999px) for tabs, filter dropdowns, search bars, and action buttons.
+- **Lime Accent**: Reserved strictly for progress percentages (`--lime`, `#B9E04B`) and success states.
+
+### Core Reusable Primitives (`src/components/ui/`)
+1. **`StatCard`**: High-contrast tabular numeral card with unit superscript, delta chip, and optional mini-chart container.
+2. **`GaugeCard`**: Dark feature card rendering an accessible 240° SVG arc with dotted outer ring and centered metric value.
+3. **`BarChart`**: Vertical bar chart using fading gradient bars (`--grad-bar`) and an accessible visually hidden `<table>`.
+4. **`PillTabs`**: Keyboard-navigable tablist with solid active pill selector.
+5. **`Chip`**: Multi-variant badges (`neutral`, `accent`, `success`, `outline`, `dark`, `danger`).
+6. **`ProgressPill`**: Discrete lime-green workflow percentage indicator.
+7. **`PillSelect` & `SearchPill`**: Filter controls and search inputs styled with pill geometry.
+8. **`GlowBackdrop`**: High-performance decorative radial gradient backdrop without blur layout penalties.
+9. **`FloatingCards`**: Subtle 3D perspective hero visual in Home, automatically flattened on mobile and `prefers-reduced-motion`.
+
+### Accessibility & Contrast Rules
+- **WCAG 2.2 AA Conformance**: All text and background combinations achieve at least 4.5:1 contrast (3:1 for large display numerals and icons).
+- **Dark Text on Orange**: Orange fills always carry `--on-orange` (`#14110F`) text; white text on orange is strictly prohibited.
+- **Dual Visual Signaling**: Status and severity indicators never rely on color alone. Excerpts use both background tint and underline; status tags include textual labels and icons.
+- **Zero Layout Shifts**: CSS tabular numbers (`font-tabular`) prevent metric jitter across state updates.
+
 

@@ -1,37 +1,29 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileQuestion, Home, ArrowLeft } from 'lucide-react';
+import { Home } from 'lucide-react';
 
 export const NotFound: React.FC = () => {
   return (
-    <div className="max-w-reading mx-auto py-16 text-center space-y-4">
-      <div className="w-12 h-12 rounded-full bg-accent-soft text-accent flex items-center justify-center mx-auto">
-        <FileQuestion className="w-6 h-6" />
+    <div className="max-w-reading mx-auto py-24 text-center space-y-5">
+      <div className="inline-block px-3 py-1 rounded-pill bg-orange-500/10 text-orange-text text-xs font-bold font-mono">
+        404 · PAGE NOT FOUND
       </div>
       <div>
-        <h1 className="text-xl font-bold text-text">Page Not Found (404)</h1>
-        <p className="text-xs text-text-muted mt-1 leading-relaxed">
-          The requested page or resource could not be found. Please check the URL or return to the main workspace.
+        <h1 className="text-3xl font-extrabold tracking-tight text-text">Page not found</h1>
+        <p className="text-xs text-text-muted mt-2 max-w-sm mx-auto leading-relaxed">
+          The requested page could not be located in Pramaan. Check the URL or return to the workspace.
         </p>
       </div>
 
-      <div className="pt-2 flex items-center justify-center space-x-3">
+      <div className="pt-2">
         <Link
           to="/"
-          className="px-3.5 py-1.5 rounded-btn bg-accent text-white text-xs font-medium hover:bg-accent/90 transition-colors inline-flex items-center space-x-1.5"
+          className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-90 transition-opacity shadow-sm"
         >
-          <Home className="w-3.5 h-3.5" />
+          <Home className="w-4 h-4" />
           <span>Return Home</span>
-        </Link>
-        <Link
-          to="/app/new"
-          className="px-3.5 py-1.5 rounded-btn border border-border bg-surface text-text text-xs font-medium hover:bg-surface-2 transition-colors inline-flex items-center space-x-1.5"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Start New Review</span>
         </Link>
       </div>
     </div>
   );
 };
-

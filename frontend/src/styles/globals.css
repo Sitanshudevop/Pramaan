@@ -3,33 +3,69 @@
 @tailwind utilities;
 
 :root {
-  --bg: #FAFAFB;
+  --bg: #EFEDEA;
   --surface: #FFFFFF;
-  --surface-2: #F3F4F7;
-  --border: #E4E6EC;
-  --text: #161A23;
-  --text-muted: #5B6272;
-  --accent: #3B4BC8;
-  --accent-soft: #ECEEFB;
-  --success: #1F7A5C;
-  --warning: #9A6700;
-  --danger: #B42318;
-  --info: #3B4BC8;
+  --surface-2: #F6F4F1;
+  --surface-dark: #14110F;
+  --border: #E3DFDA;
+  --text: #14110F;
+  --text-muted: #6B645C;
+
+  --orange-300: #FFC9A3;
+  --orange-500: #FF8A4C;
+  --orange-600: #F26B2A;
+  --orange-text: #B84A12;
+  --on-orange: #14110F;
+
+  --grad-accent: linear-gradient(135deg, #FFB27F 0%, #FF8A4C 45%, #F26B2A 100%);
+  --grad-bar: linear-gradient(180deg, #FF8A4C 0%, rgba(255, 201, 163, 0.25) 100%);
+
+  --lime: #B9E04B;
+  --on-lime: #14110F;
+  --success-text: #1F7A3D;
+  --danger: #C2321F;
+
+  --glow-color: rgba(255, 138, 76, 0.55);
+  --shadow-floating: 0 10px 30px rgba(20, 17, 15, 0.08);
+
+  /* Compatibility aliases for semantic status */
+  --accent: #F26B2A;
+  --accent-soft: rgba(255, 138, 76, 0.12);
+  --success: #1F7A3D;
+  --warning: #B84A12;
 }
 
 .dark {
-  --bg: #0F1115;
-  --surface: #161A20;
-  --surface-2: #1C212A;
-  --border: #2A303B;
-  --text: #E8EAF0;
-  --text-muted: #9AA3B5;
-  --accent: #8C9AF2;
-  --accent-soft: #232A4A;
-  --success: #4CC9A0;
-  --warning: #E3B341;
-  --danger: #F28B82;
-  --info: #8C9AF2;
+  --bg: #0D0C0B;
+  --surface: #171513;
+  --surface-2: #1F1C19;
+  --surface-dark: #1B1815;
+  --border: #2B2723;
+  --text: #F4F1EC;
+  --text-muted: #A39B91;
+
+  --orange-300: #FFC9A3;
+  --orange-500: #FF8A4C;
+  --orange-600: #FF7A3D;
+  --orange-text: #FF9A62;
+  --on-orange: #14110F;
+
+  --grad-accent: linear-gradient(135deg, #FFB27F 0%, #FF8A4C 45%, #F26B2A 100%);
+  --grad-bar: linear-gradient(180deg, #FF8A4C 0%, rgba(255, 138, 76, 0.12) 100%);
+
+  --lime: #B9E04B;
+  --on-lime: #14110F;
+  --success-text: #6EDB8F;
+  --danger: #FF8F80;
+
+  --glow-color: rgba(255, 138, 76, 0.45);
+  --shadow-floating: none;
+
+  /* Compatibility aliases for semantic status */
+  --accent: #FF8A4C;
+  --accent-soft: rgba(255, 138, 76, 0.16);
+  --success: #6EDB8F;
+  --warning: #FF9A62;
 }
 
 /* Base resets & typography */
@@ -39,11 +75,16 @@ body {
   background-color: var(--bg);
   color: var(--text);
   overflow-x: hidden;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* Accessible focus ring across all interactive controls */
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Accessible focus ring */
 *:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--orange-500);
   outline-offset: 2px;
 }
 
@@ -55,4 +96,3 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
-

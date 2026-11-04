@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Lock, Cpu, EyeOff } from 'lucide-react';
+import { Lock, Cpu, ShieldCheck } from 'lucide-react';
 import { getAuditLogs, getDisclosureLedger } from '../lib/api';
 import { useApp } from '../lib/context';
+import { PillTabs, Chip } from '../components/ui';
 
 export const AuditDisclosure: React.FC = () => {
   const { role, confidentialMode, setConfidentialMode } = useApp();
-  const [activeTab, setActiveTab] = useState<'audit' | 'disclosure'>('audit');
+  const [activeTab, setActiveTab] = useState<string>('audit');
 
   const { data: auditLogs, isLoading: loadingAudit } = useQuery({
     queryKey: ['auditLogs', role],
@@ -18,43 +19,38 @@ export const AuditDisclosure: React.FC = () => {
     queryFn: () => getDisclosureLedger(role),
   });
 
+  const tabs = [
+    { id: 'audit', label: 'Append-Only Audit Log', count: auditLogs?.length || 0 },
+    { id: 'disclosure', label: 'AI Processing Disclosure Ledger', count: disclosures?.length || 0 },
+  ];
+
   return (
-    <div className="space-y-6 max-w-app mx-auto">
+    <div className="space-y-6 max-w-app mx-auto py-2">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-text">Audit & AI Disclosure</h1>
-        <p className="text-sm text-text-muted mt-1">
+        <h1 className="text-3xl font-extrabold tracking-tight text-text">Audit & AI Disclosure</h1>
+        <p className="text-xs text-text-muted mt-1 leading-relaxed">
           Immutable append-only governance trail and runtime AI model processing ledger.
         </p>
       </div>
 
       {/* Confidential Mode Card */}
-      <div className="p-5 rounded-card border border-border bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <span className="font-semibold text-sm text-text">Confidential Mode Status</span>
-            <span
-              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                confidentialMode
-                  ? 'bg-success/15 text-success'
-                  : 'bg-surface-2 text-text-muted'
-              }`}
-            >
+      <div className="p-6 rounded-card border border-border bg-surface shadow-floating flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1.5">
+          <div className="flex items-center space-x-2.5">
+            <span className="font-bold text-sm text-text">Confidential Mode</span>
+            <Chip variant={confidentialMode ? 'success' : 'neutral'} size="sm" dot>
               {confidentialMode ? 'Active (Offline Only)' : 'Inactive (AI Layer Active)'}
-            </span>
+            </Chip>
           </div>
-          <p className="text-xs text-text-muted max-w-xl">
-            When Confidential Mode is active, all external AI calls are severed. Pramaan operates purely on local deterministic checks with zero external network egress.
+          <p className="text-xs text-text-muted max-w-xl leading-relaxed">
+            When Confidential Mode is active, all external AI calls are severed. Pramaan operates purely on local deterministic rules with zero external network egress.
           </p>
         </div>
 
         {role === 'Admin' && (
           <button
             onClick={() => setConfidentialMode(!confidentialMode)}
-            className={`px-3 py-1.5 rounded-btn text-xs font-semibold border transition-colors ${
-              confidentialMode
-                ? 'bg-success text-white border-success'
-                : 'bg-surface-2 text-text border-border hover:bg-surface'
-            }`}
+            className="px-5 py-2 rounded-pill text-xs font-semibold bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange hover:opacity-90 transition-opacity shadow-sm self-start sm:self-auto"
           >
             {confidentialMode ? 'Disable Confidential Mode' : 'Enable Confidential Mode'}
           </button>
@@ -63,119 +59,117 @@ export const AuditDisclosure: React.FC = () => {
 
       {/* Privacy Guarantee Banner */}
       <div className="p-4 rounded-card border border-border bg-surface-2 flex items-start space-x-3 text-xs text-text-muted">
-        <Lock className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
+        <Lock className="w-4 h-4 text-orange-text mt-0.5 shrink-0" />
         <div className="space-y-1">
-          <span className="font-semibold text-text">Zero-Content Logging Commitment:</span>
-          <p>
-            In strict compliance with Pramaan security policy, draft content and user prompts are NEVER stored in application logs or the audit trail. Records contain action metadata, timestamps, character sizes, and identifiers only.
+          <span className="font-semibold text-text">Zero-Content Logging Commitment</span>
+          <p className="leading-relaxed">
+            In strict compliance with Pramaan security policy, draft content and user prompts are NEVER stored in application logs or the audit trail. Records contain action metadata, timestamps, character counts, and identifiers only.
           </p>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-border space-x-4 text-xs">
-        <button
-          onClick={() => setActiveTab('audit')}
-          className={`pb-2.5 font-medium transition-colors border-b-2 ${
-            activeTab === 'audit'
-              ? 'border-accent text-accent font-semibold'
-              : 'border-transparent text-text-muted hover:text-text'
-          }`}
-        >
-          Append-Only Audit Log ({auditLogs?.length || 0})
-        </button>
-        <button
-          onClick={() => setActiveTab('disclosure')}
-          className={`pb-2.5 font-medium transition-colors border-b-2 ${
-            activeTab === 'disclosure'
-              ? 'border-accent text-accent font-semibold'
-              : 'border-transparent text-text-muted hover:text-text'
-          }`}
-        >
-          AI Processing Disclosure Ledger ({disclosures?.length || 0})
-        </button>
-      </div>
+      {/* PillTabs Selector */}
+      <PillTabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
 
-      {/* Audit Log Table / Cards */}
+      {/* Tab 1: Audit Log Table */}
       {activeTab === 'audit' && (
-        <div className="space-y-2">
+        <div className="p-5 rounded-card border border-border bg-surface shadow-floating overflow-x-auto">
           {loadingAudit ? (
-            <div className="py-12 text-center text-xs text-text-muted">Loading audit log...</div>
+            <div className="py-12 text-center text-xs text-text-muted font-mono">Loading audit trail...</div>
           ) : !auditLogs || auditLogs.length === 0 ? (
-            <div className="p-6 rounded-card border border-border bg-surface text-center text-xs text-text-muted">
-              No audit records logged yet.
-            </div>
+            <div className="py-12 text-center text-xs text-text-muted">No audit events recorded yet.</div>
           ) : (
-            auditLogs.map((entry) => (
-              <div
-                key={entry.seq}
-                className="p-3.5 rounded-card border border-border bg-surface flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-mono text-text-muted">#{entry.seq}</span>
-                    <span className="font-semibold text-text capitalize">
-                      {entry.action.replace('_', ' ')}
-                    </span>
-                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-surface-2 text-text-muted">
-                      Role: {entry.actor_role}
-                    </span>
-                  </div>
-                  <div className="font-mono text-[11px] text-text-muted">
-                    Entity: {entry.entity} · ID: {entry.entity_id}
-                  </div>
-                </div>
-
-                <div className="text-right text-[11px] text-text-muted space-y-0.5">
-                  <div>{new Date(entry.created_at).toLocaleString()}</div>
-                  <div className="font-mono text-[10px] text-text-muted">
-                    {JSON.stringify(entry.detail)}
-                  </div>
-                </div>
-              </div>
-            ))
+            <table className="w-full text-xs text-left">
+              <thead>
+                <tr className="border-b border-border/80 text-text-muted text-[11px] font-semibold uppercase tracking-wider">
+                  <th className="py-3 px-3">Seq</th>
+                  <th className="py-3 px-3">Timestamp (UTC)</th>
+                  <th className="py-3 px-3">Actor Role</th>
+                  <th className="py-3 px-3">Action</th>
+                  <th className="py-3 px-3">Target Entity</th>
+                  <th className="py-3 px-3">Metadata Detail</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50 font-mono">
+                {auditLogs.map((entry) => (
+                  <tr key={entry.seq} className="hover:bg-surface-2/60 transition-colors">
+                    <td className="py-3 px-3 text-orange-text font-bold">#{entry.seq}</td>
+                    <td className="py-3 px-3 text-text-muted text-[11px]">
+                      {new Date(entry.created_at).toISOString().replace('T', ' ').slice(0, 19)}
+                    </td>
+                    <td className="py-3 px-3 font-semibold text-text font-sans">{entry.actor_role}</td>
+                    <td className="py-3 px-3">
+                      <Chip variant="neutral" size="sm">
+                        {entry.action}
+                      </Chip>
+                    </td>
+                    <td className="py-3 px-3 text-text">
+                      {entry.entity}: <span className="text-orange-text">{entry.entity_id}</span>
+                    </td>
+                    <td className="py-3 px-3 text-text-muted text-[11px] max-w-xs truncate">
+                      {JSON.stringify(entry.detail)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       )}
 
-      {/* AI Disclosure Ledger */}
+      {/* Tab 2: AI Disclosure Ledger */}
       {activeTab === 'disclosure' && (
-        <div className="space-y-2">
+        <div className="p-5 rounded-card border border-border bg-surface shadow-floating overflow-x-auto">
           {loadingDisc ? (
-            <div className="py-12 text-center text-xs text-text-muted">Loading disclosure ledger...</div>
+            <div className="py-12 text-center text-xs text-text-muted font-mono">Loading disclosure ledger...</div>
           ) : !disclosures || disclosures.length === 0 ? (
-            <div className="p-6 rounded-card border border-border bg-surface text-center text-xs text-text-muted">
-              No external AI calls logged. (Pure deterministic executions or Confidential Mode active).
-            </div>
+            <div className="py-12 text-center text-xs text-text-muted">No AI processing requests recorded yet.</div>
           ) : (
-            disclosures.map((d) => (
-              <div
-                key={d.id}
-                className="p-3.5 rounded-card border border-border bg-surface flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Cpu className="w-3.5 h-3.5 text-accent" />
-                    <span className="font-semibold text-text">{d.provider}</span>
-                    <span className="font-mono text-[11px] text-text-muted">({d.model})</span>
-                    {d.pii_redacted && (
-                      <span className="px-1.5 py-0.2 rounded bg-success/10 text-success text-[10px] font-medium flex items-center space-x-1">
-                        <EyeOff className="w-3 h-3" />
-                        <span>PII Redacted</span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[11px] text-text-muted">
-                    Review: <span className="font-mono">{d.review_id}</span> · Data Class: {d.data_class}
-                  </div>
-                </div>
-
-                <div className="text-right text-[11px] text-text-muted space-y-0.5">
-                  <div>{new Date(d.created_at).toLocaleString()}</div>
-                  <div className="font-mono text-[10px]">{d.token_count} tokens processed</div>
-                </div>
-              </div>
-            ))
+            <table className="w-full text-xs text-left">
+              <thead>
+                <tr className="border-b border-border/80 text-text-muted text-[11px] font-semibold uppercase tracking-wider">
+                  <th className="py-3 px-3">Timestamp</th>
+                  <th className="py-3 px-3">Review ID</th>
+                  <th className="py-3 px-3">AI Provider</th>
+                  <th className="py-3 px-3">Model</th>
+                  <th className="py-3 px-3">Data Class</th>
+                  <th className="py-3 px-3">PII Redacted</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50 font-mono">
+                {disclosures.map((d) => (
+                  <tr key={d.id} className="hover:bg-surface-2/60 transition-colors">
+                    <td className="py-3 px-3 text-text-muted text-[11px]">
+                      {new Date(d.created_at).toISOString().replace('T', ' ').slice(0, 19)}
+                    </td>
+                    <td className="py-3 px-3 text-orange-text font-bold">{d.review_id}</td>
+                    <td className="py-3 px-3 font-semibold text-text flex items-center space-x-1.5 pt-3">
+                      <Cpu className="w-3.5 h-3.5 text-text-muted" />
+                      <span>{d.provider}</span>
+                    </td>
+                    <td className="py-3 px-3 text-text">{d.model}</td>
+                    <td className="py-3 px-3">
+                      <Chip variant="neutral" size="sm">
+                        {d.data_class}
+                      </Chip>
+                    </td>
+                    <td className="py-3 px-3">
+                      {d.pii_redacted ? (
+                        <Chip variant="success" size="sm" icon={<ShieldCheck className="w-3 h-3" />}>
+                          Redacted
+                        </Chip>
+                      ) : (
+                        <span className="text-text-muted text-[11px]">Clean</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       )}

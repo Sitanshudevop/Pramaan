@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Info } from 'lucide-react';
 import { getInsights, getBrandKits } from '../lib/api';
 import { useApp } from '../lib/context';
+import { GaugeCard, BarChart, PillSelect, Chip, StatCard } from '../components/ui';
 
 export const Insights: React.FC = () => {
   const { role } = useApp();
@@ -18,89 +19,172 @@ export const Insights: React.FC = () => {
     queryFn: () => getInsights(role, selectedKit || undefined),
   });
 
+  const kitOptions = [
+    { value: '', label: 'All Brand Kits' },
+    ...(kits?.map((k) => ({ value: k.id, label: k.name })) || []),
+  ];
+
+  // Calculate overall Rule Clarity Score from unclear rules
+  const avgAmbiguity =
+    insights?.unclear_rules && insights.unclear_rules.length > 0
+      ? insights.unclear_rules.reduce((acc, r) => acc + r.ambiguity_score, 0) /
+        insights.unclear_rules.length
+      : 0.18;
+  const clarityScore = Math.round((1 - avgAmbiguity) * 100);
+
+  // Map top repeated violations into BarChart items
+  const barChartData =
+    insights?.top_repeated_violations.slice(0, 5).map((v) => ({
+      label: v.rule_id,
+      value: v.count,
+    })) || [];
+
   return (
-    <div className="space-y-8 max-w-app mx-auto">
+    <div className="space-y-6 max-w-app mx-auto py-2">
+      {/* Title & Brand Filter */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-text">Brand Insights & Governance</h1>
-          <p className="text-sm text-text-muted mt-1">
+          <h1 className="text-3xl font-extrabold tracking-tight text-text">Brand Insights & Radar</h1>
+          <p className="text-xs text-text-muted mt-1 leading-relaxed">
             Aggregate compliance trends, repeated exceptions, and rule ambiguity detection.
           </p>
         </div>
 
-        {/* Filter by kit */}
-        <div>
-          <label htmlFor="insights-kit-filter" className="sr-only">Filter by Brand Kit</label>
-          <select
-            id="insights-kit-filter"
-            value={selectedKit}
-            onChange={(e) => setSelectedKit(e.target.value)}
-            className="px-3 py-1.5 rounded-btn border border-border bg-surface text-xs font-medium text-text focus:ring-1 focus:ring-accent"
-          >
-            <option value="">All Brands</option>
-            {kits?.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <PillSelect
+          value={selectedKit}
+          onChange={setSelectedKit}
+          options={kitOptions}
+          ariaLabel="Filter by brand kit"
+        />
       </div>
 
-      {/* Honesty Banner for Simulated Seed Data */}
+      {/* Mandatory Simulated Data Disclosure Banner */}
       <div className="p-4 rounded-card border border-border bg-surface-2 flex items-start space-x-3 text-xs text-text-muted">
-        <Info className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
-        <div>
+        <Info className="w-4 h-4 text-orange-text mt-0.5 shrink-0" />
+        <div className="space-y-0.5">
           <span className="font-semibold text-text">Simulated Data Disclosure: </span>
-          <span>{insights?.simulated_notice || 'Insights are populated with simulated review events for demonstration.'}</span>
+          <span>{insights?.simulated_notice || 'Insights are populated with 120 simulated review events for prototype demonstration.'}</span>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="py-24 text-center text-xs text-text-muted">Aggregating governance metrics...</div>
+        <div className="py-24 text-center text-xs text-text-muted font-mono">
+          Aggregating governance metrics from simulated events...
+        </div>
       ) : !insights ? (
         <div className="p-8 rounded-card border border-border bg-surface text-center text-xs text-text-muted">
           No metrics available.
         </div>
       ) : (
-        <div className="space-y-8">
-          {/* Section 1: Rule Ambiguity Index */}
-          <div className="p-5 rounded-card border border-border bg-surface space-y-4">
-            <div className="flex items-center justify-between">
+        <div className="space-y-6">
+          {/* Top Row: Dark GaugeCard + BarChart Card + StatCard */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+            {/* Dark GaugeCard (4 cols) */}
+            <div className="lg:col-span-4">
+              <GaugeCard
+                value={clarityScore}
+                max={100}
+                unit="%"
+                label="Overall Rule Clarity"
+                caption="Calculated from override rate & reviewer consensus across simulated reviews."
+                className="h-full"
+              />
+            </div>
+
+            {/* BarChart of Top Repeated Violations (5 cols) */}
+            <div className="lg:col-span-5 p-6 rounded-card border border-border bg-surface shadow-floating flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xs font-bold text-text uppercase tracking-wider">
+                    Repeated Violations
+                  </h2>
+                  <p className="text-[11px] text-text-muted">Rule hit frequency</p>
+                </div>
+                <Chip variant="neutral" size="sm">
+                  Simulated data
+                </Chip>
+              </div>
+
+              <div className="my-2">
+                <BarChart data={barChartData} height={140} unit="hits" />
+              </div>
+
+              <div className="text-[10px] text-text-muted border-t border-border/60 pt-2 flex justify-between">
+                <span>Top violated policies</span>
+                <span>Sorted by volume</span>
+              </div>
+            </div>
+
+            {/* Total Override Events StatCard (3 cols) */}
+            <div className="lg:col-span-3 flex flex-col justify-between">
+              <StatCard
+                label="Simulated Events"
+                value="120"
+                hint="Curated mock review dataset"
+                className="h-full"
+              >
+                <div className="pt-2 border-t border-border/70 flex items-center justify-between text-[11px]">
+                  <span className="text-text-muted">Active kits:</span>
+                  <span className="font-semibold text-text">2 Brands</span>
+                </div>
+              </StatCard>
+            </div>
+          </div>
+
+          {/* Section: Unclear Guidelines (Ambiguity Radar) */}
+          <div className="p-6 rounded-card border border-border bg-surface shadow-floating space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/70">
               <div>
-                <h2 className="text-sm font-bold text-text">Unclear Guidelines (Ambiguity Score)</h2>
+                <div className="flex items-center space-x-2">
+                  <h2 className="text-sm font-bold text-text">
+                    Guideline Ambiguity Radar
+                  </h2>
+                  <Chip variant="accent" size="sm">
+                    Simulated data
+                  </Chip>
+                </div>
                 <p className="text-xs text-text-muted mt-0.5">
                   Rules with high override rates where reviewers frequently disagree with standard policy.
                 </p>
               </div>
-              <span className="text-[11px] font-mono text-accent">Higher score = Higher ambiguity</span>
+              <span className="text-[11px] font-mono text-orange-text font-semibold">
+                Higher % = Lower guideline clarity
+              </span>
             </div>
 
             <div className="space-y-3">
               {insights.unclear_rules.map((item) => (
                 <div
                   key={item.rule_id}
-                  className="p-3.5 rounded-btn border border-border bg-surface-2 space-y-2 text-xs"
+                  className="p-4 rounded-inner border border-border/80 bg-surface-2 space-y-2 text-xs"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center space-x-2">
-                      <span className="font-mono font-bold text-accent">{item.rule_id}</span>
-                      <span className="font-semibold text-text">{item.rule_name}</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface text-text-muted">
+                      <Chip variant="accent" size="sm">
+                        {item.rule_id}
+                      </Chip>
+                      <span className="font-bold text-text">{item.rule_name}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-pill bg-surface text-text-muted border border-border/60">
                         {item.category}
                       </span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-semibold text-warning">
-                        Ambiguity: {(item.ambiguity_score * 100).toFixed(0)}%
+
+                    <div className="flex items-center space-x-1.5 font-mono">
+                      <span className="text-text-muted text-[11px]">Ambiguity:</span>
+                      <span className="px-2 py-0.5 rounded-pill bg-orange-500/15 text-orange-text font-bold text-xs">
+                        {(item.ambiguity_score * 100).toFixed(0)}%
                       </span>
                     </div>
                   </div>
 
-                  <p className="text-xs text-text-muted">{item.recommendation}</p>
+                  <p className="text-xs text-text-muted leading-relaxed">
+                    <strong className="text-text font-medium">Recommended update: </strong>
+                    {item.recommendation}
+                  </p>
 
-                  <div className="text-[11px] text-text-muted flex space-x-4 pt-1">
+                  <div className="text-[11px] font-mono text-text-muted flex space-x-4 pt-1 border-t border-border/40">
                     <span>Violations detected: {item.violation_count}</span>
+                    <span>·</span>
                     <span>Reviewer overrides: {item.override_count}</span>
                   </div>
                 </div>
@@ -108,60 +192,40 @@ export const Insights: React.FC = () => {
             </div>
           </div>
 
-          {/* Section 2: Two Columns (Repeated Violations & Overridden Rules) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Top Repeated Violations */}
-            <div className="p-5 rounded-card border border-border bg-surface space-y-4">
-              <h2 className="text-sm font-bold text-text">Top Repeated Violations</h2>
-              <div className="space-y-2.5">
-                {insights.top_repeated_violations.map((item, idx) => (
-                  <div
-                    key={item.rule_id}
-                    className="p-3 rounded-btn border border-border bg-surface-2 flex items-center justify-between text-xs"
-                  >
-                    <div className="space-y-0.5">
-                      <div className="font-semibold text-text flex items-center space-x-1.5">
-                        <span className="text-text-muted font-mono">#{idx + 1}</span>
-                        <span>{item.rule_name}</span>
-                      </div>
-                      <div className="text-[11px] text-text-muted">
-                        {item.rule_id} · {item.category}
-                      </div>
-                    </div>
-                    <span className="px-2 py-1 rounded bg-danger/10 text-danger font-bold text-xs">
-                      {item.count} hits
-                    </span>
-                  </div>
-                ))}
+          {/* Section: Most Overridden Rules */}
+          <div className="p-6 rounded-card border border-border bg-surface shadow-floating space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-border/70">
+              <div className="flex items-center space-x-2">
+                <h2 className="text-sm font-bold text-text">Reviewer Override Patterns</h2>
+                <Chip variant="neutral" size="sm">
+                  Simulated data
+                </Chip>
               </div>
+              <span className="text-[11px] text-text-muted">Human overrides recorded</span>
             </div>
 
-            {/* Most Overridden Rules */}
-            <div className="p-5 rounded-card border border-border bg-surface space-y-4">
-              <h2 className="text-sm font-bold text-text">Most Overridden Rules</h2>
-              <div className="space-y-2.5">
-                {insights.most_overridden_rules.map((item, idx) => (
-                  <div
-                    key={item.rule_id}
-                    className="p-3 rounded-btn border border-border bg-surface-2 space-y-1.5 text-xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="font-semibold text-text flex items-center space-x-1.5">
-                        <span className="text-text-muted font-mono">#{idx + 1}</span>
-                        <span>{item.rule_name}</span>
-                      </div>
-                      <span className="px-2 py-0.5 rounded bg-warning/10 text-warning font-semibold text-[11px]">
-                        {item.override_count} overrides
-                      </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {insights.most_overridden_rules.map((item, idx) => (
+                <div
+                  key={item.rule_id}
+                  className="p-4 rounded-inner border border-border/80 bg-surface-2 space-y-2 text-xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-text flex items-center space-x-2">
+                      <span className="font-mono text-orange-text">#{idx + 1}</span>
+                      <span>{item.rule_name}</span>
                     </div>
-                    {item.reasons.length > 0 && (
-                      <div className="text-[11px] text-text-muted italic">
-                        Sample reason: &ldquo;{item.reasons[0]}&rdquo;
-                      </div>
-                    )}
+                    <Chip variant="neutral" size="sm">
+                      {item.override_count} overrides
+                    </Chip>
                   </div>
-                ))}
-              </div>
+                  {item.reasons.length > 0 && (
+                    <div className="text-[11px] text-text-muted italic bg-surface p-2.5 rounded-inner border border-border/60">
+                      &ldquo;{item.reasons[0]}&rdquo;
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>

@@ -4,13 +4,14 @@ import { Edit2 } from 'lucide-react';
 import { getBrandKits, updateBrandRule } from '../lib/api';
 import { useApp } from '../lib/context';
 import { RuleItem } from '../lib/types';
+import { StatCard, PillTabs, Chip } from '../components/ui';
 
 export const BrandHub: React.FC = () => {
   const { role } = useApp();
   const queryClient = useQueryClient();
 
   const [selectedKitId, setSelectedKitId] = useState<string>('kettle-and-co');
-  const [activeTab, setActiveTab] = useState<'rules' | 'facts' | 'glossary' | 'claims'>('rules');
+  const [activeTab, setActiveTab] = useState<string>('rules');
 
   // Edit modal state
   const [editingRule, setEditingRule] = useState<RuleItem | null>(null);
@@ -59,30 +60,53 @@ export const BrandHub: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="py-24 text-center text-xs text-text-muted">Loading Brand Knowledge Hub...</div>;
+    return (
+      <div className="py-24 text-center text-xs text-text-muted font-mono">
+        Loading Brand Knowledge Hub...
+      </div>
+    );
   }
 
+  const activeRules = activeKit?.rules.filter((r) => r.status === 'active') || [];
+  const activeFacts = activeKit?.facts.filter((f) => f.status === 'active') || [];
+  const supersededFacts = activeKit?.facts.filter((f) => f.status === 'superseded') || [];
+
+  const tabs = [
+    { id: 'rules', label: 'Guidelines & Rules', count: activeRules.length },
+    { id: 'facts', label: 'Approved Facts Register', count: activeKit?.facts.length || 0 },
+    {
+      id: 'glossary',
+      label: 'Terminology',
+      count: activeKit?.rules.filter((r) => r.category === 'Terminology').length || 0,
+    },
+    {
+      id: 'claims',
+      label: 'Claims Policy',
+      count: activeKit?.rules.filter((r) => r.category === 'Promotional claims').length || 0,
+    },
+  ];
+
   return (
-    <div className="space-y-6 max-w-app mx-auto">
-      {/* Title */}
+    <div className="space-y-6 max-w-app mx-auto py-2">
+      {/* Title & Brand Kit Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-text">Brand Knowledge Hub</h1>
-          <p className="text-sm text-text-muted mt-1">
+          <h1 className="text-3xl font-extrabold tracking-tight text-text">Brand Knowledge Hub</h1>
+          <p className="text-xs text-text-muted mt-1 leading-relaxed">
             Approved guidelines, facts register, terminology constraints, and claims policies.
           </p>
         </div>
 
-        {/* Brand Kit Selector */}
-        <div className="flex items-center space-x-2">
+        {/* Brand Kit Selector Pills */}
+        <div className="flex items-center space-x-1.5 p-1 rounded-pill bg-surface-2 border border-border/70 self-start sm:self-auto">
           {kits?.map((k) => (
             <button
               key={k.id}
               onClick={() => setSelectedKitId(k.id)}
-              className={`px-3 py-1.5 rounded-btn text-xs font-semibold transition-colors ${
+              className={`px-4 py-1.5 rounded-pill text-xs font-semibold transition-all ${
                 selectedKitId === k.id
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'bg-surface border border-border text-text hover:bg-surface-2'
+                  ? 'bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange shadow-xs'
+                  : 'text-text-muted hover:text-text'
               }`}
             >
               {k.name}
@@ -93,204 +117,203 @@ export const BrandHub: React.FC = () => {
 
       {activeKit && (
         <div className="space-y-6">
-          {/* Brand Kit Overview Card */}
-          <div className="p-5 rounded-card border border-border bg-surface flex flex-col md:flex-row justify-between gap-4">
-            <div className="space-y-1">
-              <div className="text-xs uppercase tracking-wider text-accent font-semibold">
+          {/* Row of Three Small StatCards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <StatCard
+              label="Active Guidelines"
+              value={activeRules.length}
+              hint="Rules verified in review passes"
+            />
+            <StatCard
+              label="Approved Facts"
+              value={activeFacts.length}
+              delta={{ direction: 'up', label: 'Active Records' }}
+              hint="Grounding truth register"
+            />
+            <StatCard
+              label="Superseded Facts"
+              value={supersededFacts.length}
+              hint="Historical records flagged if used"
+            />
+          </div>
+
+          {/* Brand Kit Overview Description Card */}
+          <div className="p-6 rounded-card border border-border bg-surface shadow-floating flex flex-col md:flex-row justify-between gap-4">
+            <div className="space-y-1.5">
+              <span className="text-xs uppercase tracking-wider text-orange-text font-bold">
                 {activeKit.industry}
-              </div>
-              <h2 className="text-lg font-bold text-text">{activeKit.name}</h2>
-              <p className="text-xs text-text-muted max-w-xl">{activeKit.description}</p>
+              </span>
+              <h2 className="text-xl font-extrabold text-text tracking-tight">{activeKit.name}</h2>
+              <p className="text-xs text-text-muted leading-relaxed max-w-xl">
+                {activeKit.description}
+              </p>
             </div>
-            <div className="space-y-1 text-xs">
+            <div className="text-xs text-text-muted space-y-1 md:text-right border-t md:border-t-0 md:border-l border-border pt-3 md:pt-0 md:pl-6">
               <div>
-                <span className="text-text-muted">Brand Voice: </span>
-                <span className="font-medium text-text">{activeKit.voice_tone}</span>
+                <strong className="text-text">Voice & Tone: </strong>
+                {activeKit.voice_tone}
               </div>
               <div>
-                <span className="text-text-muted">Target Reading Level: </span>
-                <span className="font-medium text-text">Grade {activeKit.target_reading_level}</span>
+                <strong className="text-text">Reading Level Target: </strong>
+                Grade {activeKit.target_reading_level}
               </div>
             </div>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="flex border-b border-border space-x-4 text-xs">
-            <button
-              onClick={() => setActiveTab('rules')}
-              className={`pb-2.5 font-medium transition-colors border-b-2 ${
-                activeTab === 'rules'
-                  ? 'border-accent text-accent font-semibold'
-                  : 'border-transparent text-text-muted hover:text-text'
-              }`}
-            >
-              All Rules ({activeKit.rules.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('facts')}
-              className={`pb-2.5 font-medium transition-colors border-b-2 ${
-                activeTab === 'facts'
-                  ? 'border-accent text-accent font-semibold'
-                  : 'border-transparent text-text-muted hover:text-text'
-              }`}
-            >
-              Facts Register ({activeKit.facts.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('claims')}
-              className={`pb-2.5 font-medium transition-colors border-b-2 ${
-                activeTab === 'claims'
-                  ? 'border-accent text-accent font-semibold'
-                  : 'border-transparent text-text-muted hover:text-text'
-              }`}
-            >
-              Claims Policy
-            </button>
-            <button
-              onClick={() => setActiveTab('glossary')}
-              className={`pb-2.5 font-medium transition-colors border-b-2 ${
-                activeTab === 'glossary'
-                  ? 'border-accent text-accent font-semibold'
-                  : 'border-transparent text-text-muted hover:text-text'
-              }`}
-            >
-              Glossary
-            </button>
-          </div>
+          {/* Navigation PillTabs */}
+          <PillTabs
+            tabs={tabs}
+            activeTab={activeTab}
+            onChange={setActiveTab}
+          />
 
-          {/* Tab Content: Rules */}
+          {/* TAB 1: RULES & GUIDELINES */}
           {activeTab === 'rules' && (
-            <div className="space-y-3">
-              {activeKit.rules.map((r) => (
-                <div key={r.id} className="p-4 rounded-card border border-border bg-surface space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-mono text-xs font-bold text-accent">{r.id}</span>
-                      <span className="text-xs font-semibold text-text">{r.title}</span>
-                      <span className="text-[11px] px-2 py-0.5 rounded bg-surface-2 text-text-muted uppercase font-medium">
-                        {r.category}
-                      </span>
-                    </div>
+            <div className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-border/60">
+                <span className="text-xs font-bold text-text uppercase tracking-wider">
+                  Active Brand Rules
+                </span>
+                <span className="text-[11px] text-text-muted">
+                  {role === 'Brand manager' || role === 'Admin'
+                    ? 'Click edit to publish a new rule version'
+                    : 'Read-only view (Brand manager role required to edit)'}
+                </span>
+              </div>
 
-                    <div className="flex items-center space-x-2">
-                      <span className="text-[11px] font-mono text-text-muted">v{r.version}</span>
-                      {role === 'Brand manager' && (
+              <div className="divide-y divide-border/60">
+                {activeKit.rules.map((rule) => (
+                  <div key={rule.id} className="py-4 space-y-2 first:pt-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center space-x-2">
+                        <Chip variant="accent" size="sm">
+                          {rule.id}
+                        </Chip>
+                        <span className="text-xs font-bold text-text">{rule.title}</span>
+                        <Chip
+                          variant={
+                            rule.severity === 'Blocker'
+                              ? 'danger'
+                              : rule.severity === 'Major'
+                              ? 'accent'
+                              : 'neutral'
+                          }
+                          size="sm"
+                        >
+                          {rule.severity}
+                        </Chip>
+                      </div>
+
+                      {(role === 'Brand manager' || role === 'Admin') && (
                         <button
-                          onClick={() => openEditModal(r)}
-                          className="p-1 rounded text-text-muted hover:text-accent hover:bg-surface-2"
+                          type="button"
+                          onClick={() => openEditModal(rule)}
+                          className="p-1.5 rounded-pill text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
                           title="Edit rule and publish new version"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
-                  </div>
 
-                  <p className="text-xs text-text-muted leading-relaxed">{r.text}</p>
+                    <p className="text-xs text-text-muted leading-relaxed">{rule.text}</p>
 
-                  <div className="pt-2 border-t border-border flex flex-wrap items-center justify-between text-[11px] text-text-muted gap-2">
-                    <div>Source: {r.source}</div>
-                    <div>
-                      Owner: {r.owner} · Effective: {r.effective_from}
+                    <div className="flex items-center space-x-3 text-[11px] font-mono text-text-muted">
+                      <span>Category: {rule.category}</span>
+                      <span>·</span>
+                      <span>v{rule.version}</span>
+                      <span>·</span>
+                      <span>Owner: {rule.owner}</span>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Tab Content: Facts Register */}
+          {/* TAB 2: FACTS REGISTER */}
           {activeTab === 'facts' && (
-            <div className="space-y-3">
-              {activeKit.facts.map((f) => (
-                <div key={f.id} className="p-4 rounded-card border border-border bg-surface space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-mono text-xs font-bold text-accent">{f.id}</span>
-                      <span className="text-xs font-semibold text-text">{f.subject}</span>
-                    </div>
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
-                        f.status === 'active'
-                          ? 'bg-success/15 text-success'
-                          : 'bg-danger/10 text-danger'
-                      }`}
-                    >
-                      {f.status}
-                    </span>
-                  </div>
+            <div className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3">
+              <div className="pb-2 border-b border-border/60">
+                <span className="text-xs font-bold text-text uppercase tracking-wider">
+                  Approved Facts Register
+                </span>
+              </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-text-muted">Approved Value: </span>
-                      <span className="font-mono font-medium text-text">{f.value}</span>
-                    </div>
-                    <div>
-                      <span className="text-text-muted">Validity Window: </span>
-                      <span className="text-text">
-                        {f.valid_from} to {f.valid_to}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="text-xs text-text-muted">
-                    <span className="font-medium text-text">Permitted Wording: </span>
-                    <span>&ldquo;{f.permitted_wording}&rdquo;</span>
-                  </div>
-
-                  <div className="pt-2 border-t border-border text-[11px] text-text-muted flex justify-between">
-                    <span>Source: {f.source}</span>
-                    <span>Owner: {f.owner}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Tab Content: Claims Policy */}
-          {activeTab === 'claims' && (
-            <div className="space-y-3">
-              {activeKit.rules
-                .filter((r) => r.category === 'Promotional claims')
-                .map((r) => (
-                  <div key={r.id} className="p-4 rounded-card border border-border bg-surface space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-mono text-xs font-bold text-accent">{r.id}</span>
-                      <span className="text-xs font-semibold text-text">{r.title}</span>
-                    </div>
-                    <p className="text-xs text-text-muted">{r.text}</p>
-                  </div>
-                ))}
-            </div>
-          )}
-
-          {/* Tab Content: Glossary */}
-          {activeTab === 'glossary' && (
-            <div className="space-y-3">
-              {activeKit.rules
-                .filter((r) => r.category === 'Terminology')
-                .map((r) => (
-                  <div key={r.id} className="p-4 rounded-card border border-border bg-surface space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-mono text-xs font-bold text-accent">{r.id}</span>
-                      <span className="text-xs font-semibold text-text">{r.title}</span>
-                    </div>
-                    <p className="text-xs text-text-muted">{r.text}</p>
-                    {r.banned_terms && r.banned_terms.length > 0 && (
-                      <div className="flex items-center space-x-1.5 text-xs">
-                        <span className="text-text-muted">Prohibited Words:</span>
-                        {r.banned_terms.map((w) => (
-                          <span
-                            key={w}
-                            className="px-1.5 py-0.5 rounded bg-danger/10 text-danger text-[11px] font-mono"
-                          >
-                            {w}
-                          </span>
-                        ))}
+              <div className="divide-y divide-border/60">
+                {activeKit.facts.map((fact) => (
+                  <div key={fact.id} className="py-4 space-y-2 first:pt-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center space-x-2">
+                        <Chip variant="accent" size="sm">
+                          {fact.id}
+                        </Chip>
+                        <span className="text-xs font-bold text-text">{fact.subject}</span>
                       </div>
-                    )}
+                      <Chip variant={fact.status === 'active' ? 'success' : 'neutral'} size="sm">
+                        {fact.status}
+                      </Chip>
+                    </div>
+
+                    <div className="p-3 rounded-inner bg-surface-2 font-mono text-xs text-text">
+                      <strong className="text-orange-text">Permitted wording:</strong> &ldquo;{fact.permitted_wording}&rdquo;
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-text-muted">
+                      <span>Value: {fact.value}</span>
+                      <span>·</span>
+                      <span>Valid: {fact.valid_from} to {fact.valid_to}</span>
+                      <span>·</span>
+                      <span>Source: {fact.source}</span>
+                    </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: TERMINOLOGY */}
+          {activeTab === 'glossary' && (
+            <div className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3">
+              <div className="divide-y divide-border/60">
+                {activeKit.rules
+                  .filter((r) => r.category === 'Terminology')
+                  .map((rule) => (
+                    <div key={rule.id} className="py-3.5 space-y-1.5 first:pt-1">
+                      <div className="flex items-center space-x-2">
+                        <Chip variant="accent" size="sm">
+                          {rule.id}
+                        </Chip>
+                        <span className="text-xs font-bold text-text">{rule.title}</span>
+                      </div>
+                      <p className="text-xs text-text-muted">{rule.text}</p>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: CLAIMS POLICY */}
+          {activeTab === 'claims' && (
+            <div className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3">
+              <div className="divide-y divide-border/60">
+                {activeKit.rules
+                  .filter((r) => r.category === 'Promotional claims' || r.category === 'Messaging')
+                  .map((rule) => (
+                    <div key={rule.id} className="py-3.5 space-y-1.5 first:pt-1">
+                      <div className="flex items-center space-x-2">
+                        <Chip variant="accent" size="sm">
+                          {rule.id}
+                        </Chip>
+                        <span className="text-xs font-bold text-text">{rule.title}</span>
+                        <Chip variant={rule.severity === 'Blocker' ? 'danger' : 'accent'} size="sm">
+                          {rule.severity}
+                        </Chip>
+                      </div>
+                      <p className="text-xs text-text-muted">{rule.text}</p>
+                    </div>
+                  ))}
+              </div>
             </div>
           )}
         </div>
@@ -298,34 +321,40 @@ export const BrandHub: React.FC = () => {
 
       {/* Edit Rule Modal */}
       {editingRule && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="w-full max-w-md p-5 rounded-card bg-surface border border-border shadow-lg space-y-4">
-            <h3 className="text-sm font-bold text-text">Edit Rule {editingRule.id}</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="w-full max-w-md p-6 rounded-card bg-surface border border-border shadow-2xl space-y-4">
+            <h3 className="text-base font-bold text-text">
+              Edit Rule {editingRule.id} (Version {editingRule.version})
+            </h3>
 
-            {editError && <div className="p-2 rounded bg-danger/10 text-danger text-xs">{editError}</div>}
+            {editError && (
+              <div className="p-3 rounded-inner bg-danger/10 text-danger text-xs font-medium">
+                {editError}
+              </div>
+            )}
 
-            <div>
-              <label className="block text-xs font-medium text-text mb-1">Title</label>
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-text">Rule Title</label>
               <input
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-btn border border-border bg-surface-2 text-xs text-text"
+                className="w-full px-3.5 py-1.5 rounded-pill border border-border bg-surface-2 text-xs text-text focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-text mb-1">Specification Text</label>
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-text">Rule Text & Guidance</label>
               <textarea
                 rows={3}
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
-                className="w-full p-2.5 rounded-btn border border-border bg-surface-2 text-xs text-text"
+                className="w-full p-3 rounded-inner border border-border bg-surface-2 text-xs text-text focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-text mb-1">
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-text">
                 Version Change Reason (Mandatory)
               </label>
               <input
@@ -333,21 +362,23 @@ export const BrandHub: React.FC = () => {
                 placeholder="e.g. Updated for seasonal campaign guidance"
                 value={editReason}
                 onChange={(e) => setEditReason(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-btn border border-border bg-surface-2 text-xs text-text"
+                className="w-full px-3.5 py-1.5 rounded-pill border border-border bg-surface-2 text-xs text-text focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
 
-            <div className="flex items-center justify-end space-x-2 pt-2">
+            <div className="flex items-center justify-end space-x-2.5 pt-2">
               <button
+                type="button"
                 onClick={() => setEditingRule(null)}
-                className="px-3 py-1.5 rounded-btn border border-border text-xs text-text hover:bg-surface-2"
+                className="px-4 py-2 rounded-pill border border-border text-xs text-text hover:bg-surface-2"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={() => updateRuleMutation.mutate()}
                 disabled={updateRuleMutation.isPending || !editReason.trim()}
-                className="px-4 py-1.5 rounded-btn bg-accent text-white text-xs font-medium disabled:opacity-50"
+                className="px-5 py-2 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold disabled:opacity-50 shadow-sm"
               >
                 {updateRuleMutation.isPending ? 'Publishing...' : 'Publish New Version'}
               </button>
