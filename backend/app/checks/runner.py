@@ -43,4 +43,3 @@ def run_deterministic_checks(ctx: CheckContext) -> list[Finding]:
     # Sort by severity (Blocker -> Major -> Minor -> Info) and then start offset
     deduped.sort(key=lambda x: (SEVERITY_ORDER.get(x.severity, 4), x.start))
     return deduped
-

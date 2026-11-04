@@ -42,7 +42,7 @@ def test_hallucination_guard_drops_fake_ids():
             "version": "1.0",
         }
     ]
-    facts = []
+    facts: list[dict[str, str]] = []
     purpose = PurposeCard(
         goal="Test",
         audience="Test",

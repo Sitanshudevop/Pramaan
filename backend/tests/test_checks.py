@@ -116,7 +116,10 @@ def test_messaging_mandatory_disclaimer(kettle_rules_and_facts):
     findings = check_messaging(ctx)
     assert len(findings) == 1
     assert findings[0].rule_id == "MSG-001"
-    assert "Offer valid while stocks last" in findings[0].suggestion
+    assert (
+        findings[0].suggestion is not None
+        and "Offer valid while stocks last" in findings[0].suggestion
+    )
 
 
 def test_health_claims_and_superlatives(kettle_rules_and_facts):
@@ -201,4 +204,7 @@ def test_ai_disclosure_required_when_declared(kettle_rules_and_facts):
     findings = check_disclosure(ctx)
     assert len(findings) == 1
     assert findings[0].rule_id == "AI-001"
-    assert "Created with AI assistance" in findings[0].suggestion
+    assert (
+        findings[0].suggestion is not None
+        and "Created with AI assistance" in findings[0].suggestion
+    )

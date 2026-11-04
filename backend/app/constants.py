@@ -81,4 +81,3 @@ PASS_EXPLANATION_SENTENCE: str = (
 CERTIFICATE_LEGAL_NOTICE: str = (
     "Approval records a human decision; it is not a legal compliance certification."
 )
-

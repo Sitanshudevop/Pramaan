@@ -10,6 +10,8 @@ jobs:
   backend-test:
     name: Backend Lint, Type-Check & Tests
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: backend
     steps:
       - uses: actions/checkout@v4
 
@@ -50,7 +52,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm ci
+        run: npm ci || npm install
 
       - name: Run Type-Check
         working-directory: frontend
@@ -63,4 +65,3 @@ jobs:
       - name: Build Frontend
         working-directory: frontend
         run: npm run build
-
