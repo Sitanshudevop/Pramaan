@@ -33,3 +33,4 @@ class AIProvider(ABC):
     ) -> AIProviderResult:
         """Evaluate content passage against retrieved active rules and facts."""
         pass
+

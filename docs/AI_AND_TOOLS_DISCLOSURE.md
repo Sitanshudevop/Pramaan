@@ -54,3 +54,4 @@ In accordance with CodeNexus India 2026 rules and Section 13/15 of `PROMPT_ANTIG
 ## 4. Fictional Data Disclosure
 
 All brand kits (`Kettle & Co.`, `LedgerLeaf`), brand rules, guidelines, facts register entries, sample draft content, and simulated reviewer events are entirely fictional and authored specifically for the CodeNexus 2026 hackathon demonstration. Any resemblance to real commercial entities or living individuals is purely coincidental.
+

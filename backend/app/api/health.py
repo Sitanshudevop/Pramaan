@@ -9,3 +9,4 @@ router = APIRouter(tags=["health"])
 def health_check() -> dict[str, str]:
     """Calm health check endpoint for uptime probes."""
     return {"status": "ok"}
+

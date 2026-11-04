@@ -20,3 +20,4 @@ As specified in the project roadmap, these three high-impact improvements are sc
 - Expand beyond text and static image contrast/palette checks into comprehensive multi-modal governance:
   - Sandboxed PDF/DOCX layout parsing with typographic hierarchy and brand font validation.
   - Video asset compliance: automated audio track transcription, on-screen text (OCR) extraction, logo safe-margin detection, and strobe/photosensitivity checks (WCAG 2.3.1).
+

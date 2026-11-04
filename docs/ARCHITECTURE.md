@@ -98,3 +98,4 @@ When a creator submits text and a purpose card to `POST /api/reviews`:
 - **Proof-or-Abstain Principle**: Rather than relying on AI self-consistency, verification happens strictly in deterministic Python code. A finding without valid evidence is dropped or flagged for human review.
 - **Role Switcher with Server-Side Enforcement**: Eliminates authentication friction for judges while maintaining zero-trust server boundaries via `require(permission)` dependencies on every mutating route.
 - **Single Accent Color Theme System**: Modern, editorial design system using CSS variables with strict WCAG AA contrast (4.5:1) in both light and dark themes. Zero external font layout shifts via fallback system stacks.
+
