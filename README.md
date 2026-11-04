@@ -1,7 +1,7 @@
 # Pramaan (प्रमाण)
 ### Evidence-Backed Brand Governance Platform for Pre-Publication Content Review
 
-[![CI](https://github.com/sitanshukumark/Pramaan/actions/workflows/ci.yml/badge.svg)](https://github.com/sitanshukumark/Pramaan/actions/workflows/ci.yml)
+[![CI](https://github.com/Sitanshudevop/Pramaan/actions/workflows/ci.yml/badge.svg)](https://github.com/Sitanshudevop/Pramaan/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB.svg?logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -71,7 +71,7 @@ You can test Pramaan immediately in any browser (including Incognito) with **zer
 ### Backend Setup
 ```bash
 # Clone the repository
-git clone https://github.com/sitanshukumark/Pramaan.git
+git clone https://github.com/Sitanshudevop/Pramaan.git
 cd Pramaan
 
 # Create and activate virtual environment
