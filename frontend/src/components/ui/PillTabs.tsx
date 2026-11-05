@@ -56,6 +56,7 @@ export const PillTabs: React.FC<PillTabsProps> = ({
         return (
           <button
             key={tab.id}
+            type="button"
             role="tab"
             aria-selected={isActive}
             tabIndex={isActive ? 0 : -1}
@@ -83,3 +84,4 @@ export const PillTabs: React.FC<PillTabsProps> = ({
     </div>
   );
 };
+

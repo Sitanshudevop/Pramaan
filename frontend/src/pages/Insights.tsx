@@ -6,7 +6,7 @@ import { useApp } from '../lib/context';
 import { GaugeCard, BarChart, PillSelect, Chip, StatCard } from '../components/ui';
 
 export const Insights: React.FC = () => {
-  const { role } = useApp();
+  const { role, setRole } = useApp();
   const [selectedKit, setSelectedKit] = useState<string>('');
 
   const { data: kits } = useQuery({
@@ -14,9 +14,10 @@ export const Insights: React.FC = () => {
     queryFn: () => getBrandKits(role),
   });
 
-  const { data: insights, isLoading } = useQuery({
+  const { data: insights, isLoading, error, refetch } = useQuery({
     queryKey: ['insights', role, selectedKit],
     queryFn: () => getInsights(role, selectedKit || undefined),
+    retry: false,
   });
 
   const kitOptions = [
@@ -70,6 +71,36 @@ export const Insights: React.FC = () => {
       {isLoading ? (
         <div className="py-24 text-center text-xs text-text-muted font-mono">
           Aggregating governance metrics from simulated events...
+        </div>
+      ) : role === 'Creator' || error ? (
+        <div className="p-8 rounded-card border border-border bg-surface text-center space-y-4 shadow-floating max-w-lg mx-auto">
+          <div className="w-10 h-10 rounded-full bg-orange-500/10 text-orange-text flex items-center justify-center mx-auto">
+            <Info className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-text">Governance Insights Restricted</h2>
+            <p className="text-xs text-text-muted mt-1 leading-relaxed">
+              Aggregate compliance radar and ambiguity scores require <strong>Reviewer</strong>, <strong>Brand manager</strong>, or <strong>Admin</strong> permissions.
+            </p>
+          </div>
+          <div className="pt-2 flex items-center justify-center space-x-3">
+            <button
+              type="button"
+              onClick={() => setRole('Reviewer')}
+              className="px-4 py-2 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-90 shadow-sm"
+            >
+              Switch to Reviewer Role
+            </button>
+            {error && (
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="px-4 py-2 rounded-pill border border-border bg-surface text-text hover:bg-surface-2 text-xs font-medium"
+              >
+                Retry Request
+              </button>
+            )}
+          </div>
         </div>
       ) : !insights ? (
         <div className="p-8 rounded-card border border-border bg-surface text-center text-xs text-text-muted">

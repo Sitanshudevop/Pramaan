@@ -48,7 +48,7 @@ def check_claims(ctx: CheckContext) -> list[Finding]:
 
                 findings.append(
                     Finding(
-                        id=f"find-claim-42-{ctx.review_id}-v{ctx.version}-{start}",
+                        id=f"find-claim-42-{ctx.review_id}-v{ctx.version}-{start}-{end}",
                         review_id=ctx.review_id,
                         version=ctx.version,
                         category="Promotional claims",
@@ -90,7 +90,7 @@ def check_claims(ctx: CheckContext) -> list[Finding]:
                 if not substantiated:
                     findings.append(
                         Finding(
-                            id=f"find-claim-31-{ctx.review_id}-v{ctx.version}-{start}",
+                            id=f"find-claim-31-{ctx.review_id}-v{ctx.version}-{start}-{end}",
                             review_id=ctx.review_id,
                             version=ctx.version,
                             category="Promotional claims",
@@ -131,7 +131,7 @@ def check_claims(ctx: CheckContext) -> list[Finding]:
                 if not substantiated:
                     findings.append(
                         Finding(
-                            id=f"find-claim-abs-{ctx.review_id}-v{ctx.version}-{start}",
+                            id=f"find-claim-abs-{ctx.review_id}-v{ctx.version}-{start}-{end}",
                             review_id=ctx.review_id,
                             version=ctx.version,
                             category="Promotional claims",
@@ -168,7 +168,7 @@ def check_claims(ctx: CheckContext) -> list[Finding]:
                 matched = match.group(0)
                 findings.append(
                     Finding(
-                        id=f"find-claim-11-{ctx.review_id}-v{ctx.version}-{start}",
+                        id=f"find-claim-11-{ctx.review_id}-v{ctx.version}-{start}-{end}",
                         review_id=ctx.review_id,
                         version=ctx.version,
                         category="Promotional claims",

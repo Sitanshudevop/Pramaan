@@ -204,7 +204,7 @@ export const BrandHub: React.FC = () => {
                         </Chip>
                       </div>
 
-                      {(role === 'Brand manager' || role === 'Admin') && (
+                      {role === 'Brand manager' || role === 'Admin' ? (
                         <button
                           type="button"
                           onClick={() => openEditModal(rule)}
@@ -213,6 +213,13 @@ export const BrandHub: React.FC = () => {
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
+                      ) : (
+                        <span
+                          className="text-[10px] text-text-muted opacity-60 font-medium"
+                          title="Editing guidelines requires Brand manager role. Switch role in the top bar."
+                        >
+                          Manager only
+                        </span>
                       )}
                     </div>
 
@@ -366,22 +373,29 @@ export const BrandHub: React.FC = () => {
               />
             </div>
 
-            <div className="flex items-center justify-end space-x-2.5 pt-2">
-              <button
-                type="button"
-                onClick={() => setEditingRule(null)}
-                className="px-4 py-2 rounded-pill border border-border text-xs text-text hover:bg-surface-2"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => updateRuleMutation.mutate()}
-                disabled={updateRuleMutation.isPending || !editReason.trim()}
-                className="px-5 py-2 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold disabled:opacity-50 shadow-sm"
-              >
-                {updateRuleMutation.isPending ? 'Publishing...' : 'Publish New Version'}
-              </button>
+            <div className="flex items-center justify-between pt-2">
+              {!editReason.trim() ? (
+                <span className="text-[11px] text-orange-text font-medium">Change reason required</span>
+              ) : <span />}
+
+              <div className="flex items-center space-x-2.5">
+                <button
+                  type="button"
+                  onClick={() => setEditingRule(null)}
+                  className="px-4 py-2 rounded-pill border border-border text-xs text-text hover:bg-surface-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateRuleMutation.mutate()}
+                  disabled={updateRuleMutation.isPending || !editReason.trim()}
+                  title={!editReason.trim() ? 'Enter a version change reason above' : undefined}
+                  className="px-5 py-2 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold disabled:opacity-50 shadow-sm"
+                >
+                  {updateRuleMutation.isPending ? 'Publishing...' : 'Publish New Version'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

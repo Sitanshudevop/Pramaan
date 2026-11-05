@@ -143,17 +143,23 @@ class ReviewService:
 
         # 6. Combine and de-duplicate findings
         final_findings: list[Finding] = []
-        seen_spans: set[tuple[int, int]] = set()
+        seen_ids: set[str] = set()
 
-        # Deterministic findings take priority
         for df in deterministic_findings:
-            seen_spans.add((df.start, df.end))
+            f_id = df.id
+            if f_id in seen_ids:
+                f_id = f"{f_id}-{len(seen_ids)}"
+                df.id = f_id
+            seen_ids.add(f_id)
             final_findings.append(df)
 
         for af in verified_ai_findings:
-            if (af.start, af.end) not in seen_spans:
-                seen_spans.add((af.start, af.end))
-                final_findings.append(af)
+            f_id = af.id
+            if f_id in seen_ids:
+                f_id = f"{f_id}-{len(seen_ids)}"
+                af.id = f_id
+            seen_ids.add(f_id)
+            final_findings.append(af)
 
         # Persist findings
         self.review_repo.save_findings(final_findings)

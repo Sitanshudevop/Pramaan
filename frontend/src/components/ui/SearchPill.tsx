@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
 
-export interface SearchPillProps {
+export interface SearchPillProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
   value: string;
   onChange: (val: string) => void;
   placeholder?: string;
@@ -18,17 +18,21 @@ export const SearchPill: React.FC<SearchPillProps> = ({
   placeholder = 'Search...',
   ariaLabel = 'Search',
   className = '',
+  disabled,
+  ...rest
 }) => {
   return (
-    <div className={`relative inline-flex items-center ${className}`}>
+    <div className={`relative inline-flex items-center ${className} ${disabled ? 'opacity-50' : ''}`}>
       <Search className="w-3.5 h-3.5 text-text-muted absolute left-3.5 pointer-events-none" />
       <input
         type="text"
+        disabled={disabled}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={ariaLabel}
-        className="w-full rounded-pill bg-surface border border-border text-text placeholder:text-text-muted/70 text-xs pl-9 pr-8 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium hover:border-text-muted/50 transition-colors"
+        className="w-full rounded-pill bg-surface border border-border text-text placeholder:text-text-muted/70 text-xs pl-9 pr-8 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium hover:border-text-muted/50 transition-colors disabled:cursor-not-allowed"
+        {...rest}
       />
       {value && (
         <button
@@ -43,3 +47,4 @@ export const SearchPill: React.FC<SearchPillProps> = ({
     </div>
   );
 };
+

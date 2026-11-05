@@ -122,3 +122,4 @@ export const GaugeCard: React.FC<GaugeCardProps> = ({
     </div>
   );
 };
+

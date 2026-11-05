@@ -2,7 +2,7 @@ import React from 'react';
 
 export type ChipVariant = 'neutral' | 'accent' | 'success' | 'outline' | 'dark' | 'danger';
 
-export interface ChipProps {
+export interface ChipProps extends React.HTMLAttributes<HTMLSpanElement> {
   children: React.ReactNode;
   variant?: ChipVariant;
   icon?: React.ReactNode;
@@ -21,6 +21,8 @@ export const Chip: React.FC<ChipProps> = ({
   dot,
   className = '',
   size = 'md',
+  onClick,
+  ...rest
 }) => {
   const sizeClasses = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs';
 
@@ -33,9 +35,27 @@ export const Chip: React.FC<ChipProps> = ({
     danger: 'bg-danger/10 text-danger border border-danger/30 font-medium',
   }[variant];
 
+  const clickableClasses = onClick
+    ? 'cursor-pointer hover:opacity-90 active:scale-[0.98] select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500'
+    : '';
+
   return (
     <span
-      className={`inline-flex items-center space-x-1.5 rounded-pill tracking-tight transition-colors ${sizeClasses} ${variantClasses} ${className}`}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick(e as unknown as React.MouseEvent<HTMLSpanElement>);
+              }
+            }
+          : undefined
+      }
+      className={`inline-flex items-center space-x-1.5 rounded-pill tracking-tight transition-colors ${sizeClasses} ${variantClasses} ${clickableClasses} ${className}`}
+      {...rest}
     >
       {dot && (
         <span
@@ -56,3 +76,4 @@ export const Chip: React.FC<ChipProps> = ({
     </span>
   );
 };
+

@@ -140,8 +140,16 @@ export const ReviewQueue: React.FC = () => {
                   return (
                     <tr
                       key={r.id}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => navigate(`/app/review/${r.id}`)}
-                      className="hover:bg-surface-2 transition-colors cursor-pointer group rounded-inner"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          navigate(`/app/review/${r.id}`);
+                        }
+                      }}
+                      className="hover:bg-surface-2 transition-colors cursor-pointer group rounded-inner focus:outline-none focus-visible:bg-surface-2"
                     >
                       <td className="py-3.5 px-4 font-mono font-bold text-orange-text">
                         {r.id}
@@ -211,8 +219,16 @@ export const ReviewQueue: React.FC = () => {
               return (
                 <div
                   key={r.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => navigate(`/app/review/${r.id}`)}
-                  className="p-4 rounded-inner bg-surface-2 border border-border/80 space-y-2 cursor-pointer"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(`/app/review/${r.id}`);
+                    }
+                  }}
+                  className="p-4 rounded-inner bg-surface-2 border border-border/80 space-y-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-bold text-xs text-orange-text">{r.id}</span>

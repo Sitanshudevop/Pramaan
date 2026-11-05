@@ -227,15 +227,28 @@ export const ReviewFindings: React.FC = () => {
             <span>Certificate (HTML/PDF)</span>
           </a>
 
-          {(role === 'Brand manager' || role === 'Admin') && review.status !== 'Approved' && (
-            <button
-              onClick={() => approvalMutation.mutate('Approved')}
-              disabled={approvalMutation.isPending || (blockerCount > 0 && role !== 'Brand manager')}
-              className="inline-flex items-center space-x-1.5 px-5 py-2 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-95 shadow-sm transition-all"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Approve Review</span>
-            </button>
+          {review.status !== 'Approved' && (
+            role === 'Brand manager' || role === 'Admin' ? (
+              <button
+                type="button"
+                onClick={() => approvalMutation.mutate('Approved')}
+                disabled={approvalMutation.isPending || (blockerCount > 0 && role !== 'Brand manager')}
+                className="inline-flex items-center space-x-1.5 px-5 py-2 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-95 shadow-sm transition-all"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Approve Review</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled
+                title="Reviewer or Brand manager only. Switch role in the top bar."
+                className="inline-flex items-center space-x-1.5 px-5 py-2 rounded-pill border border-border text-text-muted text-xs font-medium cursor-not-allowed opacity-60"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Approve (Manager only)</span>
+              </button>
+            )
           )}
         </div>
       </div>
@@ -441,6 +454,7 @@ export const ReviewFindings: React.FC = () => {
                         <div className="flex flex-wrap items-center gap-2 pt-1">
                           {f.suggestion && (
                             <button
+                              type="button"
                               onClick={() => openActionModal(f, 'accept')}
                               className="px-3.5 py-1.5 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-90 shadow-xs"
                             >
@@ -448,23 +462,35 @@ export const ReviewFindings: React.FC = () => {
                             </button>
                           )}
                           <button
+                            type="button"
                             onClick={() => openActionModal(f, 'edit')}
                             className="px-3.5 py-1.5 rounded-pill border border-border bg-surface text-text hover:bg-surface-2 text-xs font-medium"
                           >
                             Edit
                           </button>
                           <button
+                            type="button"
                             onClick={() => openActionModal(f, 'dismiss')}
                             className="px-3 py-1.5 rounded-pill text-text-muted hover:text-text text-xs"
                           >
                             Dismiss
                           </button>
-                          {(role === 'Reviewer' || role === 'Brand manager') && (
+                          {role === 'Reviewer' || role === 'Brand manager' ? (
                             <button
+                              type="button"
                               onClick={() => openActionModal(f, 'override')}
-                              className="px-3 py-1.5 rounded-pill bg-orange-500/10 text-orange-text border border-orange-500/30 text-xs font-medium ml-auto"
+                              className="px-3 py-1.5 rounded-pill bg-orange-500/10 text-orange-text border border-orange-500/30 text-xs font-medium ml-auto hover:bg-orange-500/20"
                             >
                               Override Finding
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              title="Reviewer or Brand manager only. Switch role in the top bar."
+                              className="px-3 py-1.5 rounded-pill text-text-muted/60 text-xs font-medium ml-auto cursor-not-allowed border border-border/40"
+                            >
+                              Override (Reviewer only)
                             </button>
                           )}
                         </div>
@@ -678,26 +704,37 @@ export const ReviewFindings: React.FC = () => {
               </div>
             )}
 
-            <div className="flex items-center justify-end space-x-2.5 pt-2">
-              <button
-                type="button"
-                onClick={closeActionModal}
-                className="px-4 py-2 rounded-pill border border-border text-xs text-text hover:bg-surface-2"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => actMutation.mutate()}
-                disabled={
-                  actMutation.isPending ||
-                  ((actionType === 'dismiss' || actionType === 'override') &&
-                    !reasonInput.trim())
-                }
-                className="px-5 py-2 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-95 disabled:opacity-50 shadow-sm"
-              >
-                {actMutation.isPending ? 'Applying...' : 'Confirm'}
-              </button>
+            <div className="flex items-center justify-between pt-2">
+              {(actionType === 'dismiss' || actionType === 'override') && !reasonInput.trim() ? (
+                <span className="text-[11px] text-orange-text font-medium">Justification reason required</span>
+              ) : <span />}
+
+              <div className="flex items-center space-x-2.5">
+                <button
+                  type="button"
+                  onClick={closeActionModal}
+                  className="px-4 py-2 rounded-pill border border-border text-xs text-text hover:bg-surface-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => actMutation.mutate()}
+                  disabled={
+                    actMutation.isPending ||
+                    ((actionType === 'dismiss' || actionType === 'override') &&
+                      !reasonInput.trim())
+                  }
+                  title={
+                    (actionType === 'dismiss' || actionType === 'override') && !reasonInput.trim()
+                      ? 'Please enter a mandatory justification reason above'
+                      : undefined
+                  }
+                  className="px-5 py-2 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-95 disabled:opacity-50 shadow-sm"
+                >
+                  {actMutation.isPending ? 'Applying...' : 'Confirm'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

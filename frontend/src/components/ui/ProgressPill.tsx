@@ -49,3 +49,4 @@ export const ProgressPill: React.FC<ProgressPillProps> = ({
     </div>
   );
 };
+

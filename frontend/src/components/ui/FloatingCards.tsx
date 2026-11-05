@@ -20,7 +20,7 @@ export const FloatingCards: React.FC<FloatingCardsProps> = ({
 }) => {
   return (
     <div
-      className={`relative w-full max-w-[420px] h-[340px] flex items-center justify-center select-none ${className}`}
+      className={`relative w-full max-w-[420px] h-[340px] flex items-center justify-center select-none pointer-events-none ${className}`}
       aria-hidden="true"
     >
       {/* Background card: Brand Knowledge Hub snapshot */}
@@ -106,3 +106,4 @@ export const FloatingCards: React.FC<FloatingCardsProps> = ({
     </div>
   );
 };
+
