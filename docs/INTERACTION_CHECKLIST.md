@@ -9,26 +9,31 @@ This document catalogs every interactive element across Pramaan, its trigger, an
 | Component | Element / Selector | Trigger | Expected Result | Role-Gated Behavior |
 |---|---|---|---|---|
 | **Logo** | `header a[href="/"]` or sidebar logo | Click | Navigates to `/` (Home), updates URL and view | None |
-| **Sidebar Navigation** | NavLink `Home` (`/`) | Click | Navigates to `/`, sets active solid pill, loads Home view | None |
-| **Sidebar Navigation** | NavLink `New Review` (`/app/new`) | Click | Navigates to `/app/new`, loads New Review form | None |
-| **Sidebar Navigation** | NavLink `Review Queue` (`/app/queue`) | Click | Navigates to `/app/queue`, loads review table | None |
+| **Sidebar Navigation** | NavLink `Home` (`/`) | Click | Navigates to `/`, sets active soft tint, loads Home view | None |
+| **Sidebar Navigation** | NavLink `New review` (`/app/new`) | Click | Navigates to `/app/new`, loads New Review form | None |
+| **Sidebar Navigation** | NavLink `Review queue` (`/app/queue`) | Click | Navigates to `/app/queue`, loads review table | None |
 | **Sidebar Navigation** | NavLink `Brand Hub` (`/app/hub`) | Click | Navigates to `/app/hub`, loads Brand Guidelines & Rules | None |
-| **Sidebar Navigation** | NavLink `Audit & Disclosure` (`/app/audit`) | Click | Navigates to `/app/audit`, loads Audit Ledger | None |
-| **Sidebar Navigation** | NavLink `Brand Insights` (`/app/insights`) | Click | Navigates to `/app/insights`, loads analytics radar | Requires Reviewer/Manager/Admin |
+| **Sidebar Navigation** | NavLink `Audit & disclosure` (`/app/audit`) | Click | Navigates to `/app/audit`, loads Audit Ledger | None |
+| **Sidebar Navigation** | NavLink `Insights` (`/app/insights`) | Click | Navigates to `/app/insights`, loads analytics radar | Requires Reviewer/Manager/Admin |
+| **Sidebar Navigation** | NavLink `About Pramaan` (`/about`) | Click | Navigates to `/about`, loads About & Disclosures page | None |
 | **TopBar Drawer Toggle** | Button `[aria-label="Toggle navigation drawer"]` | Click | Opens/closes mobile drawer on `< 1024px` | Mobile/tablet only |
 | **Confidential Toggle** | TopBar button (Confidential Chip) | Click | Toggles Confidential Mode between ON and OFF; sends `X-Confidential-Mode` | None |
 | **Demo Role Switcher** | TopBar `select[aria-label="Demo Role Switcher"]` | Change | Switches active role (`Creator`, `Reviewer`, `Brand manager`, `Admin`); updates permissions | None |
 | **Theme Toggle** | TopBar button `[aria-label^="Cycle theme"]` | Click | Cycles theme between `light`, `dark`, and `system`; persists in localStorage | None |
+| **Demo Notice Strip** | Dismiss button `[aria-label="Dismiss notice"]` | Click | Dismisses demo notice strip and persists dismissal in localStorage | None |
 
 ---
 
-## 2. Home Page (`/`)
+## 2. Home Page (`/`) & About Page (`/about`)
 
 | Element | Trigger | Expected Result |
 |---|---|---|
 | **"Try a sample review" Button** | Click | Navigates directly to `/app/new` |
 | **"Open Brand Hub" Button** | Click | Navigates directly to `/app/hub` |
+| **Footer "About Pramaan" Link** | Click | Navigates directly to `/about` |
 | **Hero 3D Floating Cards** | Hover / Tab | Purely decorative (`pointer-events: none`, `aria-hidden="true"`); never obstructs clicks |
+| **About Accordion Cards** | Click | Expands/collapses section content (Promise, Workflow, Boundaries, Disclosures, Team) |
+| **About External Links** | Click | Opens GitHub Repository or docs in new tab |
 
 ---
 

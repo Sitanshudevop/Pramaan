@@ -157,7 +157,7 @@ All required submission documents are stored in `/docs` and accessible within th
 - [`docs/CHANGES_FROM_PLAN.md`](docs/CHANGES_FROM_PLAN.md): Log of adjustments made between Round 1 and Round 2.
 - [`docs/ROUND3_IMPROVEMENTS.md`](docs/ROUND3_IMPROVEMENTS.md): Committed improvements for Round 3 (The Finish).
 - [`docs/AI_AND_TOOLS_DISCLOSURE.md`](docs/AI_AND_TOOLS_DISCLOSURE.md): Complete disclosure of all AI models, tools, and libraries used.
-- **The 13 Canonical Plan Pages:** Directly navigable inside the web application under `/plan/*`.
+- **Plan & Project Scope:** Plan pages replaced by a single About page (`/about`) to keep the product user-focused; the full plan is in the submitted PDF and [`docs/PRAMAAN_CONTENT.md`](docs/PRAMAAN_CONTENT.md).
 
 ---
 

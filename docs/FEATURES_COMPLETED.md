@@ -30,30 +30,19 @@ This checklist honestly tracks what is implemented, verified, and active in the 
 ---
 
 ## 2. Information Architecture & Navigation
-- [x] Left Navigation Sidebar (collapsible drawer on mobile)
-- [x] Group A: Product Pages
-  - [x] `/` Home (Hero, 3 commitments, sample review CTA, Brand Hub CTA)
-  - [x] `/app/new` New Review
-  - [x] `/app/review/:id` Review & Findings Workspace
+- [x] Streamlined 6-item Sidebar (232px width, fits 720px viewport without scrollbar, drawer on mobile)
+- [x] Dedicated Core Product Pages:
+  - [x] `/` Home (Hero, commitments, sample review CTA, Brand Hub CTA, about link)
+  - [x] `/app/new` New Review (Purpose Card, sample pre-fill, draft input)
+  - [x] `/app/review/:id` Review & Findings Workspace (Diff viewer, purpose check, audit comments)
   - [x] `/app/queue` Risk-Sorted Review Queue
-  - [x] `/app/hub` Brand Knowledge Hub (Rules, Facts Register, Glossary, Claims Policy)
+  - [x] `/app/hub` Brand Knowledge Hub (Rules, Facts Register, Terminology, Claims Policy)
   - [x] `/app/audit` Audit Trail & AI Disclosure Ledger
-  - [x] `/app/insights` Calm Brand Insights (Repeated violations, override trends, ambiguity scores)
-- [x] Group B: Static Plan Pages (13 dedicated routes built from `docs/PRAMAAN_CONTENT.md`)
-  - [x] `/plan/summary`
-  - [x] `/plan/problem`
-  - [x] `/plan/evidence`
-  - [x] `/plan/users`
-  - [x] `/plan/solution`
-  - [x] `/plan/workflow`
-  - [x] `/plan/scope`
-  - [x] `/plan/technical`
-  - [x] `/plan/responsible`
-  - [x] `/plan/positioning`
-  - [x] `/plan/feasibility`
-  - [x] `/plan/delivery`
-  - [x] `/plan/references`
-- [x] Persistent "Demo data is fictional" header badge
+  - [x] `/app/insights` Brand Insights & Radar (Restricted role notification, frequency rankings)
+  - [x] `/about` About Pramaan (Promise, 4-step workflow, boundaries, AI disclosures, team links)
+- [x] Legacy `/plan/*` Route Redirects (Plan pages replaced by a single About page to keep the product user-focused; the full plan is in the submitted PDF)
+- [x] Streamlined Top Bar (Page title, Confidential Mode chip, Role selector, Theme toggle)
+- [x] Dismissible thin demo data notice strip on first visit
 - [x] Global Theme Toggle (Light / Dark / System with zero-flash early initialization)
 - [x] Demo Role Switcher (`Creator`, `Reviewer`, `Brand manager`, `Admin`)
 - [x] Global 404 & Error Boundary

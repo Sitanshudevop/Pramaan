@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, Sparkles, UserCheck, BookOpen, AlertCircle } from 'lucide-react';
 import { Chip, GlowBackdrop, FloatingCards } from '../components/ui';
 
@@ -116,7 +116,13 @@ export const Home: React.FC = () => {
 
       {/* Footer Disclosures */}
       <footer className="pt-6 border-t border-border/80 flex flex-col sm:flex-row justify-between items-center text-xs text-text-muted gap-2">
-        <div>Demo brand kits and drafts are fictional and authored for CodeNexus India 2026.</div>
+        <div className="flex items-center space-x-3">
+          <span>Demo brand kits and drafts are fictional and authored for CodeNexus India 2026.</span>
+          <span>·</span>
+          <Link to="/about" className="text-orange-text hover:underline font-medium">
+            About Pramaan
+          </Link>
+        </div>
         <div className="font-mono text-[11px]">Runtime AI: Google Gemini with PII sanitization gateway.</div>
       </footer>
     </div>
