@@ -20,7 +20,7 @@ export const AppLayout: React.FC = () => {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Column */}
-      <div className="lg:pl-56 flex-1 flex flex-col min-w-0">
+      <div className="lg:pl-[232px] flex-1 flex flex-col min-w-0">
         <TopBar onMenuClick={() => setSidebarOpen(true)} />
 
         <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-8 max-w-app w-full mx-auto">

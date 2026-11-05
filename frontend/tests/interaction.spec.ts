@@ -31,9 +31,20 @@ test.describe('Pramaan Core Interaction & Accessibility Verification', () => {
     await expect(page).toHaveURL(/\/app\/insights/);
     await expect(page.locator('h1')).toContainText('Brand Insights & Radar');
 
+    // Click About in sidebar
+    await page.locator('aside a[href="/about"]').click();
+    await expect(page).toHaveURL(/\/about/);
+    await expect(page.locator('h1')).toContainText('Evidence-backed Brand Governance');
+
     // Return Home
     await page.locator('aside a[href="/"]').first().click();
     await expect(page).toHaveURL(/http:\/\/localhost:5173\/?$/);
+  });
+
+  test('Legacy /plan/* routes redirect seamlessly to /about', async ({ page }) => {
+    await page.goto('/plan/summary');
+    await expect(page).toHaveURL(/\/about$/);
+    await expect(page.locator('h1')).toContainText('Evidence-backed Brand Governance');
   });
 
   test('Theme toggle cycles theme, updates html class, and persists on reload', async ({ page }) => {
