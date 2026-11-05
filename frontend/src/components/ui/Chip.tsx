@@ -27,12 +27,12 @@ export const Chip: React.FC<ChipProps> = ({
   const sizeClasses = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs';
 
   const variantClasses = {
-    neutral: 'bg-surface-2 text-text-muted border border-border/60',
-    accent: 'bg-orange-500/10 text-orange-text border border-orange-500/30 font-medium',
+    neutral: 'bg-surface-2 text-text-muted font-medium',
+    accent: 'bg-orange-500/12 text-orange-text font-medium',
     success: 'bg-lime text-on-lime font-semibold',
-    outline: 'bg-transparent text-text border border-border hover:border-text-muted/60',
-    dark: 'bg-surface-dark text-[#F4F1EC] border border-white/10 font-medium',
-    danger: 'bg-danger/10 text-danger border border-danger/30 font-medium',
+    outline: 'bg-surface-2 text-text font-medium',
+    dark: 'bg-surface-dark text-text font-medium',
+    danger: 'bg-danger/10 text-danger font-medium',
   }[variant];
 
   const clickableClasses = onClick

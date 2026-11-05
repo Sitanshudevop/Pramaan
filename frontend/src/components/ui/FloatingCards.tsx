@@ -50,7 +50,7 @@ export const FloatingCards: React.FC<FloatingCardsProps> = ({
 
       {/* Middle card: Evidence Grounding Rate (Dark feature card) */}
       <div
-        className="absolute w-72 p-5 rounded-card bg-surface-dark border border-white/10 text-[#F4F1EC] shadow-2xl z-10 transition-transform duration-500
+        className="absolute w-72 p-5 rounded-card bg-surface-dark border border-border/40 text-text shadow-2xl z-10 transition-transform duration-500
                    top-14 left-2
                    md:[transform:perspective(900px)_rotateX(6deg)_rotateY(8deg)_rotateZ(-3deg)]
                    motion-reduce:transform-none"

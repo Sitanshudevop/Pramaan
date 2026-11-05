@@ -32,7 +32,7 @@ export const GaugeCard: React.FC<GaugeCardProps> = ({
 
   return (
     <div
-      className={`p-5 rounded-card bg-surface-dark border border-white/10 text-[#F4F1EC] flex flex-col items-center justify-between shadow-2xl relative overflow-hidden ${className}`}
+      className={`p-5 rounded-card bg-surface-dark border border-border/40 text-text flex flex-col items-center justify-between shadow-2xl relative overflow-hidden ${className}`}
       role="img"
       aria-label={`${label}: ${value} of ${max}${unit}`}
     >

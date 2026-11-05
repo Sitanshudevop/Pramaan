@@ -48,7 +48,7 @@ export const PillTabs: React.FC<PillTabsProps> = ({
       ref={tabListRef}
       role="tablist"
       aria-label="Content views"
-      className={`inline-flex items-center p-1 rounded-pill bg-surface-2 border border-border/60 ${className}`}
+      className={`inline-flex items-center p-1 rounded-pill bg-surface-2 ${className}`}
     >
       {tabs.map((tab, idx) => {
         const isActive = tab.id === activeTab;
