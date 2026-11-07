@@ -35,7 +35,10 @@ import {
   NotificationPreferences,
 } from './types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const rawApiUrl = (import.meta.env.VITE_API_URL || '').trim();
+const API_BASE = rawApiUrl
+  ? (rawApiUrl.startsWith('http://') || rawApiUrl.startsWith('https://') ? rawApiUrl : `https://${rawApiUrl}`).replace(/\/+$/, '')
+  : (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? '' : 'http://localhost:8000');
 
 let authToken: string | null = localStorage.getItem('pramaan_token');
 let currentWorkspaceId: string = localStorage.getItem('pramaan_ws_id') || 'ws-demo';
