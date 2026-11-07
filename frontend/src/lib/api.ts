@@ -89,7 +89,23 @@ export async function fetchApi<T>(
     } catch {
       // fallback
     }
-    throw new Error(errorDetail);
+    const message = typeof errorDetail === 'string' ? errorDetail : JSON.stringify(errorDetail);
+
+    // Central error dispatch: every failing mutating request notifies the app
+    const method = (options.method || 'GET').toUpperCase();
+    if (method !== 'GET') {
+      window.dispatchEvent(
+        new CustomEvent('pramaan-api-error', {
+          detail: {
+            message,
+            status: res.status,
+            endpoint,
+          },
+        })
+      );
+    }
+
+    throw new Error(message);
   }
 
   return res.json();

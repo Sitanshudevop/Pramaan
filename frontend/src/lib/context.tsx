@@ -57,7 +57,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [user, setUser] = useState<User | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(DEMO_WORKSPACE_FALLBACK);
-  const [demoRole, setDemoRole] = useState<Role>('Creator');
+  const [demoRole, setDemoRole] = useState<Role>(() => {
+    return (localStorage.getItem('pramaan_demo_role') as Role) || 'Creator';
+  });
   const [confidentialMode, setConfidentialMode] = useState<boolean>(false);
   const [theme, setThemeState] = useState<Theme>(() => {
     return (localStorage.getItem('pramaan_theme') as Theme) || 'system';
@@ -197,6 +199,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const setRole = (newRole: Role) => {
     if (isDemoMode) {
       setDemoRole(newRole);
+      localStorage.setItem('pramaan_demo_role', newRole);
     }
   };
 

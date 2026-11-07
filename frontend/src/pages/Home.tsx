@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, Sparkles, UserCheck, Play, PlusCircle } from 'lucide-react';
 import { Chip, GlowBackdrop, FloatingCards } from '../components/ui';
 import { useApp } from '../lib/context';
+import { useToast } from '../lib/toast';
 import { AuthModal } from '../components/AuthModal';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { user, currentWorkspace, enterDemoWorkspace } = useApp();
+  const { user, currentWorkspace, enterDemoWorkspace, setRole } = useApp();
+  const { showToast } = useToast();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
 
@@ -22,6 +24,8 @@ export const Home: React.FC = () => {
 
   const handleTryDemo = () => {
     enterDemoWorkspace();
+    setRole('Creator');
+    showToast('Switched role to Creator (Priya Nair) to submit sample reviews.', 'info');
     navigate('/app/new');
   };
 
@@ -78,7 +82,14 @@ export const Home: React.FC = () => {
               className="inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-pill border border-border bg-surface text-text font-medium text-sm hover:bg-surface-2 transition-colors shadow-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <Play className="w-3.5 h-3.5 text-orange-text fill-orange-text" />
-              <span>Try the demo (instant)</span>
+              <span>Try a sample review</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/app/hub')}
+              className="inline-flex items-center justify-center space-x-2 px-5 py-3 rounded-pill border border-border bg-surface text-text font-medium text-sm hover:bg-surface-2 transition-colors shadow-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <span>Open Brand Hub</span>
             </button>
           </div>
 
