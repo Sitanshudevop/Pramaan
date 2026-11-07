@@ -71,6 +71,19 @@ app.add_middleware(
 
 # Register routers
 app.include_router(health.router)
+
+
+@app.get("/", tags=["Root"])
+def root() -> dict[str, str]:
+    """Root status indicator with link to interactive API documentation."""
+    return {
+        "name": "Pramaan API",
+        "status": "healthy",
+        "version": "0.1.0",
+        "docs_url": "/api/docs",
+    }
+
+
 app.include_router(auth.router, prefix="/api")
 app.include_router(workspaces.router, prefix="/api")
 app.include_router(brands.router, prefix="/api")
