@@ -7,10 +7,10 @@
     "content_type": "Promotional Email",
     "ai_declared": false,
     "purpose_card": {
-      "goal": "Launch ChaiCraft's signature brew with authentic origin story",
+      "goal": "Launch Kettle & Co.'s signature brew with authentic origin story",
       "audience": "Tea enthusiasts and everyday chai drinkers across urban India",
       "key_message": "Authentic, pure artisanal Masala Chai made with certified organic tea leaves",
-      "call_to_action": "Order today at chaicraft.in",
+      "call_to_action": "Order today at kettleandco.example",
       "locked_phrases": ["Masala Chai"],
       "content_type": "Promotional Email",
       "ai_declared": false
