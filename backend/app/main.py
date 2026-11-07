@@ -69,7 +69,7 @@ app.add_middleware(
 app.include_router(health.router)
 
 
-@app.get("/", tags=["Root"])
+@app.api_route("/", methods=["GET", "HEAD"], tags=["Root"])
 def root() -> dict[str, str]:
     """Root status indicator with link to interactive API documentation."""
     return {
