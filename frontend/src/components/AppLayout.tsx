@@ -1,46 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 
 export const AppLayout: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [desktopMode, setDesktopMode] = useState<'expanded' | 'rail'>(() => {
-    if (typeof window === 'undefined') return 'expanded';
-    const stored = localStorage.getItem('pramaan_sidebar_state');
-    if (stored === 'expanded' || stored === 'rail') return stored;
-    // Default: rail for 1024-1279px, expanded for >= 1280px
-    return window.innerWidth >= 1280 ? 'expanded' : 'rail';
-  });
-
   const hamburgerRef = useRef<HTMLButtonElement>(null);
 
-  // Sync default when resizing across the 1280px boundary if user hasn't explicitly set preference
-  useEffect(() => {
-    const handleResize = () => {
-      const stored = localStorage.getItem('pramaan_sidebar_state');
-      if (!stored && window.innerWidth >= 1024) {
-        setDesktopMode(window.innerWidth >= 1280 ? 'expanded' : 'rail');
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const handleHamburgerClick = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setDrawerOpen((prev) => !prev);
-    } else {
-      setDesktopMode((prev) => {
-        const next = prev === 'expanded' ? 'rail' : 'expanded';
-        localStorage.setItem('pramaan_sidebar_state', next);
-        return next;
-      });
-    }
+    // Hamburger only operates on screens < 1024px to toggle the off-canvas drawer
+    setDrawerOpen((prev) => !prev);
   };
 
   return (
-    <div className="min-h-[100dvh] bg-bg flex flex-col antialiased overflow-x-clip">
+    <div className="min-h-[100dvh] bg-bg flex flex-col antialiased">
       {/* Skip to main content for accessibility */}
       <a
         href="#main-content"
@@ -49,30 +22,24 @@ export const AppLayout: React.FC = () => {
         Skip to main content
       </a>
 
-      {/* Hamburger Navigation: Off-Canvas Drawer (<1024px) & Rail/Sidebar (>=1024px) */}
+      {/* Navigation: Off-Canvas Drawer (<1024px) & Full Persistent 240px Sidebar (>=1024px) */}
       <Sidebar
         drawerOpen={drawerOpen}
         onCloseDrawer={() => setDrawerOpen(false)}
-        desktopMode={desktopMode}
         hamburgerRef={hamburgerRef}
       />
 
-      {/* Main Content Column */}
-      <div
-        className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ease-in-out ${
-          desktopMode === 'expanded' ? 'lg:pl-[240px]' : 'lg:pl-[72px]'
-        }`}
-      >
+      {/* Main Content Column: Always padded 240px on desktop (>=1024px) */}
+      <div className="flex-1 flex flex-col min-w-0 w-full lg:pl-[240px]">
         <TopBar
           drawerOpen={drawerOpen}
           onHamburgerClick={handleHamburgerClick}
           hamburgerRef={hamburgerRef}
-          desktopMode={desktopMode}
         />
 
         <main
           id="main-content"
-          className="flex-1 p-4 sm:p-6 lg:p-8 max-w-app w-full mx-auto pb-safe flex flex-col"
+          className="flex-1 p-4 sm:p-6 lg:p-8 max-w-app w-full mx-auto pb-safe flex flex-col min-w-0"
         >
           <Outlet />
         </main>

@@ -17,7 +17,6 @@ import { Logo } from './Logo';
 export interface SidebarProps {
   drawerOpen: boolean;
   onCloseDrawer: () => void;
-  desktopMode: 'expanded' | 'rail';
   hamburgerRef?: React.RefObject<HTMLButtonElement>;
 }
 
@@ -35,7 +34,6 @@ export const NAV_ITEMS = [
 export const Sidebar: React.FC<SidebarProps> = ({
   drawerOpen,
   onCloseDrawer,
-  desktopMode,
   hamburgerRef,
 }) => {
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -111,8 +109,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const isRail = desktopMode === 'rail';
-
   return (
     <>
       {/* ============================================================== */}
@@ -144,10 +140,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             : '-translate-x-full opacity-0 invisible pointer-events-none'
         }`}
       >
-        {/* Drawer Header: Logo + Close Button */}
+        {/* Drawer Header: Logo + Close Button (ABOVE "Home") */}
         <div>
-          <div className="h-14 border-b border-border/80 flex items-center justify-between px-4">
-            <Logo size="md" />
+          <div className="h-14 border-b border-border/80 flex items-center justify-between px-4 shrink-0">
+            <Logo size="md" showText={true} />
             <button
               type="button"
               onClick={() => {
@@ -161,7 +157,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </div>
 
-          {/* Drawer Navigation Items: 48px row heights */}
+          {/* Drawer Navigation Items: "Home" is the first nav item directly below header */}
           <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100dvh-130px)]" aria-label="Mobile Navigation">
             {NAV_ITEMS.map((item) => (
               <NavLink
@@ -188,7 +184,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Drawer Footer: About & Compact Legal Links */}
-        <div className="p-3 border-t border-border/60 space-y-2 pb-safe bg-surface">
+        <div className="p-3 border-t border-border/60 space-y-2 pb-safe bg-surface shrink-0">
           <NavLink
             to="/about"
             onClick={() => {
@@ -217,97 +213,66 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* ============================================================== */}
-      {/* 2. Desktop Rail & Expanded Sidebar (>= 1024px)                  */}
+      {/* 2. Desktop Persistent Sidebar (>= 1024px)                       */}
       {/* ============================================================== */}
       <aside
         id="app-navigation"
         aria-label="Application Sidebar"
-        className={`hidden lg:flex fixed top-0 bottom-0 left-0 z-30 bg-surface border-r border-border flex-col justify-between select-none transition-all duration-200 ease-in-out ${
-          isRail ? 'w-[72px]' : 'w-[240px]'
-        }`}
+        className="hidden lg:flex fixed top-0 bottom-0 left-0 z-30 bg-surface border-r border-border flex-col justify-between select-none w-[240px]"
       >
-        {/* Top: Header with Logo */}
+        {/* Top: Header with Logo mark + "Pramaan" wordmark */}
         <div>
-          <div className={`h-14 border-b border-border/80 flex items-center ${isRail ? 'justify-center px-2' : 'px-4'}`}>
-            <Logo size="md" showText={!isRail} />
+          <div className="h-14 border-b border-border/80 flex items-center px-4 shrink-0">
+            <Logo size="md" showText={true} />
           </div>
 
-          {/* Navigation Items: 48px rows (h-12) */}
-          <nav className="p-2 space-y-1" aria-label="Desktop Navigation">
+          {/* Navigation Items: persistent full sidebar (240px, icons + labels) */}
+          <nav className="p-3 space-y-1" aria-label="Desktop Navigation">
             {NAV_ITEMS.map((item) => (
-              <div key={item.path} className="relative group">
-                <NavLink
-                  to={item.path}
-                  end={item.path === '/'}
-                  title={isRail ? item.name : undefined}
-                  aria-label={item.name}
-                  className={({ isActive }) =>
-                    `flex items-center h-12 rounded-inner text-sm transition-colors ${
-                      isRail ? 'justify-center px-0 w-full' : 'gap-3 px-3'
-                    } ${
-                      isActive
-                        ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
-                        : 'text-text-muted hover:text-text hover:bg-surface-2 font-medium'
-                    }`
-                  }
-                >
-                  <item.icon className="w-5 h-5 shrink-0" />
-                  {!isRail && <span className="truncate">{item.name}</span>}
-                </NavLink>
-
-                {/* Accessible Floating Tooltip for Icon Rail */}
-                {isRail && (
-                  <div
-                    role="tooltip"
-                    className="absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 px-2.5 py-1 bg-surface-dark text-white dark:bg-surface-2 dark:text-text text-xs rounded-pill shadow-lg border border-border pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-50 whitespace-nowrap"
-                  >
-                    {item.name}
-                  </div>
-                )}
-              </div>
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/'}
+                aria-label={item.name}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3.5 h-11 rounded-inner text-sm transition-colors ${
+                    isActive
+                      ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
+                      : 'text-text-muted hover:text-text hover:bg-surface-2 font-medium'
+                  }`
+                }
+              >
+                <item.icon className="w-5 h-5 shrink-0" />
+                <span className="truncate">{item.name}</span>
+              </NavLink>
             ))}
           </nav>
         </div>
 
         {/* Bottom Footer: About & Compact Legal Links */}
-        <div className={`p-2 border-t border-border/60 ${isRail ? 'flex flex-col items-center space-y-2' : 'space-y-1.5 p-3'}`}>
-          <div className="relative group w-full">
-            <NavLink
-              to="/about"
-              title={isRail ? 'About Pramaan' : undefined}
-              aria-label="About Pramaan"
-              className={({ isActive }) =>
-                `flex items-center h-10 rounded-inner text-xs transition-colors ${
-                  isRail ? 'justify-center px-0 w-full' : 'gap-2.5 px-3'
-                } ${
-                  isActive
-                    ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
-                    : 'text-text-muted hover:text-text hover:bg-surface-2 font-medium'
-                }`
-              }
-            >
-              <Info className="w-4 h-4 shrink-0" />
-              {!isRail && <span>About Pramaan</span>}
-            </NavLink>
-            {isRail && (
-              <div
-                role="tooltip"
-                className="absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 px-2.5 py-1 bg-surface-dark text-white dark:bg-surface-2 dark:text-text text-xs rounded-pill shadow-lg border border-border pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-50 whitespace-nowrap"
-              >
-                About Pramaan
-              </div>
-            )}
-          </div>
+        <div className="p-3 border-t border-border/60 space-y-2 bg-surface shrink-0">
+          <NavLink
+            to="/about"
+            aria-label="About Pramaan"
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-3 h-10 rounded-inner text-xs transition-colors ${
+                isActive
+                  ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
+                  : 'text-text-muted hover:text-text hover:bg-surface-2 font-medium'
+              }`
+            }
+          >
+            <Info className="w-4 h-4 shrink-0" />
+            <span>About Pramaan</span>
+          </NavLink>
 
-          {!isRail && (
-            <div className="flex items-center justify-between px-2 pt-1 text-[10px] text-text-muted">
-              <NavLink to="/privacy" className="hover:underline">Privacy</NavLink>
-              <span>·</span>
-              <NavLink to="/terms" className="hover:underline">Terms</NavLink>
-              <span>·</span>
-              <NavLink to="/ai-disclosure" className="hover:underline">AI Ethics</NavLink>
-            </div>
-          )}
+          <div className="flex items-center justify-between px-2 pt-1 text-[11px] text-text-muted">
+            <NavLink to="/privacy" className="hover:underline">Privacy</NavLink>
+            <span>·</span>
+            <NavLink to="/terms" className="hover:underline">Terms</NavLink>
+            <span>·</span>
+            <NavLink to="/ai-disclosure" className="hover:underline">AI Ethics</NavLink>
+          </div>
         </div>
       </aside>
     </>

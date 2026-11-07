@@ -31,7 +31,6 @@ interface TopBarProps {
   drawerOpen: boolean;
   onHamburgerClick: () => void;
   hamburgerRef?: React.RefObject<HTMLButtonElement>;
-  desktopMode: 'expanded' | 'rail';
 }
 
 function getPageTitle(pathname: string): string {
@@ -53,7 +52,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   drawerOpen,
   onHamburgerClick,
   hamburgerRef,
-  desktopMode,
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -147,61 +145,52 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <>
-      <header className="h-14 border-b border-border/80 bg-surface sticky top-0 z-30 flex items-center justify-between px-3 sm:px-4 lg:px-6">
+      <header className="h-14 border-b border-border/80 bg-surface sticky top-0 z-30 flex items-center justify-between px-3 sm:px-4 lg:px-6 w-full min-w-0">
         {/* ============================================================== */}
-        {/* Left Side: Hamburger, Logo, Page Title, Workspace Dropdown    */}
+        {/* Left Side: Hamburger (<1024px), Logo (640-1023px), Title      */}
         {/* ============================================================== */}
-        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-          {/* Hamburger Navigation Button */}
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 mr-2">
+          {/* Hamburger Navigation Button (44x44 px touch-target, HIDDEN on >= 1024px) */}
           <button
             ref={hamburgerRef}
             type="button"
             onClick={onHamburgerClick}
-            className="p-2 -ml-1 rounded-pill border border-border text-text-muted hover:text-text hover:bg-surface-2 transition-colors touch-target flex items-center justify-center shrink-0"
+            className="lg:hidden w-11 h-11 min-w-[44px] min-h-[44px] touch-target rounded-pill border border-border text-text-muted hover:text-text hover:bg-surface-2 transition-colors flex items-center justify-center shrink-0 -ml-1"
             aria-label={drawerOpen ? 'Close navigation menu' : 'Open navigation menu'}
             aria-expanded={drawerOpen}
-            aria-controls="app-navigation"
-            title={desktopMode === 'expanded' ? 'Collapse sidebar' : 'Expand sidebar'}
+            aria-controls="app-navigation-drawer"
           >
-            {drawerOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            {drawerOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          {/* Logo Mark: Icon only on phone (<640px), Full logo with text on tablet/desktop */}
-          <div className="shrink-0 flex items-center">
-            {/* On phone: icon only */}
-            <div className="sm:hidden">
-              <Logo size="sm" showText={false} />
-            </div>
-            {/* On tablet: show logo with text */}
-            <div className="hidden sm:block lg:hidden">
-              <Logo size="sm" showText={true} />
-            </div>
+          {/* Logo: NEVER repeated below 640px (it is in the drawer). Shown on tablet 640-1023px. */}
+          <div className="hidden sm:flex lg:hidden shrink-0 items-center">
+            <Logo size="sm" showText={true} />
+            <span className="text-border ml-3 shrink-0">|</span>
           </div>
 
-          <span className="text-border hidden sm:inline shrink-0">|</span>
-
-          {/* Page Title: single line, truncated with ellipsis on small screens */}
-          <span className="text-sm font-bold text-text tracking-tight truncate max-w-[120px] sm:max-w-[180px] md:max-w-none select-none">
+          {/* Page Title: single line, truncated cleanly on small screens */}
+          <span className="text-sm font-bold text-text tracking-tight truncate min-w-0 select-none">
             {pageTitle}
           </span>
 
           {/* Desktop Workspace Selector Dropdown (>= 1024px) */}
-          <div className="relative hidden lg:block" ref={dropdownRef}>
+          <div className="relative hidden lg:block shrink-0" ref={dropdownRef}>
             <button
               type="button"
               onClick={() => setWorkspaceDropdownOpen(!workspaceDropdownOpen)}
               className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-pill border border-border bg-surface-2 hover:bg-surface text-xs font-semibold text-text transition-colors"
             >
-              <Building2 className="w-3.5 h-3.5 text-orange-text" />
+              <Building2 className="w-3.5 h-3.5 text-orange-text shrink-0" />
               <span className="max-w-[140px] truncate">
                 {currentWorkspace?.name || 'Demo Workspace'}
               </span>
               {currentWorkspace?.is_demo && (
-                <span className="text-[10px] px-1.5 py-0.2 rounded-pill bg-orange-500/10 text-orange-text font-bold">
+                <span className="text-[10px] px-1.5 py-0.2 rounded-pill bg-orange-500/10 text-orange-text font-bold shrink-0">
                   Demo
                 </span>
               )}
-              <ChevronDown className="w-3 h-3 text-text-muted" />
+              <ChevronDown className="w-3 h-3 text-text-muted shrink-0" />
             </button>
 
             {workspaceDropdownOpen && (
@@ -277,7 +266,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
 
         {/* ============================================================== */}
-        {/* Right Side: Reorganised Controls by Viewport Width             */}
+        {/* Right Side: [bell] [avatar menu] on mobile; full on desktop    */}
         {/* ============================================================== */}
         <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
           {/* 1. Desktop Only Controls (>= 1024px) */}
@@ -307,7 +296,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             {/* Persona Switcher (Demo) OR Fixed Role Badge (Real Workspace) */}
             {isDemoMode ? (
               <div className="relative" ref={personaRef}>
-                {/* Accessible & Automation Select Helper */}
                 <select
                   aria-label="Demo Role Switcher"
                   className="sr-only"
@@ -336,18 +324,18 @@ export const TopBar: React.FC<TopBarProps> = ({
                   title={`Viewing as ${demoPersona.name} (${demoPersona.role})`}
                 >
                   <span
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-xs"
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-xs shrink-0"
                     style={{ backgroundColor: demoPersona.avatarColor }}
                   >
                     {demoPersona.initials}
                   </span>
-                  <span className="font-semibold text-text">
+                  <span className="font-semibold text-text truncate max-w-[100px]">
                     {demoPersona.name}
                   </span>
-                  <span className="text-[10px] text-text-muted px-1.5 py-0.5 rounded-pill bg-surface-2 border border-border/60">
+                  <span className="text-[10px] text-text-muted px-1.5 py-0.5 rounded-pill bg-surface-2 border border-border/60 shrink-0">
                     {demoPersona.role}
                   </span>
-                  <ChevronDown className="w-3 h-3 text-text-muted" />
+                  <ChevronDown className="w-3 h-3 text-text-muted shrink-0" />
                 </button>
 
                 {personaDropdownOpen && (
@@ -396,12 +384,12 @@ export const TopBar: React.FC<TopBarProps> = ({
             )}
           </div>
 
-          {/* 2. Notification Bell (Visible on ALL screen sizes) */}
-          <div className="relative" ref={notifRef}>
+          {/* 2. Notification Bell (Visible on ALL viewports) */}
+          <div className="relative shrink-0" ref={notifRef}>
             <button
               type="button"
               onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-              className="relative p-2 rounded-pill border border-border text-text-muted hover:text-text hover:bg-surface-2 transition-colors touch-target flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="relative p-2 rounded-pill border border-border text-text-muted hover:text-text hover:bg-surface-2 transition-colors touch-target flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-orange-500 shrink-0"
               title="Notifications"
               aria-label={`Notifications: ${unreadCount} unread`}
             >
@@ -462,8 +450,8 @@ export const TopBar: React.FC<TopBarProps> = ({
             )}
           </div>
 
-          {/* 3. Theme Toggle (Visible on Tablet and Desktop: >= 640px) */}
-          <div className="hidden sm:block">
+          {/* 3. Theme Toggle (Visible on Tablet & Desktop: >= 640px) */}
+          <div className="hidden sm:block shrink-0">
             <button
               type="button"
               onClick={cycleTheme}
@@ -478,7 +466,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
 
           {/* 4. Desktop Sign In / Sign Out (>= 1024px) */}
-          <div className="hidden lg:block">
+          <div className="hidden lg:block shrink-0">
             {user ? (
               <button
                 type="button"
@@ -503,24 +491,24 @@ export const TopBar: React.FC<TopBarProps> = ({
             )}
           </div>
 
-          {/* 5. Mobile & Tablet Overflow/Avatar Button (< 1024px) */}
-          <div className="lg:hidden relative" ref={overflowRef}>
+          {/* 5. Mobile & Tablet Avatar / Overflow Menu Button (< 1024px) */}
+          <div className="lg:hidden relative shrink-0" ref={overflowRef}>
             <button
               type="button"
               onClick={() => setOverflowMenuOpen(!overflowMenuOpen)}
-              className="p-1.5 rounded-pill border border-border bg-surface hover:bg-surface-2 transition-colors touch-target flex items-center justify-center space-x-1"
+              className="p-1.5 rounded-pill border border-border bg-surface hover:bg-surface-2 transition-colors touch-target flex items-center justify-center space-x-1 shrink-0"
               aria-label="Workspace & profile settings menu"
               aria-expanded={overflowMenuOpen}
             >
               {isDemoMode ? (
                 <span
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-xs"
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-xs shrink-0"
                   style={{ backgroundColor: demoPersona.avatarColor }}
                 >
                   {demoPersona.initials}
                 </span>
               ) : user ? (
-                <span className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px] font-bold">
+                <span className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px] font-bold shrink-0">
                   {user.email.slice(0, 2).toUpperCase()}
                 </span>
               ) : (
@@ -531,7 +519,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             {/* Overflow Menu (Bottom Sheet on Phone < 640px, Popover Dropdown on Tablet 640-1023px) */}
             {overflowMenuOpen && (
               <>
-                {/* Backdrop for mobile bottom sheet */}
                 <div
                   className="fixed inset-0 bg-black/60 z-40 sm:hidden backdrop-blur-xs"
                   onClick={() => setOverflowMenuOpen(false)}
@@ -543,11 +530,9 @@ export const TopBar: React.FC<TopBarProps> = ({
                   role="dialog"
                   aria-label="Quick Settings & Profile"
                 >
-                  {/* Phone drag handle */}
                   <div className="w-12 h-1.5 bg-border rounded-pill mx-auto mb-3 sm:hidden" />
 
                   <div className="space-y-1.5 text-xs">
-                    {/* Header: Persona or Workspace summary */}
                     <div className="px-3 py-2 rounded-inner bg-surface-2 flex items-center justify-between">
                       <div className="truncate">
                         <div className="font-bold text-text text-sm">
@@ -558,13 +543,12 @@ export const TopBar: React.FC<TopBarProps> = ({
                         </div>
                       </div>
                       {isDemoMode && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-pill bg-orange-500/10 text-orange-text font-bold uppercase">
+                        <span className="text-[10px] px-2 py-0.5 rounded-pill bg-orange-500/10 text-orange-text font-bold uppercase shrink-0">
                           Demo
                         </span>
                       )}
                     </div>
 
-                    {/* 1. Switch Demo Persona (in Demo Workspace) */}
                     {isDemoMode && (
                       <div className="pt-2">
                         <div className="px-3 py-1 text-[10px] font-bold text-text-muted uppercase tracking-wider">
@@ -600,7 +584,6 @@ export const TopBar: React.FC<TopBarProps> = ({
                       </div>
                     )}
 
-                    {/* 2. Workspace switcher options */}
                     <div className="pt-2 border-t border-border/70">
                       <div className="px-3 py-1 text-[10px] font-bold text-text-muted uppercase tracking-wider">
                         Workspace
@@ -637,7 +620,6 @@ export const TopBar: React.FC<TopBarProps> = ({
                       </button>
                     </div>
 
-                    {/* 3. Confidential Mode Toggle */}
                     <div className="pt-2 border-t border-border/70">
                       <button
                         type="button"
@@ -660,7 +642,6 @@ export const TopBar: React.FC<TopBarProps> = ({
                       </button>
                     </div>
 
-                    {/* 4. Theme Picker on Phone (<640px) */}
                     <div className="pt-2 border-t border-border/70 sm:hidden">
                       <div className="px-3 py-1 text-[10px] font-bold text-text-muted uppercase tracking-wider">
                         Appearance
@@ -699,7 +680,6 @@ export const TopBar: React.FC<TopBarProps> = ({
                       </div>
                     </div>
 
-                    {/* 5. Quick link to Settings */}
                     <div className="pt-2 border-t border-border/70">
                       <button
                         type="button"
@@ -714,7 +694,6 @@ export const TopBar: React.FC<TopBarProps> = ({
                       </button>
                     </div>
 
-                    {/* 6. Sign In or Sign Out */}
                     <div className="pt-2 border-t border-border/70">
                       {user ? (
                         <button
@@ -751,15 +730,12 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       </header>
 
-      {/* ============================================================== */}
-      {/* Dismissible Thin Strip for Fictional Demo Notice               */}
-      {/* (Never wraps into multiple lines; truncates with ellipsis)     */}
-      {/* ============================================================== */}
+      {/* Dismissible Thin Strip for Fictional Demo Notice */}
       {isDemoMode && showDemoNotice && (
-        <div className="bg-surface-2/80 border-b border-border/60 px-3 sm:px-4 py-1 text-[11px] text-text-muted flex items-center justify-between select-none">
-          <div className="flex items-center space-x-1.5 min-w-0 flex-1 mr-2">
+        <div className="bg-surface-2/80 border-b border-border/60 px-3 sm:px-4 py-1 text-[11px] text-text-muted flex items-center justify-between select-none w-full min-w-0 overflow-hidden">
+          <div className="flex items-center space-x-1.5 min-w-0 flex-1 mr-2 overflow-hidden">
             <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
-            <span className="truncate">
+            <span className="truncate min-w-0 block">
               Demo workspace notice: All brand kits, facts registers, and sample reviews are fictional.
             </span>
           </div>
