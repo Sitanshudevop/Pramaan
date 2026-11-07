@@ -62,6 +62,54 @@ def check_messaging(ctx: CheckContext) -> list[Finding]:
             if not is_invest_text:
                 continue
 
+        if any(w in rule_lower for w in ("otp", "pin", "password", "security alert")) and not any(
+            kw in text.lower()
+            for kw in (
+                "otp",
+                "pin",
+                "password",
+                "sign in",
+                "login",
+                "credentials",
+                "2fa",
+                "verification code",
+            )
+        ):
+            continue
+
+        if any(
+            w in rule_lower for w in ("apr", "loan", "margin", "borrowing", "credit line")
+        ) and not any(
+            kw in text.lower()
+            for kw in (
+                "loan",
+                "margin",
+                "apr",
+                "borrow",
+                "credit line",
+                "interest rate",
+                "cost of borrowing",
+            )
+        ):
+            continue
+
+        if any(w in rule_lower for w in ("harvest", "seasonal release")) and not any(
+            kw in text.lower()
+            for kw in (
+                "harvest batch",
+                "seasonal release",
+                "first flush",
+                "second flush",
+                "limited harvest",
+            )
+        ):
+            continue
+
+        if any(w in rule_lower for w in ("packaging", "net quantity", "net weight")) and not any(
+            kw in text.lower() for kw in ("net wt", "net weight", "250g", "100g", "500g")
+        ):
+            continue
+
         if any(w in rule_lower for w in ("discount", "bundle", "gift", "promotional")):
             is_promo_text = any(
                 kw in text.lower()

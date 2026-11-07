@@ -233,6 +233,7 @@ class ReviewResponse(StrictBaseModel):
     findings: list[Finding]
     comments: list[Comment]
     approvals: list[Approval]
+    is_overdue: bool = False
     pass_notice: str = Field(
         default="A pass means only that no issue was detected by the checks performed."
     )
@@ -396,6 +397,9 @@ class UserResponse(StrictBaseModel):
     email: str
     full_name: str
     avatar_url: str | None = None
+    avatar_color: str = "#E06D3B"
+    notification_language: str = "en-IN"
+    notification_preferences_json: str = "{}"
     created_at: datetime
 
 
@@ -409,6 +413,47 @@ class WorkspaceResponse(StrictBaseModel):
     is_demo: bool
     retention_days: int
     ai_enabled: bool
+    timezone: str = "Asia/Kolkata"
+    date_format: str = "YYYY-MM-DD"
+    default_brand_kit_id: str = "kettle-and-co"
+    default_spelling: str = "en-IN"
+    manager_approval_severity: str = "Blocker"
+    require_decision_reason: bool = True
+    auto_assign_mode: str = "off"
+    sla_hours: int = 48
+    confidential_mode: bool = False
+    redaction_options_json: str = "{}"
+    logo_url: str | None = None
+    role: str
+
+
+class WorkspaceSettingsResponse(StrictBaseModel):
+    """Comprehensive workspace governance settings and audit timestamp."""
+
+    id: str
+    name: str
+    slug: str
+    industry: str
+    is_demo: bool
+    retention_days: int
+    ai_enabled: bool
+    ai_consent_at: datetime | None = None
+    ai_consent_by_id: str | None = None
+    ai_consent_by_name: str | None = None
+    ai_consent_version: str | None = None
+    timezone: str = "Asia/Kolkata"
+    date_format: str = "YYYY-MM-DD"
+    default_brand_kit_id: str = "kettle-and-co"
+    default_spelling: str = "en-IN"
+    manager_approval_severity: str = "Blocker"
+    require_decision_reason: bool = True
+    auto_assign_mode: str = "off"
+    sla_hours: int = 48
+    confidential_mode: bool = False
+    redaction_options_json: str = '{"emails": true, "phones": true, "cards": true}'
+    logo_url: str | None = None
+    last_changed_by: str | None = None
+    last_changed_at: datetime | None = None
     role: str
 
 
@@ -427,6 +472,8 @@ class UpdateProfileRequest(StrictBaseModel):
 
     full_name: str | None = Field(default=None, min_length=2, max_length=128)
     avatar_url: str | None = Field(default=None, max_length=512)
+    avatar_color: str | None = Field(default=None, max_length=32)
+    notification_language: str | None = Field(default=None, max_length=32)
     current_password: str | None = Field(default=None, max_length=128)
     new_password: str | None = Field(default=None, min_length=10, max_length=128)
 
@@ -443,8 +490,90 @@ class WorkspaceSettingsUpdateRequest(StrictBaseModel):
 
     name: str | None = Field(default=None, min_length=2, max_length=128)
     industry: str | None = Field(default=None, max_length=128)
-    retention_days: int | None = Field(default=None, ge=7, le=3650)
+    retention_days: int | None = Field(default=None, ge=0, le=3650)
     ai_enabled: bool | None = Field(default=None)
+    logo_url: str | None = Field(default=None, max_length=512)
+    timezone: str | None = Field(default=None, max_length=64)
+    date_format: str | None = Field(default=None, max_length=32)
+    default_brand_kit_id: str | None = Field(default=None, max_length=64)
+    default_spelling: str | None = Field(default=None, max_length=32)
+    manager_approval_severity: str | None = Field(default=None, max_length=32)
+    require_decision_reason: bool | None = Field(default=None)
+    auto_assign_mode: str | None = Field(default=None, max_length=32)
+    sla_hours: int | None = Field(default=None, ge=1, le=720)
+    confidential_mode: bool | None = Field(default=None)
+    redaction_options_json: str | None = Field(default=None)
+    ai_consent_version: str | None = Field(default=None, max_length=32)
+
+
+class ContentTypeResponse(StrictBaseModel):
+    """Content format configuration definition."""
+
+    id: str
+    workspace_id: str
+    name: str
+    description: str | None = None
+    is_default: bool = False
+    requires_manager_approval: bool = False
+    default_reviewer_id: str | None = None
+    default_reviewer_name: str | None = None
+    order_index: int = 0
+    is_archived: bool = False
+    created_at: datetime
+
+
+class CreateContentTypeRequest(StrictBaseModel):
+    """Create a new content type."""
+
+    name: str = Field(..., min_length=2, max_length=64)
+    description: str | None = Field(default=None, max_length=256)
+    requires_manager_approval: bool = False
+    default_reviewer_id: str | None = None
+    order_index: int = 0
+
+
+class UpdateContentTypeRequest(StrictBaseModel):
+    """Update existing content type."""
+
+    name: str | None = Field(default=None, min_length=2, max_length=64)
+    description: str | None = Field(default=None, max_length=256)
+    requires_manager_approval: bool | None = None
+    default_reviewer_id: str | None = None
+    order_index: int | None = None
+    is_archived: bool | None = None
+
+
+class RetentionRunResponse(StrictBaseModel):
+    """Result of manual retention policy execution."""
+
+    deleted_count: int
+    retained_count: int
+    retention_days: int
+    message: str
+
+
+class ActiveSessionResponse(StrictBaseModel):
+    """Active user session representation."""
+
+    id: str
+    device_info: str
+    ip_address: str
+    created_at: datetime
+    last_active_at: datetime
+    is_current: bool = False
+
+
+class NotificationPreferencesUpdateRequest(StrictBaseModel):
+    """User notification subscription preferences."""
+
+    assigned: bool = True
+    mentions: bool = True
+    changes_requested: bool = True
+    approved: bool = True
+    overdue: bool = True
+    quiet_hours_enabled: bool = False
+    quiet_hours_start: str | None = None
+    quiet_hours_end: str | None = None
 
 
 class OnboardingWizardRequest(StrictBaseModel):

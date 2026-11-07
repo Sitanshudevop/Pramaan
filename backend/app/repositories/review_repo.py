@@ -3,6 +3,7 @@
 import difflib
 import json
 import uuid
+from datetime import datetime
 
 from app.constants import DecisionAction, ReviewStatus, Role
 from app.models.base import get_utc_now
@@ -36,6 +37,7 @@ class ReviewRepository:
         workspace_id: str | None = None,
         author_id: str | None = None,
         assignee_id: str | None = None,
+        created_at: datetime | None = None,
     ) -> ReviewModel:
         """Create a new review submission and its initial version snapshot."""
         review_id = f"rev-{uuid.uuid4().hex[:12]}"
@@ -43,7 +45,7 @@ class ReviewRepository:
             id=review_id,
             workspace_id=workspace_id or self.workspace_id,
             creator_id=author_id,
-            assignee_id=assignee_id or author_id,
+            assignee_id=assignee_id,
             kit_id=kit_id,
             status=ReviewStatus.SUBMITTED.value,
             content_type=content_type,
@@ -53,6 +55,8 @@ class ReviewRepository:
             created_by_role=created_by_role.value
             if hasattr(created_by_role, "value")
             else str(created_by_role),
+            created_at=created_at or get_utc_now(),
+            updated_at=created_at or get_utc_now(),
         )
         self.db.add(review)
 
@@ -63,6 +67,7 @@ class ReviewRepository:
             version=1,
             content=content,
             diff_from_previous=None,
+            created_at=created_at or get_utc_now(),
         )
         self.db.add(version)
         self.db.commit()

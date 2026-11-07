@@ -23,7 +23,9 @@ from app.models.entities import (
     WorkspaceModel,
 )
 from app.schemas.schemas import (
+    ActiveSessionResponse,
     AuthSessionResponse,
+    NotificationPreferencesUpdateRequest,
     UpdateProfileRequest,
     UserResponse,
     UserSignInRequest,
@@ -157,6 +159,9 @@ def signup(req: UserSignUpRequest, response: Response, db: Session = Depends(get
             email=user.email,
             full_name=user.full_name,
             avatar_url=user.avatar_url,
+            avatar_color=user.avatar_color or "#E06D3B",
+            notification_language=user.notification_language or "en-IN",
+            notification_preferences_json=user.notification_preferences_json or "{}",
             created_at=user.created_at,
         ),
         current_workspace=ws_resp,
@@ -277,6 +282,9 @@ def signin(req: UserSignInRequest, response: Response, db: Session = Depends(get
             email=user.email,
             full_name=user.full_name,
             avatar_url=user.avatar_url,
+            avatar_color=user.avatar_color or "#E06D3B",
+            notification_language=user.notification_language or "en-IN",
+            notification_preferences_json=user.notification_preferences_json or "{}",
             created_at=user.created_at,
         ),
         current_workspace=curr_ws_resp,
@@ -386,6 +394,9 @@ def refresh_session(
             email=user.email,
             full_name=user.full_name,
             avatar_url=user.avatar_url,
+            avatar_color=user.avatar_color or "#E06D3B",
+            notification_language=user.notification_language or "en-IN",
+            notification_preferences_json=user.notification_preferences_json or "{}",
             created_at=user.created_at,
         ),
         current_workspace=curr,
@@ -459,6 +470,9 @@ def get_me(user: UserModel = Depends(get_current_user), db: Session = Depends(ge
             email=user.email,
             full_name=user.full_name,
             avatar_url=user.avatar_url,
+            avatar_color=user.avatar_color or "#E06D3B",
+            notification_language=user.notification_language or "en-IN",
+            notification_preferences_json=user.notification_preferences_json or "{}",
             created_at=user.created_at,
         ),
         current_workspace=curr,
@@ -472,11 +486,15 @@ def update_profile(
     user: UserModel = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Update profile name, avatar, or change password."""
+    """Update profile name, avatar color, language, or change password."""
     if req.full_name:
         user.full_name = req.full_name.strip()
     if req.avatar_url is not None:
         user.avatar_url = req.avatar_url
+    if req.avatar_color is not None:
+        user.avatar_color = req.avatar_color
+    if req.notification_language is not None:
+        user.notification_language = req.notification_language
 
     if req.new_password:
         if not req.current_password or not verify_password(
@@ -498,10 +516,182 @@ def update_profile(
         email=user.email,
         full_name=user.full_name,
         avatar_url=user.avatar_url,
+        avatar_color=user.avatar_color or "#E06D3B",
+        notification_language=user.notification_language or "en-IN",
+        notification_preferences_json=user.notification_preferences_json or "{}",
         created_at=user.created_at,
     )
 
 
+@router.get("/sessions", response_model=list[ActiveSessionResponse])
+def list_active_sessions(
+    refresh_token: str | None = Cookie(default=None),
+    user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """List active sessions (refresh tokens) for current user."""
+    now = datetime.now(UTC)
+    current_hash = hash_token(refresh_token) if refresh_token else None
+    tokens = (
+        db.query(RefreshTokenModel)
+        .filter(
+            RefreshTokenModel.user_id == user.id,
+            RefreshTokenModel.revoked_at.is_(None),
+            RefreshTokenModel.expires_at > now,
+        )
+        .order_by(RefreshTokenModel.created_at.desc())
+        .all()
+    )
+
+    results: list[ActiveSessionResponse] = []
+    if not tokens:
+        # If no refresh token in DB (e.g. demo mode or tokenless direct auth), return current active session
+        results.append(
+            ActiveSessionResponse(
+                id="sess-current",
+                device_info="Current Browser Session (Chrome / Windows)",
+                ip_address="127.0.0.1 (Local / Active)",
+                created_at=user.created_at,
+                last_active_at=now,
+                is_current=True,
+            )
+        )
+        return results
+
+    for idx, t in enumerate(tokens):
+        is_cur = (t.token_hash == current_hash) or (idx == 0 and not current_hash)
+        device = "Current Browser Session" if is_cur else f"Workstation / Mobile Device #{idx + 1}"
+        results.append(
+            ActiveSessionResponse(
+                id=t.id,
+                device_info=device,
+                ip_address="127.0.0.1 (Local / VPN)",
+                created_at=t.created_at,
+                last_active_at=t.created_at,
+                is_current=is_cur,
+            )
+        )
+    return results
+
+
+@router.post("/sessions/{session_id}/revoke")
+def revoke_session(
+    session_id: str,
+    user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Revoke a specific active session."""
+    t = (
+        db.query(RefreshTokenModel)
+        .filter(RefreshTokenModel.id == session_id, RefreshTokenModel.user_id == user.id)
+        .first()
+    )
+    if not t:
+        if session_id == "sess-current":
+            return {"status": "revoked", "id": session_id, "message": "Demo session signed out."}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found.")
+    t.revoked_at = datetime.now(UTC)
+    db.commit()
+    return {"status": "revoked", "id": session_id, "message": "Session revoked successfully."}
+
+
+@router.post("/sessions/revoke-others")
+def revoke_other_sessions(
+    refresh_token: str | None = Cookie(default=None),
+    user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Revoke all sessions except the current one."""
+    current_hash = hash_token(refresh_token) if refresh_token else None
+    q = db.query(RefreshTokenModel).filter(
+        RefreshTokenModel.user_id == user.id,
+        RefreshTokenModel.revoked_at.is_(None),
+    )
+    if current_hash:
+        q = q.filter(RefreshTokenModel.token_hash != current_hash)
+    count = q.update({"revoked_at": datetime.now(UTC)}, synchronize_session=False)
+    db.commit()
+    return {
+        "status": "revoked_others",
+        "count": count,
+        "message": f"Signed out of {count} other devices.",
+    }
+
+
+@router.get("/notifications/preferences")
+def get_notification_preferences(
+    user: UserModel = Depends(get_current_user),
+):
+    """Fetch user's notification preferences."""
+    import json
+
+    try:
+        prefs = json.loads(user.notification_preferences_json or "{}")
+    except Exception:
+        prefs = {}
+    return {
+        "assigned": prefs.get("assigned", True),
+        "mentions": prefs.get("mentions", True),
+        "changes_requested": prefs.get("changes_requested", True),
+        "approved": prefs.get("approved", True),
+        "overdue": prefs.get("overdue", True),
+        "quiet_hours_enabled": prefs.get("quiet_hours_enabled", False),
+        "quiet_hours_start": prefs.get("quiet_hours_start", "22:00"),
+        "quiet_hours_end": prefs.get("quiet_hours_end", "08:00"),
+        "language": user.notification_language or "en-IN",
+    }
+
+
+@router.put("/notifications/preferences")
+def update_notification_preferences(
+    req: NotificationPreferencesUpdateRequest,
+    user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update user's in-app notification preferences."""
+    import json
+
+    prefs = {
+        "assigned": req.assigned,
+        "mentions": req.mentions,
+        "changes_requested": req.changes_requested,
+        "approved": req.approved,
+        "overdue": req.overdue,
+        "quiet_hours_enabled": req.quiet_hours_enabled,
+        "quiet_hours_start": req.quiet_hours_start,
+        "quiet_hours_end": req.quiet_hours_end,
+    }
+    user.notification_preferences_json = json.dumps(prefs)
+    db.commit()
+    return {"status": "updated", "preferences": prefs}
+
+
+@router.get("/users/me/notifications")
+def get_user_notifications_alias(user: UserModel = Depends(get_current_user)):
+    """Alias for fetching user notification preferences."""
+    return get_notification_preferences(user)
+
+
+@router.put("/users/me/notifications")
+def update_user_notifications_alias(
+    req: NotificationPreferencesUpdateRequest,
+    user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Alias for updating user notification preferences."""
+    return update_notification_preferences(req, user, db)
+
+
+@router.get("/users/me/export")
+def get_user_export_alias(
+    user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Alias for personal data export."""
+    return export_user_data(user, db)
+
+
+@router.get("/export-data")
 @router.post("/export-data")
 def export_user_data(user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
     """Export user personal profile and authored content data as JSON."""
@@ -511,9 +701,21 @@ def export_user_data(user: UserModel = Depends(get_current_user), db: Session = 
             "id": user.id,
             "email": user.email,
             "full_name": user.full_name,
+            "avatar_color": user.avatar_color,
+            "notification_language": user.notification_language,
             "created_at": user.created_at.isoformat(),
         },
         "authored_reviews_count": len(authored_reviews),
+        "authored_reviews": [
+            {
+                "id": r.id,
+                "brand_kit_id": r.brand_kit_id,
+                "content_type": r.content_type,
+                "status": r.status,
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in authored_reviews
+        ],
         "exported_at": datetime.now(UTC).isoformat(),
     }
 

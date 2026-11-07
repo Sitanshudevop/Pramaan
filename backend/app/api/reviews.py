@@ -148,6 +148,7 @@ def _format_review(review: ReviewModel, active_version: int | None = None) -> Re
             )
             for a in review.approvals
         ],
+        is_overdue=review.is_overdue,
         pass_notice=PASS_EXPLANATION_SENTENCE,
     )
 

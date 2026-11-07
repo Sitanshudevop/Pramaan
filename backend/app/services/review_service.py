@@ -83,7 +83,49 @@ class ReviewService:
             for f in kit.facts
         ]
 
-        # 2. Persist Review and Initial Version
+        # 2. Check workspace policies: auto-assign, AI enablement, confidential mode
+        from app.models.entities import ContentTypeModel, MembershipModel, WorkspaceModel
+
+        ws = (
+            self.db.query(WorkspaceModel)
+            .filter(WorkspaceModel.id == (self.workspace_id or "ws-demo"))
+            .first()
+        )
+        assignee_id = request.assignee_id
+        if not assignee_id and ws:
+            if ws.auto_assign_mode == "by_brand_kit":
+                ct = (
+                    self.db.query(ContentTypeModel)
+                    .filter(
+                        ContentTypeModel.workspace_id == ws.id,
+                        ContentTypeModel.name == request.content_type,
+                    )
+                    .first()
+                )
+                if ct and ct.default_reviewer_id:
+                    assignee_id = ct.default_reviewer_id
+                elif kit.id == "kettle-and-co":
+                    assignee_id = "usr-rohan"
+                elif kit.id == "ledgerleaf":
+                    assignee_id = "usr-dev"
+            elif ws.auto_assign_mode == "round_robin":
+                rev_mems = (
+                    self.db.query(MembershipModel.user_id)
+                    .filter(
+                        MembershipModel.workspace_id == ws.id,
+                        MembershipModel.role.in_(["Reviewer", "Brand manager"]),
+                    )
+                    .all()
+                )
+                if rev_mems:
+                    assignee_id = rev_mems[0][0]
+
+        if ws and ws.confidential_mode:
+            confidential_mode = True
+
+        ai_is_enabled = ws.ai_enabled if ws else True
+
+        # Persist Review and Initial Version
         review = self.review_repo.create_review(
             kit_id=kit.id,
             content=request.content,
@@ -92,7 +134,7 @@ class ReviewService:
             ai_declared=request.ai_declared,
             created_by_role=actor_role,
             workspace_id=self.workspace_id,
-            assignee_id=request.assignee_id,
+            assignee_id=assignee_id,
         )
 
         # 3. Deterministic check layer (pure, reproducible)
@@ -116,9 +158,13 @@ class ReviewService:
         retrieved_rules = [d["item"] for d in retrieved_docs if d["type"] == "rule"]
         retrieved_facts = [d["item"] for d in retrieved_docs if d["type"] == "fact"]
 
-        # 5. AI Layer (Optional, bypassed in Confidential Mode)
+        # 5. AI Layer (Optional, bypassed in Confidential Mode or when AI disabled)
         verified_ai_findings: list[Finding] = []
-        if not confidential_mode and not isinstance(self.ai_provider, NullProvider):
+        if (
+            ai_is_enabled
+            and not confidential_mode
+            and not isinstance(self.ai_provider, NullProvider)
+        ):
             ai_res = await self.ai_provider.evaluate_content(
                 passage=request.content,
                 retrieved_rules=retrieved_rules,
@@ -144,6 +190,15 @@ class ReviewService:
                 data_class="Confidential (Redacted Draft Passage)",
                 pii_redacted=True,
                 token_count=ai_res.tokens_used,
+            )
+        elif confidential_mode:
+            self.audit_repo.append_disclosure(
+                review_id=review.id,
+                provider="Offline Deterministic Engine",
+                model="no external call",
+                data_class="Confidential Mode",
+                pii_redacted=True,
+                token_count=0,
             )
 
         # 6. Combine and de-duplicate findings

@@ -21,6 +21,9 @@ class AuditRepository:
         entity: str,
         entity_id: str,
         detail: dict[str, Any],
+        workspace_id: str = "ws-demo",
+        actor_id: str | None = None,
+        created_at: Any | None = None,
     ) -> AuditLogModel:
         """Append an audit record to the immutable ledger without raw content."""
         # Sanitize details to guarantee zero draft content leakage
@@ -29,20 +32,29 @@ class AuditRepository:
         }
 
         event = AuditLogModel(
+            workspace_id=workspace_id,
+            actor_id=actor_id,
             actor_role=actor_role.value if hasattr(actor_role, "value") else str(actor_role),
             action=action,
             entity=entity,
             entity_id=entity_id,
             detail_json=json.dumps(clean_detail),
         )
+        if created_at:
+            event.created_at = created_at
         self.db.add(event)
         self.db.commit()
         self.db.refresh(event)
         return event
 
-    def list_audit_events(self, limit: int = 100) -> list[AuditLogModel]:
+    def list_audit_events(
+        self, limit: int = 100, workspace_id: str | None = None
+    ) -> list[AuditLogModel]:
         """Return the most recent audit trail records in reverse chronological order."""
-        return self.db.query(AuditLogModel).order_by(AuditLogModel.seq.desc()).limit(limit).all()
+        query = self.db.query(AuditLogModel)
+        if workspace_id:
+            query = query.filter(AuditLogModel.workspace_id == workspace_id)
+        return query.order_by(AuditLogModel.seq.desc()).limit(limit).all()
 
     def append_disclosure(
         self,
@@ -52,6 +64,8 @@ class AuditRepository:
         data_class: str,
         pii_redacted: bool,
         token_count: int = 0,
+        workspace_id: str = "ws-demo",
+        created_at: Any | None = None,
     ) -> DisclosureLedgerModel:
         """Record an immutable entry in the AI Disclosure Ledger."""
         import uuid
@@ -65,9 +79,12 @@ class AuditRepository:
             pii_redacted=pii_redacted,
             token_count=token_count,
         )
+        if created_at:
+            entry.created_at = created_at
         self.db.add(entry)
         self.db.commit()
         self.db.refresh(entry)
+        return entry
         return entry
 
     def list_disclosures(self, limit: int = 100) -> list[DisclosureLedgerModel]:

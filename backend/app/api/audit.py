@@ -2,6 +2,7 @@
 
 import json
 
+from app.auth.dependencies import WorkspaceContext, get_workspace_context
 from app.constants import Role
 from app.deps import get_db
 from app.repositories.audit_repo import AuditRepository
@@ -25,11 +26,12 @@ class ConfidentialModePayload(StrictBaseModel):
 def get_audit_logs(
     limit: int = 100,
     role: Role = Depends(require_permission(Permission.READ_AUDIT)),
+    ctx: WorkspaceContext = Depends(get_workspace_context),
     db: Session = Depends(get_db),
 ) -> list[AuditLogEntry]:
     """Retrieve immutable append-only audit trail records."""
     repo = AuditRepository(db)
-    models = repo.list_audit_events(limit=limit)
+    models = repo.list_audit_events(limit=limit, workspace_id=ctx.workspace_id)
     entries = []
     for m in models:
         try:
@@ -104,6 +106,7 @@ def set_confidential_mode(
 def export_audit_logs(
     format: str = "json",
     role: Role = Depends(require_permission(Permission.READ_AUDIT)),
+    ctx: WorkspaceContext = Depends(get_workspace_context),
     db: Session = Depends(get_db),
 ):
     """Export the audit trail as CSV or JSON for compliance verification."""
@@ -111,7 +114,7 @@ def export_audit_logs(
     import io
 
     repo = AuditRepository(db)
-    models = repo.list_audit_events(limit=1000)
+    models = repo.list_audit_events(limit=1000, workspace_id=ctx.workspace_id)
     entries = []
     for m in models:
         try:
@@ -158,13 +161,14 @@ def export_audit_logs(
 @router.post("/verify")
 def verify_audit_integrity(
     role: Role = Depends(require_permission(Permission.READ_AUDIT)),
+    ctx: WorkspaceContext = Depends(get_workspace_context),
     db: Session = Depends(get_db),
 ) -> dict:
     """Verify sequential cryptographic integrity of the append-only audit trail."""
     import hashlib
 
     repo = AuditRepository(db)
-    models = repo.list_audit_events(limit=1000)
+    models = repo.list_audit_events(limit=1000, workspace_id=ctx.workspace_id)
     sorted_models = sorted(models, key=lambda m: m.seq)
 
     prev_hash = "GENESIS"

@@ -165,9 +165,11 @@ export const Insights: React.FC = () => {
                   </h2>
                   <p className="text-[11px] text-text-muted">Rule hit frequency</p>
                 </div>
-                <Chip variant="neutral" size="sm">
-                  Simulated data
-                </Chip>
+                {isDemoMode && (
+                  <Chip variant="neutral" size="sm">
+                    Demo data is fictional
+                  </Chip>
+                )}
               </div>
 
               <div className="my-2">
@@ -176,21 +178,23 @@ export const Insights: React.FC = () => {
 
               <div className="text-[10px] text-text-muted border-t border-border/60 pt-2 flex justify-between">
                 <span>Top violated policies</span>
-                <span>Sorted by volume</span>
+                <span>Click a rule to inspect queue</span>
               </div>
             </div>
 
             {/* Total Override Events StatCard (3 cols) */}
             <div className="lg:col-span-3 flex flex-col justify-between">
               <StatCard
-                label="Simulated Events"
-                value="120"
-                hint="Curated mock review dataset"
+                label="Total Review Events"
+                value={insights.total_events}
+                hint="Computed across workspace reviews"
                 className="h-full"
               >
                 <div className="pt-2 border-t border-border/70 flex items-center justify-between text-[11px]">
                   <span className="text-text-muted">Active kits:</span>
-                  <span className="font-semibold text-text">2 Brands</span>
+                  <Link to="/app/hub" className="font-semibold text-orange-text hover:underline">
+                    2 Brands
+                  </Link>
                 </div>
               </StatCard>
             </div>
@@ -204,9 +208,11 @@ export const Insights: React.FC = () => {
                   <h2 className="text-sm font-bold text-text">
                     Guideline Ambiguity Radar
                   </h2>
-                  <Chip variant="accent" size="sm">
-                    Simulated data
-                  </Chip>
+                  {isDemoMode && (
+                    <Chip variant="accent" size="sm">
+                      Demo data is fictional
+                    </Chip>
+                  )}
                 </div>
                 <p className="text-xs text-text-muted mt-0.5">
                   Rules with high override rates where reviewers frequently disagree with standard policy.
@@ -225,9 +231,11 @@ export const Insights: React.FC = () => {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center space-x-2">
-                      <Chip variant="accent" size="sm">
-                        {item.rule_id}
-                      </Chip>
+                      <Link to={`/app/queue?rule=${item.rule_id}`}>
+                        <Chip variant="accent" size="sm" className="hover:opacity-80">
+                          {item.rule_id}
+                        </Chip>
+                      </Link>
                       <span className="font-bold text-text">{item.rule_name}</span>
                       <span className="text-[10px] px-2 py-0.5 rounded-pill bg-surface text-text-muted border border-border/60">
                         {item.category}
@@ -249,12 +257,16 @@ export const Insights: React.FC = () => {
 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] font-mono text-text-muted pt-1 border-t border-border/40">
                     <div className="flex space-x-4">
-                      <span>Violations detected: {item.violation_count}</span>
+                      <Link to={`/app/queue?rule=${item.rule_id}`} className="hover:text-text hover:underline">
+                        Violations detected: {item.violation_count}
+                      </Link>
                       <span>·</span>
-                      <span>Reviewer overrides: {item.override_count}</span>
+                      <Link to={`/app/queue?rule=${item.rule_id}`} className="hover:text-text hover:underline">
+                        Reviewer overrides: {item.override_count}
+                      </Link>
                     </div>
                     <Link
-                      to="/app/hub"
+                      to={item.rule_id === 'TERM-002' ? '/app/hub?kit=kettle-and-co&rule=TERM-002-v2' : `/app/hub?rule=${item.rule_id}`}
                       className="inline-flex items-center space-x-1 text-orange-text hover:underline font-semibold"
                     >
                       <span>Edit in Brand Hub</span>
@@ -271,9 +283,11 @@ export const Insights: React.FC = () => {
             <div className="flex items-center justify-between pb-2 border-b border-border/70">
               <div className="flex items-center space-x-2">
                 <h2 className="text-sm font-bold text-text">Reviewer Override Patterns</h2>
-                <Chip variant="neutral" size="sm">
-                  Simulated data
-                </Chip>
+                {isDemoMode && (
+                  <Chip variant="neutral" size="sm">
+                    Demo data is fictional
+                  </Chip>
+                )}
               </div>
               <span className="text-[11px] text-text-muted">Human overrides recorded</span>
             </div>

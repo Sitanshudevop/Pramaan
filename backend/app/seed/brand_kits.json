@@ -27,12 +27,26 @@
         "category": "Terminology",
         "title": "Product name casing & typography",
         "text": "Always write 'Masala Chai' in Title Case and 'Kettle & Co.' with an ampersand (&), never 'Kettle and Co' or 'Kettle & company'.",
+        "banned_terms": ["Kettle and Co", "Kettle & company"],
         "severity": "Major",
         "version": "1.0",
         "status": "active",
         "effective_from": "2026-01-01",
         "owner": "Editorial Lead",
         "source": "Brand Style Guide Section 2.1"
+      },
+      {
+        "id": "TERM-002-v2",
+        "category": "Terminology",
+        "title": "Product name casing & typography (Clarification proposal)",
+        "text": "Always write 'Masala Chai' in Title Case and 'Kettle & Co.' with an ampersand (&). When referring to tea blends, capitalize 'Masala Chai Blend' but keep 'masala spices' lowercase.",
+        "banned_terms": ["Kettle and Co", "Kettle & company"],
+        "severity": "Major",
+        "version": "2.0",
+        "status": "draft",
+        "effective_from": "2026-12-01",
+        "owner": "Anika Rao",
+        "source": "Brand Council Review Q4"
       },
       {
         "id": "TERM-003",
@@ -47,10 +61,75 @@
         "source": "Kettle & Co. Spelling Dictionary 2026"
       },
       {
+        "id": "TERM-004",
+        "category": "Terminology",
+        "title": "Traditional tea processing terminology",
+        "text": "Accurately designate processing methods: 'CTC', 'orthodox leaf', or 'single estate'. Never describe blended tea as single origin.",
+        "banned_terms": ["single origin blend"],
+        "severity": "Minor",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Quality Assurance",
+        "source": "Tea Processing Nomenclature v1.1"
+      },
+      {
+        "id": "TERM-005",
+        "category": "Terminology",
+        "title": "Natural & chemical-free terminology",
+        "text": "Do not use '100% natural' or 'chemical-free' without citing standard laboratory analysis certificate.",
+        "banned_terms": ["chemical-free", "100% chemical free"],
+        "severity": "Major",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Legal & Compliance",
+        "source": "Consumer Protection Guidelines"
+      },
+      {
+        "id": "MSG-001",
+        "category": "Messaging",
+        "title": "Mandatory promotional email disclaimer",
+        "text": "All promotional communications offering discounts, bundles, or gifts must include: 'Offer valid while stocks last. T&Cs apply.'",
+        "preferred_replacement": "Offer valid while stocks last. T&Cs apply.",
+        "severity": "Major",
+        "version": "1.1",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Marketing Operations",
+        "source": "Sales Promotion Mandates 2026"
+      },
+      {
+        "id": "MSG-002",
+        "category": "Messaging",
+        "title": "Limited edition harvest batch disclaimer",
+        "text": "Seasonal harvest announcements must state: 'Limited harvest batch. Subject to availability.'",
+        "preferred_replacement": "Limited harvest batch. Subject to availability.",
+        "severity": "Minor",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Marketing Operations",
+        "source": "Seasonal Release Guidelines"
+      },
+      {
+        "id": "MSG-003",
+        "category": "Messaging",
+        "title": "Net quantity packaging declaration",
+        "text": "All product packs must clearly declare net weight in metric units (e.g. 'Net Wt. 250g') alongside pouch imagery.",
+        "severity": "Major",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Compliance Lead",
+        "source": "Legal Metrology Pack Rules"
+      },
+      {
         "id": "CLAIM-3.1",
         "category": "Promotional claims",
         "title": "Unsubstantiated superlatives restriction",
         "text": "Do not make unsupported superlative claims such as 'best', 'number one', or '#1' unless an active, approved fact in the facts register substantiates the ranking with verifiable third-party certification.",
+        "banned_terms": ["best in the world", "#1 masala chai", "number one tea", "best"],
         "severity": "Major",
         "version": "1.2",
         "status": "active",
@@ -63,6 +142,7 @@
         "category": "Promotional claims",
         "title": "Medical & health claims prohibition",
         "text": "Health, curative, or medical efficacy claims ('cure', 'clinically proven', 'treats', 'detox') are strictly prohibited without an approved regulatory clinical trial dossier.",
+        "banned_terms": ["cure", "clinically proven", "treats", "detox"],
         "severity": "Blocker",
         "version": "2.0",
         "status": "active",
@@ -71,16 +151,30 @@
         "source": "FSSAI & Advertising Compliance Register 2026"
       },
       {
-        "id": "MSG-001",
-        "category": "Messaging",
-        "title": "Mandatory promotional email disclaimer",
-        "text": "All promotional communications offering discounts, bundles, or gifts must include: 'Offer valid while stocks last. T&Cs apply.'",
+        "id": "CLAIM-4.3",
+        "category": "Promotional claims",
+        "title": "Geographic origin & terroir certification",
+        "text": "Terroir claims ('100% Assam', 'Darjeeling certified') must match authentic registered plantation origin certificates.",
+        "banned_terms": ["100% authentic Darjeeling", "fake origin"],
         "severity": "Major",
-        "version": "1.1",
+        "version": "1.0",
         "status": "active",
         "effective_from": "2026-01-01",
-        "owner": "Marketing Operations",
-        "source": "Sales Promotion Mandates 2026"
+        "owner": "Supply Chain Audit",
+        "source": "Geographic Indication Policy"
+      },
+      {
+        "id": "CLAIM-4.4",
+        "category": "Promotional claims",
+        "title": "Freshness packaging window claim",
+        "text": "Freshness claims ('packaged within 48 hours of pluck') require batch-coded factory roasting timestamps.",
+        "banned_terms": ["plucked this morning"],
+        "severity": "Minor",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Packaging Lead",
+        "source": "Operations Protocol 4.4"
       },
       {
         "id": "TONE-001",
@@ -91,69 +185,218 @@
         "version": "1.0",
         "status": "active",
         "effective_from": "2026-01-01",
-        "owner": "Brand Lead",
-        "source": "Tone of Voice Blueprint 2026"
+        "owner": "Editorial Lead",
+        "source": "Editorial Guidelines Section 1"
       },
       {
-        "id": "AI-001",
-        "category": "AI and disclosure",
-        "title": "Mandatory AI content disclosure",
-        "text": "Any external marketing asset drafted with generative AI tools must include: 'Created with AI assistance and reviewed by our team.'",
-        "severity": "Major",
+        "id": "TONE-002",
+        "category": "Tone and voice",
+        "title": "Grounded authenticity & artificial urgency prohibition",
+        "text": "Avoid sensational countdowns or artificial urgency such as 'HURRY OR REGRET FOREVER'. Speak with warmth and poise.",
+        "banned_terms": ["HURRY BEFORE IT'S GONE FOREVER", "BUY NOW OR CRY LATER"],
+        "severity": "Minor",
         "version": "1.0",
         "status": "active",
-        "effective_from": "2026-02-01",
-        "owner": "Brand Governance Team",
-        "source": "Responsible AI & Ethics Standard 2026"
+        "effective_from": "2026-01-01",
+        "owner": "Editorial Lead",
+        "source": "Editorial Guidelines Section 2"
       }
     ],
     "facts": [
       {
         "id": "F-12",
-        "subject": "Organic Ingredients",
-        "value": "Made with certified organic tea leaves",
-        "unit": "certification",
-        "valid_from": "2026-01-01",
-        "valid_to": "2027-12-31",
-        "permitted_wording": "Made with 100% certified organic estate tea leaves",
-        "owner": "Sourcing Director",
-        "source": "Organic India Certification Audit 2026",
-        "status": "active"
-      },
-      {
-        "id": "F-14",
-        "subject": "Masala Chai 250g Price",
+        "subject": "Masala Chai 250g Retail Price",
         "value": "₹349",
         "unit": "INR",
         "valid_from": "2026-07-01",
         "valid_to": "2026-12-31",
-        "permitted_wording": "Masala Chai 250 g is priced at ₹349 (inclusive of all taxes)",
-        "owner": "Revenue Lead",
-        "source": "Price Schedule H2-2026",
+        "permitted_wording": "₹349 for 250g pouch",
+        "owner": "Pricing Operations",
+        "source": "Retail Price List Q3/Q4 2026",
         "status": "active"
       },
       {
         "id": "F-15",
-        "subject": "Masala Chai 250g Historic Price",
+        "subject": "Masala Chai 250g Retail Price",
         "value": "₹299",
         "unit": "INR",
-        "valid_from": "2025-01-01",
+        "valid_from": "2026-01-01",
         "valid_to": "2026-06-30",
-        "permitted_wording": "Historic introductory price ₹299 (Expired)",
-        "owner": "Revenue Lead",
-        "source": "Price Schedule H1-2026",
+        "permitted_wording": "₹299 for 250g pouch",
+        "owner": "Pricing Operations",
+        "source": "Retail Price List H1 2026 (Superseded on 1 Jul 2026)",
         "status": "superseded"
       },
       {
-        "id": "F-16",
-        "subject": "Free Shipping Threshold",
+        "id": "F-14",
+        "subject": "Standard Free Shipping Threshold",
         "value": "₹499",
         "unit": "INR",
+        "valid_from": "2026-07-01",
+        "valid_to": "2026-12-31",
+        "permitted_wording": "Free pan-India delivery on orders above ₹499",
+        "owner": "Logistics Operations",
+        "source": "Logistics Policy Q3 2026",
+        "status": "active"
+      },
+      {
+        "id": "F-14-OLD",
+        "subject": "Standard Free Shipping Threshold",
+        "value": "₹399",
+        "unit": "INR",
+        "valid_from": "2026-01-01",
+        "valid_to": "2026-06-30",
+        "permitted_wording": "Free delivery on orders above ₹399",
+        "owner": "Logistics Operations",
+        "source": "Logistics Policy H1 2026 (Superseded)",
+        "status": "superseded"
+      },
+      {
+        "id": "F-18",
+        "subject": "Assam Single-Estate Blend Origin",
+        "value": "certified 100% Upper Assam tea estates",
+        "unit": "plantation origin",
         "valid_from": "2026-01-01",
         "valid_to": "2026-12-31",
-        "permitted_wording": "Free domestic shipping on orders over ₹499",
-        "owner": "Logistics Lead",
-        "source": "Fulfillment Policy 2026",
+        "permitted_wording": "harvested from certified 100% Upper Assam tea estates",
+        "owner": "Supply Chain Quality",
+        "source": "Estate Verification Certificate #AS-2026-99",
+        "status": "active"
+      },
+      {
+        "id": "F-16",
+        "subject": "Artisanal Small-Batch Brew Time",
+        "value": "4-5 minutes steeped at 95°C",
+        "unit": "steeping protocol",
+        "valid_from": "2026-01-01",
+        "valid_to": "2026-12-31",
+        "permitted_wording": "steep for 4-5 minutes in fresh water at 95°C",
+        "owner": "Brewmaster Lab",
+        "source": "Brewing Standard Operating Procedure v2",
+        "status": "active"
+      },
+      {
+        "id": "F-17",
+        "subject": "Festive Monsoon Bundle Seasonal Pricing",
+        "value": "₹799",
+        "unit": "INR",
+        "valid_from": "2026-10-15",
+        "valid_to": "2026-11-20",
+        "permitted_wording": "Festive Monsoon Trio Bundle at ₹799",
+        "owner": "Marketing Campaigns",
+        "source": "Diwali & Monsoon Promo Directive 2026",
+        "status": "active"
+      }
+    ],
+    "glossary": [
+      {
+        "id": "GLS-KC-01",
+        "term": "Kettle & Co.",
+        "preferred_casing": "Kettle & Co.",
+        "definition": "Brand trade name, always punctuated with ampersand and period."
+      },
+      {
+        "id": "GLS-KC-02",
+        "term": "Masala Chai",
+        "preferred_casing": "Masala Chai",
+        "definition": "Flagship artisanal spiced black tea blend in Title Case."
+      },
+      {
+        "id": "GLS-KC-03",
+        "term": "Darjeeling Second Flush",
+        "preferred_casing": "Darjeeling Second Flush",
+        "definition": "Muscatel summer harvest black tea from certified Darjeeling GI estates."
+      },
+      {
+        "id": "GLS-KC-04",
+        "term": "Kadak",
+        "preferred_casing": "Kadak",
+        "definition": "Strong, full-bodied extraction profile characteristic of Indian CTC tea."
+      },
+      {
+        "id": "GLS-KC-05",
+        "term": "CTC",
+        "preferred_casing": "CTC",
+        "definition": "Crush, Tear, Curl manufacturing method for rich malty liquor."
+      },
+      {
+        "id": "GLS-KC-06",
+        "term": "Single Estate",
+        "preferred_casing": "Single Estate",
+        "definition": "Harvested exclusively from a single named partner plantation."
+      }
+    ],
+    "claim_patterns": [
+      {
+        "id": "CLM-KC-01",
+        "pattern": "100% pure Assam",
+        "category": "Origin",
+        "severity": "Major",
+        "substantiating_fact_id": "F-18",
+        "reason": "Substantiated by estate harvest certificate",
+        "status": "active"
+      },
+      {
+        "id": "CLM-KC-02",
+        "pattern": "single origin",
+        "category": "Origin",
+        "severity": "Major",
+        "substantiating_fact_id": "F-18",
+        "reason": "Substantiated by single estate origin certificate",
+        "status": "active"
+      },
+      {
+        "id": "CLM-KC-03",
+        "pattern": "freshly packaged",
+        "category": "Freshness",
+        "severity": "Minor",
+        "substantiating_fact_id": "F-16",
+        "reason": "Substantiated by daily roasting schedule",
+        "status": "active"
+      },
+      {
+        "id": "CLM-KC-04",
+        "pattern": "miracle cure",
+        "category": "Health",
+        "severity": "Blocker",
+        "substantiating_fact_id": null,
+        "reason": "Prohibited curative claim under FSSAI regulations",
+        "status": "active"
+      },
+      {
+        "id": "CLM-KC-05",
+        "pattern": "cures acidity",
+        "category": "Health",
+        "severity": "Blocker",
+        "substantiating_fact_id": null,
+        "reason": "Unsubstantiated therapeutic claim",
+        "status": "active"
+      },
+      {
+        "id": "CLM-KC-06",
+        "pattern": "clinically proven tea",
+        "category": "Health",
+        "severity": "Blocker",
+        "substantiating_fact_id": null,
+        "reason": "No regulatory clinical trials registered",
+        "status": "active"
+      },
+      {
+        "id": "CLM-KC-07",
+        "pattern": "cheapest tea",
+        "category": "Pricing",
+        "severity": "Blocker",
+        "substantiating_fact_id": null,
+        "reason": "Sensationalist pricing superlatives forbidden",
+        "status": "active"
+      },
+      {
+        "id": "CLM-KC-08",
+        "pattern": "#1 masala chai in India",
+        "category": "Ranking",
+        "severity": "Major",
+        "substantiating_fact_id": null,
+        "reason": "Unverified superlative market ranking claim",
         "status": "active"
       }
     ]
@@ -161,49 +404,101 @@
   {
     "id": "ledgerleaf",
     "name": "LedgerLeaf",
-    "tagline": "Intelligent automated accounting & wealth management for modern professionals",
-    "industry": "Financial Technology (Fintech)",
-    "description": "Fictional fintech platform offering compliant expense tracking, verified portfolio insights, and automated bank reconciliation.",
-    "voice_tone": "Precise, calm, compliant, transparent, non-sensational",
-    "target_reading_level": 9,
-    "primary_color": "#3B4BC8",
+    "tagline": "Transparent, automated personal accounting & investments",
+    "industry": "FinTech / SaaS",
+    "description": "Fictional fintech startup delivering automated expense tracking, smart tax-saving buckets, and transparent portfolio insights.",
+    "voice_tone": "Prudent, precise, objective, regulatory-compliant",
+    "target_reading_level": 10,
+    "primary_color": "#2563EB",
     "rules": [
       {
         "id": "CLAIM-1.1",
         "category": "Promotional claims",
-        "title": "Unsubstantiated financial promises prohibition",
-        "text": "Never promise 'guaranteed returns', 'risk-free' investment, or 'zero fees' without an explicit, active fact registration and regulatory disclosure.",
-        "banned_terms": ["guaranteed returns", "risk-free", "zero fees"],
-        "severity": "Blocker",
-        "version": "2.1",
-        "status": "active",
-        "effective_from": "2026-01-01",
-        "owner": "Chief Compliance Officer",
-        "source": "SEBI Compliance Directives 2026"
-      },
-      {
-        "id": "CLAIM-1.4",
-        "category": "Promotional claims",
-        "title": "Mandatory risk disclaimer on performance figures",
-        "text": "Any mention of investment returns, percentage gains, or historic yields must be accompanied by the statutory risk notice.",
-        "severity": "Major",
-        "version": "1.3",
-        "status": "active",
-        "effective_from": "2026-01-01",
-        "owner": "Legal & Risk",
-        "source": "Financial Promotion Standard 1.4"
-      },
-      {
-        "id": "MSG-010",
-        "category": "Messaging",
-        "title": "Mandatory investment market risk disclaimer",
-        "text": "Must include exact disclaimer: 'Investments are subject to market risks. Read all scheme-related documents carefully.'",
+        "title": "Guaranteed financial returns prohibition",
+        "text": "Never promise 'guaranteed returns', 'risk-free', or 'zero risk'. All investment products carry capital risk.",
+        "banned_terms": ["guaranteed returns", "risk-free", "zero risk", "guaranteed profit"],
         "severity": "Blocker",
         "version": "1.0",
         "status": "active",
         "effective_from": "2026-01-01",
         "owner": "Compliance Lead",
-        "source": "Statutory Financial Mandates 2026"
+        "source": "SEBI Investment Adviser Regulations 2026"
+      },
+      {
+        "id": "CLAIM-1.2",
+        "category": "Promotional claims",
+        "title": "Zero-brokerage fee condition transparency",
+        "text": "Claims of 'zero brokerage' or '0 commission' must clearly state that exchange transaction charges, SEBI turnover fees, and GST still apply.",
+        "banned_terms": ["free investing forever", "completely free trades"],
+        "severity": "Major",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Legal & Compliance",
+        "source": "Tariff & Pricing Code"
+      },
+      {
+        "id": "CLAIM-1.3",
+        "category": "Promotional claims",
+        "title": "Regulatory SEBI/RBI registration claims",
+        "text": "Claims citing SEBI registration must display official registration number INZ000293431 in legible body typography.",
+        "severity": "Blocker",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Compliance Lead",
+        "source": "Statutory Representation Policy"
+      },
+      {
+        "id": "CLAIM-1.4",
+        "category": "Promotional claims",
+        "title": "Performance metrics & annualized yield statutory warning",
+        "text": "Any performance figure or annualized yield must be accompanied by the statutory note: 'Past performance does not guarantee future results.'",
+        "preferred_replacement": "Past performance does not guarantee future results.",
+        "severity": "Major",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Compliance Lead",
+        "source": "SEBI Circular on Performance Advertising"
+      },
+      {
+        "id": "MSG-010",
+        "category": "Messaging",
+        "title": "Mandatory investment market risk disclaimer",
+        "text": "All customer-facing materials discussing securities, equities, or mutual funds must include: 'Investments are subject to market risks. Read all scheme-related documents carefully.'",
+        "preferred_replacement": "Investments are subject to market risks. Read all scheme-related documents carefully.",
+        "severity": "Blocker",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Compliance Lead",
+        "source": "SEBI Advertising Code Clause 7"
+      },
+      {
+        "id": "MSG-011",
+        "category": "Messaging",
+        "title": "Account security & OTP confidential warning",
+        "text": "Account setup and notification copy must remind users: 'LedgerLeaf never asks for your OTP, PIN, or password.'",
+        "preferred_replacement": "LedgerLeaf never asks for your OTP, PIN, or password.",
+        "severity": "Major",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "InfoSec Officer",
+        "source": "Information Security Standard"
+      },
+      {
+        "id": "MSG-012",
+        "category": "Messaging",
+        "title": "Credit line APR and representative cost disclosure",
+        "text": "Loan and margin facilities must declare annual percentage rate (APR) range and representative total cost of borrowing.",
+        "severity": "Blocker",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Legal Lead",
+        "source": "Digital Lending Norms 2026"
       },
       {
         "id": "TERM-010",
@@ -217,20 +512,83 @@
         "effective_from": "2026-01-01",
         "owner": "Product Marketing",
         "source": "Rebranding Architecture Memo 2026"
+      },
+      {
+        "id": "TERM-011",
+        "category": "Terminology",
+        "title": "LedgerLeaf brand product casing",
+        "text": "Always write 'LedgerLeaf Pro' and 'SmartVault' in exact CamelCase. Never write 'smart vault'.",
+        "banned_terms": ["smart vault"],
+        "severity": "Major",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Brand Governance Team",
+        "source": "Product Nomenclature Manual"
+      },
+      {
+        "id": "TERM-012",
+        "category": "Terminology",
+        "title": "FinTech en-IN terminology conventions",
+        "text": "Use standard Indian financial terminology: 'demat account', 'cheque', 'PAN card', 'Aadhaar e-sign'.",
+        "severity": "Minor",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Editorial Lead",
+        "source": "Regional Finance Lexicon"
+      },
+      {
+        "id": "TONE-010",
+        "category": "Tone and voice",
+        "title": "Objective calm tone & FOMO avoidance",
+        "text": "Financial communications must be measured, transparent, and educational. Avoid artificial urgency words like 'HURRY BEFORE PRICES EXPLODE'.",
+        "banned_terms": ["HURRY BEFORE PRICES EXPLODE", "GUARANTEED MOONSHOT"],
+        "severity": "Major",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Editorial Lead",
+        "source": "Tone Principles 2026"
+      },
+      {
+        "id": "AI-010",
+        "category": "Tone and voice",
+        "title": "Automated algorithmic advisory disclosure",
+        "text": "Algorithmic portfolio rebalancing suggestions must be labeled 'Algorithmic calculation for informational purposes only, not personalized investment advice.'",
+        "preferred_replacement": "Algorithmic calculation for informational purposes only, not personalized investment advice.",
+        "severity": "Major",
+        "version": "1.0",
+        "status": "active",
+        "effective_from": "2026-01-01",
+        "owner": "Compliance Lead",
+        "source": "Robo-Advisory Governance Framework"
       }
     ],
     "facts": [
       {
         "id": "F-30",
-        "subject": "LedgerLeaf Plus Subscription Price",
-        "value": "₹199 per month",
-        "unit": "INR/month",
-        "valid_from": "2026-01-01",
+        "subject": "LedgerLeaf Pro Annual Subscription",
+        "value": "₹999",
+        "unit": "INR/year",
+        "valid_from": "2026-07-01",
         "valid_to": "2026-12-31",
-        "permitted_wording": "LedgerLeaf Plus subscription is ₹199 per month billed monthly or annually",
-        "owner": "Pricing Lead",
-        "source": "Product Commercial Catalog 2026",
+        "permitted_wording": "₹999 per year for LedgerLeaf Pro",
+        "owner": "Product Growth",
+        "source": "Subscription Tier Tariff Q3 2026",
         "status": "active"
+      },
+      {
+        "id": "F-30-OLD",
+        "subject": "LedgerLeaf Pro Annual Subscription",
+        "value": "₹799",
+        "unit": "INR/year",
+        "valid_from": "2026-01-01",
+        "valid_to": "2026-06-30",
+        "permitted_wording": "₹799 per year for LedgerLeaf Pro",
+        "owner": "Product Growth",
+        "source": "Subscription Tier Tariff H1 2026 (Superseded)",
+        "status": "superseded"
       },
       {
         "id": "F-31",
@@ -246,17 +604,137 @@
       },
       {
         "id": "F-32",
-        "subject": "Customer Support Operating Hours",
-        "value": "9 AM to 6 PM IST, Monday to Saturday",
-        "unit": "hours",
+        "subject": "Regulated Broker License Number",
+        "value": "SEBI Reg No. INZ000293431",
+        "unit": "SEBI registration code",
         "valid_from": "2026-01-01",
         "valid_to": "2026-12-31",
-        "permitted_wording": "Live support desk available 9 AM to 6 PM IST, Monday through Saturday",
-        "owner": "Customer Operations",
-        "source": "Support SLA Guidelines 2026",
+        "permitted_wording": "SEBI Registration Number INZ000293431",
+        "owner": "Legal Operations",
+        "source": "SEBI Intermediary Registry 2026",
+        "status": "active"
+      },
+      {
+        "id": "F-33",
+        "subject": "Instant Withdrawal Processing Window",
+        "value": "Under 15 minutes",
+        "unit": "minutes processing window",
+        "valid_from": "2026-01-01",
+        "valid_to": "2026-12-31",
+        "permitted_wording": "withdrawals processed to verified UPI bank accounts in under 15 minutes",
+        "owner": "Banking Operations",
+        "source": "IMPS/UPI Banking Settlement SLA",
+        "status": "active"
+      },
+      {
+        "id": "F-34",
+        "subject": "Zero Account Maintenance Charges (AMC) for First Year",
+        "value": "₹0 for months 1-12",
+        "unit": "INR AMC fee",
+        "valid_from": "2026-01-01",
+        "valid_to": "2026-12-31",
+        "permitted_wording": "zero account maintenance charges for the first 12 months",
+        "owner": "Product Growth",
+        "source": "New Account Promotion Policy 2026",
+        "status": "active"
+      }
+    ],
+    "glossary": [
+      {
+        "id": "GLS-LL-01",
+        "term": "LedgerLeaf Pro",
+        "preferred_casing": "LedgerLeaf Pro",
+        "definition": "Premium algorithmic portfolio analytics and taxation suite."
+      },
+      {
+        "id": "GLS-LL-02",
+        "term": "SmartVault",
+        "preferred_casing": "SmartVault",
+        "definition": "High-yield institutional cash-sweep vault product."
+      },
+      {
+        "id": "GLS-LL-03",
+        "term": "Demat",
+        "preferred_casing": "Demat",
+        "definition": "Electronic dematerialised depository account for holding shares and bonds."
+      },
+      {
+        "id": "GLS-LL-04",
+        "term": "SEBI",
+        "preferred_casing": "SEBI",
+        "definition": "Securities and Exchange Board of India (apex securities market regulator)."
+      },
+      {
+        "id": "GLS-LL-05",
+        "term": "NAV",
+        "preferred_casing": "NAV",
+        "definition": "Net Asset Value representing the per-unit market value of a mutual fund."
+      }
+    ],
+    "claim_patterns": [
+      {
+        "id": "CLM-LL-01",
+        "pattern": "guaranteed 18% return",
+        "category": "Returns",
+        "severity": "Blocker",
+        "substantiating_fact_id": null,
+        "reason": "Unlawful guaranteed returns claim under SEBI regulations",
+        "status": "active"
+      },
+      {
+        "id": "CLM-LL-02",
+        "pattern": "risk-free wealth creation",
+        "category": "Risk",
+        "severity": "Blocker",
+        "substantiating_fact_id": null,
+        "reason": "Misleading zero-risk investment guarantee",
+        "status": "active"
+      },
+      {
+        "id": "CLM-LL-03",
+        "pattern": "100% safe investment",
+        "category": "Risk",
+        "severity": "Blocker",
+        "substantiating_fact_id": null,
+        "reason": "Capital is always exposed to market volatility",
+        "status": "active"
+      },
+      {
+        "id": "CLM-LL-04",
+        "pattern": "zero risk guarantee",
+        "category": "Risk",
+        "severity": "Blocker",
+        "substantiating_fact_id": null,
+        "reason": "Statutory prohibition on risk elimination promises",
+        "status": "active"
+      },
+      {
+        "id": "CLM-LL-05",
+        "pattern": "instant payout under 15 minutes",
+        "category": "Operations",
+        "severity": "Minor",
+        "substantiating_fact_id": "F-33",
+        "reason": "Substantiated by verified UPI gateway SLA",
+        "status": "active"
+      },
+      {
+        "id": "CLM-LL-06",
+        "pattern": "insured up to 5 lakh",
+        "category": "Security",
+        "severity": "Major",
+        "substantiating_fact_id": "F-32",
+        "reason": "Substantiated by SmartVault partner bank insurance register",
+        "status": "active"
+      },
+      {
+        "id": "CLM-LL-07",
+        "pattern": "sebi registered broker",
+        "category": "Regulatory",
+        "severity": "Major",
+        "substantiating_fact_id": "F-32",
+        "reason": "Substantiated by official license registration certificate",
         "status": "active"
       }
     ]
   }
 ]
-

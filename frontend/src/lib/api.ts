@@ -29,12 +29,17 @@ import {
   Invitation,
   NotificationItem,
   BulkImportItem,
+  WorkspaceSettings,
+  ContentType,
+  ActiveSession,
+  NotificationPreferences,
 } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 let authToken: string | null = localStorage.getItem('pramaan_token');
 let currentWorkspaceId: string = localStorage.getItem('pramaan_ws_id') || 'ws-demo';
+let currentDemoUserId: string = localStorage.getItem('pramaan_demo_persona') || 'usr-priya';
 
 export function getAuthToken(): string | null {
   return authToken;
@@ -58,6 +63,15 @@ export function setWorkspaceId(wsId: string) {
   localStorage.setItem('pramaan_ws_id', wsId);
 }
 
+export function getDemoUserId(): string {
+  return currentDemoUserId;
+}
+
+export function setDemoUserId(userId: string) {
+  currentDemoUserId = userId;
+  localStorage.setItem('pramaan_demo_persona', userId);
+}
+
 export async function fetchApi<T>(
   endpoint: string,
   options: RequestInit = {},
@@ -75,6 +89,9 @@ export async function fetchApi<T>(
   headers.set('X-Workspace-Id', currentWorkspaceId);
   headers.set('X-Demo-Role', role);
   headers.set('X-Confidential-Mode', confidentialMode ? '1' : '0');
+  if (currentWorkspaceId === 'ws-demo' && currentDemoUserId) {
+    headers.set('X-Demo-User-Id', currentDemoUserId);
+  }
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
@@ -137,6 +154,8 @@ export const authGetMe = () => fetchApi<AuthSession>('/api/auth/me');
 export const authUpdateProfile = (data: {
   full_name?: string;
   avatar_url?: string;
+  avatar_color?: string;
+  notification_language?: string;
   current_password?: string;
   new_password?: string;
 }) =>
@@ -171,9 +190,98 @@ export const completeOnboarding = (data: OnboardingWizardPayload) =>
 
 export const updateWorkspaceSettings = (
   wsId: string,
-  data: { name?: string; industry?: string; retention_days?: number; ai_enabled?: boolean }
+  data: Partial<WorkspaceSettings>
 ) =>
   fetchApi<Workspace>(`/api/workspaces/${wsId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+export const getWorkspaceSettings = (wsId: string) =>
+  fetchApi<WorkspaceSettings>(`/api/workspaces/${wsId}/settings`);
+
+export const updateWorkspaceSettingsFull = (
+  wsId: string,
+  data: Partial<WorkspaceSettings>
+) =>
+  fetchApi<WorkspaceSettings>(`/api/workspaces/${wsId}/settings`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+export const getContentTypes = (wsId: string, includeArchived: boolean = false) =>
+  fetchApi<ContentType[]>(`/api/workspaces/${wsId}/content-types${includeArchived ? '?include_archived=true' : ''}`);
+
+export const createContentType = (
+  wsId: string,
+  data: {
+    name: string;
+    description?: string;
+    requires_manager_approval?: boolean;
+    default_reviewer_id?: string;
+    order_index?: number;
+  }
+) =>
+  fetchApi<ContentType>(`/api/workspaces/${wsId}/content-types`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+export const updateContentType = (
+  wsId: string,
+  ctId: string,
+  data: Partial<ContentType>
+) =>
+  fetchApi<ContentType>(`/api/workspaces/${wsId}/content-types/${ctId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+
+export const archiveContentType = (wsId: string, ctId: string) =>
+  fetchApi<{ status: string; id: string; message: string }>(`/api/workspaces/${wsId}/content-types/${ctId}`, {
+    method: 'DELETE',
+  });
+
+export const runRetentionPolicy = (wsId: string) =>
+  fetchApi<{ deleted_count: number; retained_count: number; retention_days: number; message: string }>(
+    `/api/workspaces/${wsId}/retention/run`,
+    {
+      method: 'POST',
+    }
+  );
+
+export const exportWorkspaceData = async (wsId: string) => {
+  const data = await fetchApi<Record<string, unknown>>(`/api/workspaces/${wsId}/export`);
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `workspace_${wsId}_export_${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+  return data;
+};
+
+export const getActiveSessions = () =>
+  fetchApi<ActiveSession[]>('/api/auth/sessions');
+
+export const revokeSession = (sessionId: string) =>
+  fetchApi<{ status: string; id: string; message: string }>(`/api/auth/sessions/${sessionId}/revoke`, {
+    method: 'POST',
+  });
+
+export const revokeOtherSessions = () =>
+  fetchApi<{ status: string; count: number; message: string }>('/api/auth/sessions/revoke-others', {
+    method: 'POST',
+  });
+
+export const getNotificationPreferences = () =>
+  fetchApi<NotificationPreferences>('/api/auth/notifications/preferences');
+
+export const updateNotificationPreferences = (data: Partial<NotificationPreferences>) =>
+  fetchApi<{ status: string; preferences: NotificationPreferences }>('/api/auth/notifications/preferences', {
     method: 'PUT',
     body: JSON.stringify(data),
   });
@@ -566,6 +674,15 @@ export const extractGuidelineRules = (kitId: string, content: string, role: Role
     {
       method: 'POST',
       body: JSON.stringify({ content }),
+    },
+    role
+  );
+
+export const resetDemoWorkspace = (role: Role = 'Admin') =>
+  fetchApi<{ status: string; message: string; workspace_id: string }>(
+    '/api/workspaces/demo/reset',
+    {
+      method: 'POST',
     },
     role
   );

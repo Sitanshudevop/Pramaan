@@ -2,7 +2,7 @@
 
 from app.checks.context import CheckContext
 from app.checks.runner import run_deterministic_checks
-from app.constants import DecisionAction, FindingStatus, ReviewStatus, Role, Severity
+from app.constants import DecisionAction, FindingStatus, ReviewStatus, Role
 from app.models.entities import ReviewModel
 from app.repositories.audit_repo import AuditRepository
 from app.repositories.brand_repo import BrandRepository
@@ -156,18 +156,46 @@ class WorkflowService:
         if not review:
             raise ValueError(f"Review '{review_id}' not found")
 
-        # Manager Gate Check: Blockers or Overridden Unsubstantiated claims require Brand Manager
+        # Manager Gate Check: Blockers, Content Type policy, or workspace severity policy
+        from app.models.entities import ContentTypeModel
+
         active_findings = self.review_repo.get_findings_for_version(
             review.id, review.current_version
         )
-        has_blocker_or_override = any(
-            f.severity == Severity.BLOCKER.value or f.status == FindingStatus.UNSUPPORTED.value
+
+        # Check content type manager sign-off requirement
+        ct_model = (
+            self.db.query(ContentTypeModel)
+            .filter(
+                ContentTypeModel.workspace_id == (review.workspace_id or "ws-demo"),
+                ContentTypeModel.name == review.content_type,
+            )
+            .first()
+        )
+        requires_mgr_approval = ct_model.requires_manager_approval if ct_model else False
+
+        # Check workspace manager approval severity setting
+        gate_sev = "Blocker"
+        if (
+            review.workspace
+            and hasattr(review.workspace, "manager_approval_severity")
+            and review.workspace.manager_approval_severity
+        ):
+            gate_sev = review.workspace.manager_approval_severity
+
+        severities_gated = ["Blocker"] if gate_sev == "Blocker" else ["Blocker", "Major"]
+        has_gated_finding = any(
+            f.severity in severities_gated or f.status == FindingStatus.UNSUPPORTED.value
             for f in active_findings
         )
 
-        if outcome == "Approved" and has_blocker_or_override and actor_role != Role.BRAND_MANAGER:
+        if (
+            outcome == "Approved"
+            and (requires_mgr_approval or has_gated_finding)
+            and actor_role not in (Role.BRAND_MANAGER, Role.ADMIN)
+        ):
             raise PermissionError(
-                "Content contains Blocker findings or unsupported claims. Approval is gated to the Brand Manager role."
+                f"Content format '{review.content_type}' requires manager sign-off. Approval is gated to Brand manager or Admin."
             )
 
         self.review_repo.record_approval(

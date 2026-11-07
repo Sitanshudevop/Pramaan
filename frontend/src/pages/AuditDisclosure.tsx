@@ -31,6 +31,13 @@ export const AuditDisclosure: React.FC = () => {
     queryFn: () => getDisclosureLedger(role),
   });
 
+  const { data: verifyData } = useQuery({
+    queryKey: ['auditVerify', role],
+    queryFn: () => verifyAuditIntegrity(role),
+  });
+
+  const effectiveVerify = verifyResult || verifyData;
+
   const handleExport = async (format: 'csv' | 'json') => {
     setIsExporting(true);
     try {
@@ -119,18 +126,22 @@ export const AuditDisclosure: React.FC = () => {
         </div>
       </div>
 
-      {/* Cryptographic Verification Banner if ran */}
-      {verifyResult && (
+      {/* Cryptographic Verification Banner */}
+      {effectiveVerify && (
         <div className="p-4 rounded-card border border-success/40 bg-success/10 text-xs font-mono space-y-1">
           <div className="flex items-center space-x-2 font-bold text-success-text font-sans">
             <CheckCircle2 className="w-4 h-4" />
-            <span>Audit Trail Integrity Confirmed</span>
+            <span>
+              {effectiveVerify.total_records > 0
+                ? 'Audit Trail Integrity Confirmed'
+                : 'No Events Yet'}
+            </span>
           </div>
           <div className="text-text">
-            Status: <span className="font-bold uppercase">{verifyResult.status}</span> · Total Records: {verifyResult.total_records}
+            Status: <span className="font-bold uppercase">{effectiveVerify.status}</span> · Total Records: {effectiveVerify.total_records}
           </div>
           <div className="text-[11px] text-text-muted break-all">
-            SHA-256 Hash: {verifyResult.latest_hash}
+            Head Hash: {effectiveVerify.latest_hash}
           </div>
         </div>
       )}
@@ -204,7 +215,16 @@ export const AuditDisclosure: React.FC = () => {
             {loadingAudit ? (
               <div className="py-12 text-center text-xs text-text-muted font-mono">Loading audit trail...</div>
             ) : filteredAuditLogs.length === 0 ? (
-              <div className="py-12 text-center text-xs text-text-muted">No audit events match current filter.</div>
+              <div className="py-12 text-center text-xs text-text-muted space-y-3">
+                <p>No events match this filter.</p>
+                <button
+                  type="button"
+                  onClick={() => setRoleFilter('ALL')}
+                  className="px-4 py-1.5 rounded-pill bg-surface-2 border border-border text-text hover:bg-border text-xs font-semibold transition-colors"
+                >
+                  Clear filter
+                </button>
+              </div>
             ) : (
               <table className="w-full text-xs text-left">
                 <thead>

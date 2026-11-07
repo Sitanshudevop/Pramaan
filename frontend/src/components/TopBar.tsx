@@ -19,16 +19,14 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApp } from '../lib/context';
-import { Role } from '../lib/types';
-import { Chip, PillSelect } from './ui';
+import { DEMO_CAST } from '../lib/types';
+import { Chip } from './ui';
 import { AuthModal } from './AuthModal';
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../lib/api';
 
 interface TopBarProps {
   onMenuClick: () => void;
 }
-
-const ROLES: Role[] = ['Creator', 'Reviewer', 'Brand manager', 'Admin'];
 
 function getPageTitle(pathname: string): string {
   if (pathname === '/') return 'Overview';
@@ -39,6 +37,8 @@ function getPageTitle(pathname: string): string {
   if (pathname === '/app/hub') return 'Brand Knowledge Hub';
   if (pathname === '/app/audit') return 'Audit & AI Disclosure';
   if (pathname === '/app/insights') return 'Brand Insights & Radar';
+  if (pathname === '/app/settings') return 'Settings';
+  if (pathname === '/app/team') return 'Team & Members';
   if (pathname === '/about') return 'About Pramaan';
   return 'Pramaan';
 }
@@ -52,7 +52,8 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
     workspaces,
     isDemoMode,
     role,
-    setRole,
+    demoPersona,
+    switchDemoPersona,
     theme,
     setTheme,
     confidentialMode,
@@ -65,10 +66,12 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const [showDemoNotice, setShowDemoNotice] = useState(true);
   const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [personaDropdownOpen, setPersonaDropdownOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+  const personaRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const { data: notifications = [] } = useQuery({
@@ -97,6 +100,9 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setNotifDropdownOpen(false);
       }
+      if (personaRef.current && !personaRef.current.contains(e.target as Node)) {
+        setPersonaDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -107,11 +113,6 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
     else if (theme === 'light') setTheme('dark');
     else setTheme('system');
   };
-
-  const roleOptions = ROLES.map((r) => ({
-    value: r,
-    label: `Role: ${r}`,
-  }));
 
   const pageTitle = getPageTitle(location.pathname);
 
@@ -250,15 +251,70 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
             )}
           </button>
 
-          {/* 2. Role Selector (in Demo) OR Fixed Role Badge (in Real Workspace) */}
+          {/* 2. Persona Switcher (in Demo) OR Fixed Role Badge (in Real Workspace) */}
           {isDemoMode ? (
-            <PillSelect
-              value={role}
-              onChange={(val) => setRole(val as Role)}
-              options={roleOptions}
-              ariaLabel="Demo Role Switcher"
-              icon={<UserCheck className="w-3.5 h-3.5 text-orange-text" />}
-            />
+            <div className="relative" ref={personaRef}>
+              <button
+                type="button"
+                onClick={() => setPersonaDropdownOpen(!personaDropdownOpen)}
+                className="px-2.5 py-1 rounded-pill border border-border bg-surface hover:bg-surface-2 transition-colors flex items-center space-x-2 text-xs"
+                aria-label="Demo Role Switcher"
+                title={`Viewing as ${demoPersona.name} (${demoPersona.role})`}
+              >
+                <span
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-xs"
+                  style={{ backgroundColor: demoPersona.avatarColor }}
+                >
+                  {demoPersona.initials}
+                </span>
+                <span className="font-semibold text-text hidden sm:inline">
+                  {demoPersona.name}
+                </span>
+                <span className="text-[10px] text-text-muted px-1.5 py-0.5 rounded-pill bg-surface-2 border border-border/60">
+                  {demoPersona.role}
+                </span>
+                <ChevronDown className="w-3 h-3 text-text-muted" />
+              </button>
+
+              {personaDropdownOpen && (
+                <div className="absolute right-0 mt-1.5 w-64 rounded-card border border-border bg-surface shadow-floating py-1.5 z-50 text-xs">
+                  <div className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider border-b border-border/70 mb-1">
+                    View Demo As
+                  </div>
+                  {DEMO_CAST.map((p) => {
+                    const isActive = p.id === demoPersona.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          switchDemoPersona(p.id);
+                          setPersonaDropdownOpen(false);
+                          queryClient.invalidateQueries();
+                        }}
+                        className={`w-full text-left px-3 py-2 flex items-start space-x-2.5 transition-colors ${
+                          isActive ? 'bg-orange-500/10' : 'hover:bg-surface-2'
+                        }`}
+                      >
+                        <span
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-xs shrink-0 mt-0.5"
+                          style={{ backgroundColor: p.avatarColor }}
+                        >
+                          {p.initials}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-text truncate">{p.name}</span>
+                            <span className="text-[10px] font-semibold text-orange-text">{p.role}</span>
+                          </div>
+                          <p className="text-[10px] text-text-muted truncate mt-0.5">{p.bio}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           ) : (
             <Chip variant="neutral" size="sm" icon={<UserCheck className="w-3 h-3 text-orange-text" />}>
               <span>Role: {role}</span>

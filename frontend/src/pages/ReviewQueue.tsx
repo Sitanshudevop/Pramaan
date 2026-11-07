@@ -1,21 +1,33 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Inbox, ArrowRight, Plus, CheckCircle2, Download, Trash2 } from 'lucide-react';
+import { Inbox, ArrowRight, Plus, CheckCircle2, Download, Trash2, X } from 'lucide-react';
 import { listReviews, submitApproval, deleteReview, getBrandKits, assignReview, listWorkspaceMembers } from '../lib/api';
 import { useApp } from '../lib/context';
 import { SearchPill, PillSelect, Chip } from '../components/ui';
 
 export const ReviewQueue: React.FC = () => {
   const navigate = useNavigate();
-  const { role, user, currentWorkspace } = useApp();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { role, user, currentWorkspace, isDemoMode, demoPersona } = useApp();
   const queryClient = useQueryClient();
 
+  const urlStatus = searchParams.get('status') || 'ALL';
+  const urlRule = searchParams.get('rule') || '';
+  const urlKit = searchParams.get('kit') || 'ALL';
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState(urlStatus);
   const [severityFilter, setSeverityFilter] = useState('ALL');
-  const [kitFilter, setKitFilter] = useState('ALL');
+  const [kitFilter, setKitFilter] = useState(urlKit);
+  const [ruleFilter, setRuleFilter] = useState(urlRule);
   const [viewTab, setViewTab] = useState<'all' | 'mine' | 'assigned'>('all');
+
+  useEffect(() => {
+    if (searchParams.get('status')) setStatusFilter(searchParams.get('status')!);
+    if (searchParams.get('rule')) setRuleFilter(searchParams.get('rule')!);
+    if (searchParams.get('kit')) setKitFilter(searchParams.get('kit')!);
+  }, [searchParams]);
 
   const { data: reviews, isLoading } = useQuery({
     queryKey: ['reviews', role, currentWorkspace?.id],
@@ -54,7 +66,7 @@ export const ReviewQueue: React.FC = () => {
   });
 
   const claimMutation = useMutation({
-    mutationFn: (reviewId: string) => assignReview(reviewId, user?.id, role),
+    mutationFn: (reviewId: string) => assignReview(reviewId, user?.id || (isDemoMode ? demoPersona.id : undefined), role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reviews'] });
     },
@@ -65,10 +77,14 @@ export const ReviewQueue: React.FC = () => {
 
   const statusOptions = [
     { value: 'ALL', label: 'All Statuses' },
-    { value: 'Submitted', label: 'Submitted' },
+    { value: 'In human review', label: 'In human review' },
+    { value: 'overdue', label: 'Overdue SLA (>48h)' },
     { value: 'AI-reviewed', label: 'AI-reviewed' },
     { value: 'Changes requested', label: 'Changes requested' },
     { value: 'Approved', label: 'Approved' },
+    { value: 'Exported', label: 'Exported' },
+    { value: 'Draft', label: 'Draft' },
+    { value: 'Rejected', label: 'Rejected' },
   ];
 
   const severityOptions = [
@@ -82,15 +98,21 @@ export const ReviewQueue: React.FC = () => {
     ...(brandKits?.map((k) => ({ value: k.id, label: k.name })) || []),
   ];
 
-  const myReviewsCount = (reviews || []).filter((r) => r.creator_id === user?.id).length;
-  const assignedCount = (reviews || []).filter((r) => r.assignee_id === user?.id).length;
+  const effectiveUserId = user?.id || (isDemoMode ? demoPersona.id : '');
+  const myReviewsCount = (reviews || []).filter((r) => r.creator_id === effectiveUserId).length;
+  const assignedCount = (reviews || []).filter((r) => r.assignee_id === effectiveUserId).length;
 
   // Filtering
   const filteredReviews = (reviews || []).filter((r) => {
-    if (viewTab === 'mine' && r.creator_id !== user?.id) return false;
-    if (viewTab === 'assigned' && r.assignee_id !== user?.id) return false;
-    if (statusFilter !== 'ALL' && r.status !== statusFilter) return false;
+    if (viewTab === 'mine' && r.creator_id !== effectiveUserId) return false;
+    if (viewTab === 'assigned' && r.assignee_id !== effectiveUserId) return false;
+    if (statusFilter === 'overdue' || statusFilter === 'Overdue') {
+      if (!r.is_overdue) return false;
+    } else if (statusFilter !== 'ALL' && r.status !== statusFilter) {
+      return false;
+    }
     if (kitFilter !== 'ALL' && r.kit_id !== kitFilter) return false;
+    if (ruleFilter && !r.findings.some((f) => f.rule_id === ruleFilter)) return false;
 
     const blockerCount = r.findings.filter((f) => f.severity === 'Blocker').length;
     if (severityFilter === 'BLOCKERS' && blockerCount === 0) return false;
@@ -142,7 +164,7 @@ export const ReviewQueue: React.FC = () => {
           >
             All Reviews ({reviews?.length || 0})
           </button>
-          {user && (
+          {(user || isDemoMode) && (
             <>
               <button
                 type="button"
@@ -169,6 +191,25 @@ export const ReviewQueue: React.FC = () => {
             </>
           )}
         </div>
+
+        {ruleFilter && (
+          <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-pill bg-orange-500/10 text-orange-text text-xs border border-orange-500/30">
+            <span>Filtering rule: <strong>{ruleFilter}</strong></span>
+            <button
+              type="button"
+              onClick={() => {
+                setRuleFilter('');
+                setSearchParams((prev) => {
+                  prev.delete('rule');
+                  return prev;
+                });
+              }}
+              className="p-0.5 hover:opacity-75 rounded-full"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
 
         <PillSelect
           value={kitFilter}

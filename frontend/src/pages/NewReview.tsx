@@ -10,7 +10,13 @@ import {
   RotateCcw,
   RefreshCw,
 } from 'lucide-react';
-import { getBrandKits, getSampleDrafts, createReview, listWorkspaceMembers } from '../lib/api';
+import {
+  getBrandKits,
+  getSampleDrafts,
+  createReview,
+  listWorkspaceMembers,
+  getContentTypes,
+} from '../lib/api';
 import { useApp } from '../lib/context';
 import { useToast } from '../lib/toast';
 import { SampleDraft } from '../lib/types';
@@ -39,6 +45,11 @@ export const NewReview: React.FC = () => {
     queryKey: ['sampleDrafts'],
     queryFn: () => getSampleDrafts(),
     enabled: isDemoMode,
+  });
+
+  const { data: dynamicContentTypes } = useQuery({
+    queryKey: ['contentTypes', currentWorkspace?.id],
+    queryFn: () => getContentTypes(currentWorkspace?.id || 'ws-demo'),
   });
 
   // Form State
@@ -274,12 +285,17 @@ export const NewReview: React.FC = () => {
       label: `${k.name} (${k.industry})`,
     })) || [];
 
-  const contentTypeOptions = [
-    { value: 'Promotional Email', label: 'Promotional Email' },
-    { value: 'Social Media Post', label: 'Social Media Post' },
-    { value: 'In-App Announcement', label: 'In-App Announcement' },
-    { value: 'Landing Page Copy', label: 'Landing Page Copy' },
-  ];
+  const contentTypeOptions =
+    dynamicContentTypes && dynamicContentTypes.length > 0
+      ? dynamicContentTypes
+          .filter((ct) => !ct.is_archived)
+          .map((ct) => ({ value: ct.name, label: ct.name }))
+      : [
+          { value: 'Promotional Email', label: 'Promotional Email' },
+          { value: 'Social Media Post', label: 'Social Media Post' },
+          { value: 'In-App Announcement', label: 'In-App Announcement' },
+          { value: 'Landing Page Copy', label: 'Landing Page Copy' },
+        ];
 
   return (
     <div className="max-w-[800px] mx-auto py-6 sm:py-8 space-y-6">
@@ -331,45 +347,47 @@ export const NewReview: React.FC = () => {
       {/* Single Centered Main Card */}
       <div className="p-6 sm:p-8 rounded-card border border-border bg-surface shadow-floating">
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-          {/* Section: Configuration Controls (Pill Selects) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4 border-b border-border/80">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-semibold text-text">
-                  Target Brand Kit
-                </label>
-                <button
-                  type="button"
-                  onClick={() => navigate('/app/hub')}
-                  className="text-[11px] text-orange-text hover:underline font-medium"
-                >
-                  + Add Kit
-                </button>
+          {/* Section: Configuration Controls (Clean 2-Column Layout) */}
+          <div className="space-y-4 pb-4 border-b border-border/80">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-text">
+                    Target Brand Kit
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/app/hub')}
+                    className="text-[11px] text-orange-text hover:underline font-medium"
+                  >
+                    + Add kit
+                  </button>
+                </div>
+                <PillSelect
+                  value={selectedKit}
+                  onChange={(val) => setSelectedKit(val)}
+                  options={kitOptions}
+                  ariaLabel="Brand Kit selection"
+                  className="w-full"
+                />
               </div>
-              <PillSelect
-                value={selectedKit}
-                onChange={(val) => setSelectedKit(val)}
-                options={kitOptions}
-                ariaLabel="Brand Kit selection"
-                className="w-full"
-              />
-            </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-text mb-1.5">
-                Content Format
-              </label>
-              <PillSelect
-                value={contentType}
-                onChange={setContentType}
-                options={contentTypeOptions}
-                ariaLabel="Content Type selection"
-                className="w-full"
-              />
+              <div>
+                <label className="block text-xs font-semibold text-text mb-1.5">
+                  Content Format
+                </label>
+                <PillSelect
+                  value={contentType}
+                  onChange={setContentType}
+                  options={contentTypeOptions}
+                  ariaLabel="Content Type selection"
+                  className="w-full"
+                />
+              </div>
             </div>
 
             {members && members.length > 0 && (
-              <div>
+              <div className="max-w-md">
                 <label className="block text-xs font-semibold text-text mb-1.5">
                   Assign Reviewer (Optional)
                 </label>

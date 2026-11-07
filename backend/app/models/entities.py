@@ -31,6 +31,13 @@ class UserModel(Base):
     password_hash = Column(String(256), nullable=False)  # Argon2id hash
     full_name = Column(String(128), nullable=False)
     avatar_url = Column(String(512), nullable=True)
+    avatar_color = Column(String(32), default="#E06D3B", nullable=False)
+    notification_language = Column(String(32), default="en-IN", nullable=False)
+    notification_preferences_json = Column(
+        Text,
+        default='{"assigned": true, "mentions": true, "changes_requested": true, "approved": true, "overdue": true}',
+        nullable=False,
+    )
     is_active = Column(Boolean, default=True, nullable=False)
     failed_login_attempts = Column(Integer, default=0, nullable=False)
     lockout_until = Column(DateTime, nullable=True)
@@ -80,6 +87,21 @@ class WorkspaceModel(Base):
     ai_consent_by_id = Column(String(64), nullable=True)
     ai_consent_version = Column(String(32), nullable=True)
     encrypted_gemini_api_key = Column(String(512), nullable=True)  # Fernet encrypted at rest
+    timezone = Column(String(64), default="Asia/Kolkata", nullable=False)
+    date_format = Column(String(32), default="YYYY-MM-DD", nullable=False)
+    default_brand_kit_id = Column(String(64), default="kettle-and-co", nullable=False)
+    default_spelling = Column(String(32), default="en-IN", nullable=False)
+    manager_approval_severity = Column(String(32), default="Blocker", nullable=False)
+    require_decision_reason = Column(Boolean, default=True, nullable=False)
+    auto_assign_mode = Column(
+        String(32), default="off", nullable=False
+    )  # off, round_robin, by_brand_kit
+    sla_hours = Column(Integer, default=48, nullable=False)
+    confidential_mode = Column(Boolean, default=False, nullable=False)
+    redaction_options_json = Column(
+        Text, default='{"emails": true, "phones": true, "cards": true}', nullable=False
+    )
+    logo_url = Column(String(512), nullable=True)
     created_at = Column(DateTime, default=get_utc_now, nullable=False)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False)
 
@@ -314,6 +336,10 @@ class ContentTypeModel(Base):
     name = Column(String(64), nullable=False)
     description = Column(String(256), nullable=True)
     is_default = Column(Boolean, default=False, nullable=False)
+    requires_manager_approval = Column(Boolean, default=False, nullable=False)
+    default_reviewer_id = Column(String(64), nullable=True)
+    order_index = Column(Integer, default=0, nullable=False)
+    is_archived = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=get_utc_now, nullable=False)
 
 
@@ -370,6 +396,22 @@ class ReviewModel(Base):
         cascade="all, delete-orphan",
         order_by="ApprovalModel.created_at",
     )
+
+    @property
+    def is_overdue(self) -> bool:
+        """Evaluate if review is overdue according to workspace SLA threshold."""
+        if self.status in ("Submitted", "In human review", "AI-reviewed"):
+            sla = 48
+            if self.workspace and hasattr(self.workspace, "sla_hours") and self.workspace.sla_hours:
+                sla = self.workspace.sla_hours
+            now = get_utc_now()
+            created = self.created_at
+            if created.tzinfo is not None and now.tzinfo is None:
+                created = created.replace(tzinfo=None)
+            elif created.tzinfo is None and now.tzinfo is not None:
+                now = now.replace(tzinfo=None)
+            return (now - created).total_seconds() > sla * 3600
+        return False
 
 
 class ReviewVersionModel(Base):

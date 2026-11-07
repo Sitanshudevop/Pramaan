@@ -113,6 +113,7 @@ export interface ReviewResponse {
   created_by_role: Role;
   creator_id?: string;
   assignee_id?: string;
+  is_overdue?: boolean;
   created_at: string;
   updated_at: string;
   versions: ReviewVersionSummary[];
@@ -284,8 +285,78 @@ export interface User {
   email: string;
   full_name: string;
   avatar_url?: string | null;
+  avatar_color?: string;
+  notification_language?: string;
+  notification_preferences_json?: string;
   created_at: string;
 }
+
+export interface DemoPersona {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  avatarColor: string;
+  bio: string;
+  initials: string;
+}
+
+export const DEMO_CAST: DemoPersona[] = [
+  {
+    id: 'usr-meera',
+    name: 'Meera Kapoor',
+    email: 'meera@example.com',
+    role: 'Admin',
+    avatarColor: '#E06D3B',
+    bio: 'Admin · Owns settings, enabled AI with consent',
+    initials: 'MK',
+  },
+  {
+    id: 'usr-anika',
+    name: 'Anika Rao',
+    email: 'anika@example.com',
+    role: 'Brand manager',
+    avatarColor: '#3B82F6',
+    bio: 'Brand manager · Publishes rules, final approvals',
+    initials: 'AR',
+  },
+  {
+    id: 'usr-rohan',
+    name: 'Rohan Mehta',
+    email: 'rohan@example.com',
+    role: 'Reviewer',
+    avatarColor: '#10B981',
+    bio: 'Reviewer · Kettle & Co. content, overrides',
+    initials: 'RM',
+  },
+  {
+    id: 'usr-dev',
+    name: 'Dev Malhotra',
+    email: 'dev@example.com',
+    role: 'Reviewer',
+    avatarColor: '#8B5CF6',
+    bio: 'Reviewer · LedgerLeaf compliance, disclaimers',
+    initials: 'DM',
+  },
+  {
+    id: 'usr-priya',
+    name: 'Priya Nair',
+    email: 'priya@example.com',
+    role: 'Creator',
+    avatarColor: '#EC4899',
+    bio: 'Creator · Social & email drafts for Kettle & Co.',
+    initials: 'PN',
+  },
+  {
+    id: 'usr-imran',
+    name: 'Imran Sheikh',
+    email: 'imran@example.com',
+    role: 'Creator',
+    avatarColor: '#F59E0B',
+    bio: 'Creator · App copy & landing pages for LedgerLeaf',
+    initials: 'IS',
+  },
+];
 
 export interface Workspace {
   id: string;
@@ -295,7 +366,81 @@ export interface Workspace {
   is_demo: boolean;
   retention_days: number;
   ai_enabled: boolean;
+  timezone?: string;
+  date_format?: string;
+  default_brand_kit_id?: string;
+  default_spelling?: string;
+  manager_approval_severity?: string;
+  require_decision_reason?: boolean;
+  auto_assign_mode?: string;
+  sla_hours?: number;
+  confidential_mode?: boolean;
+  redaction_options_json?: string;
+  logo_url?: string | null;
   role: Role;
+}
+
+export interface WorkspaceSettings {
+  id: string;
+  name: string;
+  slug: string;
+  industry: string;
+  is_demo: boolean;
+  retention_days: number;
+  ai_enabled: boolean;
+  ai_consent_at?: string | null;
+  ai_consent_by_id?: string | null;
+  ai_consent_by_name?: string | null;
+  ai_consent_version?: string | null;
+  timezone: string;
+  date_format: string;
+  default_brand_kit_id: string;
+  default_spelling: string;
+  manager_approval_severity: string;
+  require_decision_reason: boolean;
+  auto_assign_mode: string;
+  sla_hours: number;
+  confidential_mode: boolean;
+  redaction_options_json: string;
+  logo_url?: string | null;
+  last_changed_by?: string | null;
+  last_changed_at?: string | null;
+  role: Role;
+}
+
+export interface ContentType {
+  id: string;
+  workspace_id: string;
+  name: string;
+  description?: string | null;
+  is_default: boolean;
+  requires_manager_approval: boolean;
+  default_reviewer_id?: string | null;
+  default_reviewer_name?: string | null;
+  order_index: number;
+  is_archived: boolean;
+  created_at: string;
+}
+
+export interface ActiveSession {
+  id: string;
+  device_info: string;
+  ip_address: string;
+  created_at: string;
+  last_active_at: string;
+  is_current: boolean;
+}
+
+export interface NotificationPreferences {
+  assigned: boolean;
+  mentions: boolean;
+  changes_requested: boolean;
+  approved: boolean;
+  overdue: boolean;
+  quiet_hours_enabled: boolean;
+  quiet_hours_start?: string | null;
+  quiet_hours_end?: string | null;
+  language?: string;
 }
 
 export interface AuthSession {

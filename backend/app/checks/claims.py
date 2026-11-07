@@ -85,9 +85,12 @@ def check_claims(ctx: CheckContext) -> list[Finding]:
 
         # Check performance / return risk disclaimer requirement
         rule_lower = rule.get("text", "").lower()
+        rule_title_lower = rule.get("title", "").lower()
         if (
-            any(w in rule_lower for w in ("return", "yield", "gain", "performance"))
-            and "risk" in rule_lower
+            "statutory risk notice" in rule_lower
+            or "performance metrics" in rule_title_lower
+            or "annualized yield" in rule_title_lower
+            or ("historic yields" in rule_lower and "risk" in rule_lower)
         ):
             perf_match = re.search(
                 r"(\d+(?:\.\d+)?%\s*(?:annualized|annual|return|gain|yield)?|annualized return|historic yields)",
@@ -138,11 +141,19 @@ def check_claims(ctx: CheckContext) -> list[Finding]:
             quoted = re.findall(r"['\"](.*?)['\"]", rule.get("text", ""))
             banned_claims = [q.strip() for q in quoted if len(q.strip()) >= 1]
 
+        # Sort banned claims descending by length to prioritize longer phrase matches
+        banned_claims = sorted(banned_claims, key=len, reverse=True)
+        matched_claim_spans: list[tuple[int, int]] = []
+
         for b_claim in banned_claims:
             regex = re.compile(rf"(?<!\w){re.escape(b_claim)}(?!\w)", re.IGNORECASE)
             for match in regex.finditer(text):
                 start, end = match.span()
                 matched = match.group(0)
+
+                # Avoid duplicate / nested matches at the same or overlapping span
+                if any(s <= start < e or s < end <= e for s, e in matched_claim_spans):
+                    continue
 
                 # Check if substantiated by any active fact permitted wording
                 substantiated = any(
@@ -152,6 +163,7 @@ def check_claims(ctx: CheckContext) -> list[Finding]:
                 )
 
                 if not substantiated:
+                    matched_claim_spans.append((start, end))
                     findings.append(
                         Finding(
                             id=f"find-claim-rule-{ctx.review_id}-v{ctx.version}-{rule_id.lower()}-{start}",

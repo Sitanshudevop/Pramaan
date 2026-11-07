@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Edit2,
@@ -43,8 +44,10 @@ import { StatCard, PillTabs, Chip } from '../components/ui';
 export const BrandHub: React.FC = () => {
   const { role } = useApp();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const urlKit = searchParams.get('kit');
 
-  const [selectedKitId, setSelectedKitId] = useState<string>('');
+  const [selectedKitId, setSelectedKitId] = useState<string>(urlKit || '');
   const [activeTab, setActiveTab] = useState<string>('rules');
 
   // Brand Kit Creation modal state

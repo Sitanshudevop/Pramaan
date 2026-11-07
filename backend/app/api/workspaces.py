@@ -7,26 +7,37 @@ from datetime import UTC, datetime, timedelta
 from app.auth.dependencies import (
     WorkspaceContext,
     get_current_user,
+    get_current_user_optional,
     get_workspace_context,
     require_role,
 )
 from app.auth.security import generate_secure_token, hash_token
+from app.constants import Role
 from app.database import get_db
 from app.models.entities import (
     AuditLogModel,
     BrandKitModel,
+    ContentTypeModel,
+    FactModel,
     InvitationModel,
     MembershipModel,
+    ReviewModel,
+    RuleModel,
     UserModel,
     WorkspaceModel,
 )
 from app.schemas.schemas import (
+    ContentTypeResponse,
+    CreateContentTypeRequest,
     CreateInvitationRequest,
     InvitationResponse,
     OnboardingWizardRequest,
+    RetentionRunResponse,
+    UpdateContentTypeRequest,
     WorkspaceCreateRequest,
     WorkspaceMemberResponse,
     WorkspaceResponse,
+    WorkspaceSettingsResponse,
     WorkspaceSettingsUpdateRequest,
 )
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -175,28 +186,43 @@ def get_or_reset_demo_workspace(db: Session = Depends(get_db)):
     """Fetch or initialize the isolated public Demo workspace."""
     demo_ws = db.query(WorkspaceModel).filter(WorkspaceModel.id == "ws-demo").first()
     if not demo_ws:
-        demo_ws = WorkspaceModel(
-            id="ws-demo",
-            name="Demo Workspace",
-            slug="demo-workspace",
-            industry="Fictional Brands Demo",
-            is_demo=True,
-            ai_enabled=True,
-        )
-        db.add(demo_ws)
-        db.commit()
-        db.refresh(demo_ws)
+        from app.seed.loader import seed_database
+
+        seed_database(db)
+        demo_ws = db.query(WorkspaceModel).filter(WorkspaceModel.id == "ws-demo").first()
 
     return WorkspaceResponse(
-        id=demo_ws.id,
-        name=demo_ws.name,
-        slug=demo_ws.slug,
-        industry=demo_ws.industry,
+        id=demo_ws.id if demo_ws else "ws-demo",
+        name=demo_ws.name if demo_ws else "Demo Workspace",
+        slug=demo_ws.slug if demo_ws else "demo-workspace",
+        industry=demo_ws.industry if demo_ws else "Fictional Brands Demo",
         is_demo=True,
-        retention_days=30,
-        ai_enabled=True,
+        retention_days=demo_ws.retention_days if demo_ws else 90,
+        ai_enabled=demo_ws.ai_enabled if demo_ws else True,
         role="Creator",
     )
+
+
+@router.post("/demo/reset")
+def reset_demo_workspace_endpoint(
+    role: Role = Depends(require_role(Role.ADMIN)),
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+    db: Session = Depends(get_db),
+):
+    """Admin-only reset of the Demo Workspace back to clean 8-week seed state."""
+    if not ctx.is_demo and ctx.workspace_id != "ws-demo":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reset is only permitted on the Demo Workspace.",
+        )
+    from app.seed.loader import reset_database_seed
+
+    reset_database_seed(db)
+    return {
+        "status": "reset_successful",
+        "message": "Demo workspace successfully reset to authentic 8-week seed state.",
+        "workspace_id": "ws-demo",
+    }
 
 
 @router.get("/{workspace_id}/members", response_model=list[WorkspaceMemberResponse])
@@ -445,15 +471,14 @@ def remove_workspace_member(
     return {"message": "Member removed successfully."}
 
 
-@router.put("/{workspace_id}", response_model=WorkspaceResponse)
-def update_workspace_settings(
+@router.get("/{workspace_id}/settings", response_model=WorkspaceSettingsResponse)
+def get_workspace_settings(
     workspace_id: str,
-    req: WorkspaceSettingsUpdateRequest,
-    ctx: WorkspaceContext = Depends(require_role("Admin")),
+    ctx: WorkspaceContext = Depends(get_workspace_context),
     db: Session = Depends(get_db),
 ):
-    """Update workspace settings (Admin only)."""
-    if ctx.workspace_id != workspace_id:
+    """Retrieve comprehensive workspace governance and operational settings."""
+    if ctx.workspace_id != workspace_id and not ctx.is_demo:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
         )
@@ -462,17 +487,200 @@ def update_workspace_settings(
     if not ws:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found.")
 
-    if req.name is not None:
-        ws.name = req.name
-    if req.industry is not None:
-        ws.industry = req.industry
-    if req.retention_days is not None:
-        ws.retention_days = req.retention_days
-    if req.ai_enabled is not None:
-        ws.ai_enabled = req.ai_enabled
+    # Find who enabled AI consent if recorded
+    consent_by_name = None
+    if ws.ai_consent_by_id:
+        c_user = db.query(UserModel).filter(UserModel.id == ws.ai_consent_by_id).first()
+        if c_user:
+            consent_by_name = c_user.full_name
 
-    db.commit()
-    db.refresh(ws)
+    # Query latest audit log entry for settings change
+    last_audit = (
+        db.query(AuditLogModel)
+        .filter(
+            AuditLogModel.workspace_id == workspace_id,
+            AuditLogModel.action.in_(["WORKSPACE_SETTINGS_UPDATED", "WORKSPACE_CREATED"]),
+        )
+        .order_by(AuditLogModel.created_at.desc())
+        .first()
+    )
+    last_changed_by = None
+    last_changed_at = None
+    if last_audit:
+        last_changed_at = last_audit.created_at
+        if last_audit.actor_id:
+            a_user = db.query(UserModel).filter(UserModel.id == last_audit.actor_id).first()
+            last_changed_by = a_user.full_name if a_user else last_audit.actor_role
+        else:
+            last_changed_by = last_audit.actor_role
+
+    return WorkspaceSettingsResponse(
+        id=ws.id,
+        name=ws.name,
+        slug=ws.slug,
+        industry=ws.industry,
+        is_demo=ws.is_demo,
+        retention_days=ws.retention_days,
+        ai_enabled=ws.ai_enabled,
+        ai_consent_at=ws.ai_consent_at,
+        ai_consent_by_id=ws.ai_consent_by_id,
+        ai_consent_by_name=consent_by_name,
+        ai_consent_version=ws.ai_consent_version,
+        timezone=ws.timezone or "Asia/Kolkata",
+        date_format=ws.date_format or "YYYY-MM-DD",
+        default_brand_kit_id=ws.default_brand_kit_id or "kettle-and-co",
+        default_spelling=ws.default_spelling or "en-IN",
+        manager_approval_severity=ws.manager_approval_severity or "Blocker",
+        require_decision_reason=ws.require_decision_reason
+        if ws.require_decision_reason is not None
+        else True,
+        auto_assign_mode=ws.auto_assign_mode or "off",
+        sla_hours=ws.sla_hours or 48,
+        confidential_mode=ws.confidential_mode or False,
+        redaction_options_json=ws.redaction_options_json
+        or '{"emails": true, "phones": true, "cards": true}',
+        logo_url=ws.logo_url,
+        last_changed_by=last_changed_by,
+        last_changed_at=last_changed_at,
+        role=ctx.role,
+    )
+
+
+def _apply_settings_update(
+    ws: WorkspaceModel,
+    req: WorkspaceSettingsUpdateRequest,
+    ctx: WorkspaceContext,
+    user: UserModel | None,
+    db: Session,
+) -> dict[str, object]:
+    """Helper to validate role permissions, apply workspace updates, and record audit."""
+    if ctx.role in ["Creator", "Reviewer"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"{ctx.role}s cannot modify workspace settings or review policy.",
+        )
+
+    is_admin = ctx.role == "Admin"
+    changed: dict[str, object] = {}
+
+    if is_admin:
+        if req.name is not None and req.name.strip() != ws.name:
+            ws.name = req.name.strip()
+            changed["name"] = ws.name
+        if req.industry is not None and req.industry.strip() != ws.industry:
+            ws.industry = req.industry.strip()
+            changed["industry"] = ws.industry
+        if req.retention_days is not None and req.retention_days != ws.retention_days:
+            ws.retention_days = req.retention_days
+            changed["retention_days"] = ws.retention_days
+        if req.ai_enabled is not None and req.ai_enabled != ws.ai_enabled:
+            ws.ai_enabled = req.ai_enabled
+            changed["ai_enabled"] = ws.ai_enabled
+            if ws.ai_enabled:
+                ws.ai_consent_at = datetime.now(UTC)
+                ws.ai_consent_by_id = user.id if user else "usr-meera"
+                ws.ai_consent_version = req.ai_consent_version or "v1.2-enterprise"
+                changed["ai_consent_version"] = ws.ai_consent_version
+        if req.timezone is not None and req.timezone != ws.timezone:
+            ws.timezone = req.timezone
+            changed["timezone"] = ws.timezone
+        if req.date_format is not None and req.date_format != ws.date_format:
+            ws.date_format = req.date_format
+            changed["date_format"] = ws.date_format
+        if req.confidential_mode is not None and req.confidential_mode != ws.confidential_mode:
+            ws.confidential_mode = req.confidential_mode
+            changed["confidential_mode"] = ws.confidential_mode
+        if req.redaction_options_json is not None:
+            ws.redaction_options_json = req.redaction_options_json
+            changed["redaction_options"] = "updated"
+        if req.logo_url is not None:
+            ws.logo_url = req.logo_url
+            changed["logo_url"] = ws.logo_url
+
+    # Admin and Brand Manager both allowed to modify governance & review policy
+    if (
+        req.manager_approval_severity is not None
+        and req.manager_approval_severity != ws.manager_approval_severity
+    ):
+        ws.manager_approval_severity = req.manager_approval_severity
+        changed["manager_approval_severity"] = ws.manager_approval_severity
+    if req.default_brand_kit_id is not None and req.default_brand_kit_id != ws.default_brand_kit_id:
+        ws.default_brand_kit_id = req.default_brand_kit_id
+        changed["default_brand_kit_id"] = ws.default_brand_kit_id
+    if req.default_spelling is not None and req.default_spelling != ws.default_spelling:
+        ws.default_spelling = req.default_spelling
+        changed["default_spelling"] = ws.default_spelling
+    if (
+        req.require_decision_reason is not None
+        and req.require_decision_reason != ws.require_decision_reason
+    ):
+        ws.require_decision_reason = req.require_decision_reason
+        changed["require_decision_reason"] = ws.require_decision_reason
+    if req.auto_assign_mode is not None and req.auto_assign_mode != ws.auto_assign_mode:
+        ws.auto_assign_mode = req.auto_assign_mode
+        changed["auto_assign_mode"] = ws.auto_assign_mode
+    if req.sla_hours is not None and req.sla_hours != ws.sla_hours:
+        ws.sla_hours = req.sla_hours
+        changed["sla_hours"] = ws.sla_hours
+
+    if changed:
+        audit_evt = AuditLogModel(
+            workspace_id=ws.id,
+            actor_id=user.id if user else ("usr-meera" if ctx.role == "Admin" else "usr-anika"),
+            actor_role=ctx.role,
+            action="WORKSPACE_SETTINGS_UPDATED",
+            entity="workspace",
+            entity_id=ws.id,
+            detail_json=json.dumps(changed),
+        )
+        db.add(audit_evt)
+        db.commit()
+        db.refresh(ws)
+
+    return changed
+
+
+@router.put("/{workspace_id}/settings", response_model=WorkspaceSettingsResponse)
+def update_workspace_settings_detailed(
+    workspace_id: str,
+    req: WorkspaceSettingsUpdateRequest,
+    user: UserModel | None = Depends(get_current_user_optional),
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+    db: Session = Depends(get_db),
+):
+    """Update workspace governance settings with strict role gating."""
+    if ctx.workspace_id != workspace_id and not ctx.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
+
+    ws = db.query(WorkspaceModel).filter(WorkspaceModel.id == workspace_id).first()
+    if not ws:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found.")
+
+    _apply_settings_update(ws, req, ctx, user, db)
+    return get_workspace_settings(workspace_id, ctx, db)
+
+
+@router.put("/{workspace_id}", response_model=WorkspaceResponse)
+def update_workspace_settings(
+    workspace_id: str,
+    req: WorkspaceSettingsUpdateRequest,
+    user: UserModel | None = Depends(get_current_user_optional),
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+    db: Session = Depends(get_db),
+):
+    """Update workspace settings (Standard endpoint)."""
+    if ctx.workspace_id != workspace_id and not ctx.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
+
+    ws = db.query(WorkspaceModel).filter(WorkspaceModel.id == workspace_id).first()
+    if not ws:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found.")
+
+    _apply_settings_update(ws, req, ctx, user, db)
     return WorkspaceResponse(
         id=ws.id,
         name=ws.name,
@@ -481,8 +689,397 @@ def update_workspace_settings(
         is_demo=ws.is_demo,
         retention_days=ws.retention_days,
         ai_enabled=ws.ai_enabled,
-        role=ctx.role.value if hasattr(ctx.role, "value") else str(ctx.role),
+        timezone=ws.timezone or "Asia/Kolkata",
+        date_format=ws.date_format or "YYYY-MM-DD",
+        default_brand_kit_id=ws.default_brand_kit_id or "kettle-and-co",
+        default_spelling=ws.default_spelling or "en-IN",
+        manager_approval_severity=ws.manager_approval_severity or "Blocker",
+        require_decision_reason=ws.require_decision_reason
+        if ws.require_decision_reason is not None
+        else True,
+        auto_assign_mode=ws.auto_assign_mode or "off",
+        sla_hours=ws.sla_hours or 48,
+        confidential_mode=ws.confidential_mode or False,
+        redaction_options_json=ws.redaction_options_json or "{}",
+        logo_url=ws.logo_url,
+        role=ctx.role,
     )
+
+
+# ---------------------------------------------------------------------------
+# Content Types Management
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{workspace_id}/content-types", response_model=list[ContentTypeResponse])
+def list_content_types(
+    workspace_id: str,
+    include_archived: bool = False,
+    ctx: WorkspaceContext = Depends(get_workspace_context),
+    db: Session = Depends(get_db),
+):
+    """List available content types for current workspace."""
+    if ctx.workspace_id != workspace_id and not ctx.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
+
+    q = db.query(ContentTypeModel).filter(ContentTypeModel.workspace_id == workspace_id)
+    if not include_archived:
+        q = q.filter(ContentTypeModel.is_archived.is_(False))
+    records = q.order_by(ContentTypeModel.order_index.asc(), ContentTypeModel.name.asc()).all()
+
+    user_ids = {r.default_reviewer_id for r in records if r.default_reviewer_id}
+    users_by_id = {}
+    if user_ids:
+        users = db.query(UserModel).filter(UserModel.id.in_(user_ids)).all()
+        users_by_id = {u.id: u.full_name for u in users}
+
+    return [
+        ContentTypeResponse(
+            id=r.id,
+            workspace_id=r.workspace_id,
+            name=r.name,
+            description=r.description,
+            is_default=r.is_default,
+            requires_manager_approval=r.requires_manager_approval,
+            default_reviewer_id=r.default_reviewer_id,
+            default_reviewer_name=users_by_id.get(r.default_reviewer_id),
+            order_index=r.order_index,
+            is_archived=r.is_archived,
+            created_at=r.created_at,
+        )
+        for r in records
+    ]
+
+
+@router.post(
+    "/{workspace_id}/content-types",
+    response_model=ContentTypeResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_content_type(
+    workspace_id: str,
+    req: CreateContentTypeRequest,
+    user: UserModel | None = Depends(get_current_user_optional),
+    ctx: WorkspaceContext = Depends(require_role("Admin", "Brand manager")),
+    db: Session = Depends(get_db),
+):
+    """Create a new content type (Admin/Brand manager)."""
+    if ctx.workspace_id != workspace_id and not ctx.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
+
+    ct_id = f"ct-{uuid.uuid4().hex[:10]}"
+    ct = ContentTypeModel(
+        id=ct_id,
+        workspace_id=workspace_id,
+        name=req.name.strip(),
+        description=req.description.strip() if req.description else None,
+        is_default=False,
+        requires_manager_approval=req.requires_manager_approval,
+        default_reviewer_id=req.default_reviewer_id,
+        order_index=req.order_index,
+        is_archived=False,
+    )
+    db.add(ct)
+
+    audit_evt = AuditLogModel(
+        workspace_id=workspace_id,
+        actor_id=user.id if user else "usr-admin",
+        actor_role=ctx.role,
+        action="CONTENT_TYPE_CREATED",
+        entity="content_type",
+        entity_id=ct_id,
+        detail_json=json.dumps(
+            {"name": ct.name, "requires_manager_approval": ct.requires_manager_approval}
+        ),
+    )
+    db.add(audit_evt)
+    db.commit()
+    db.refresh(ct)
+
+    reviewer_name = None
+    if ct.default_reviewer_id:
+        rev_user = db.query(UserModel).filter(UserModel.id == ct.default_reviewer_id).first()
+        if rev_user:
+            reviewer_name = rev_user.full_name
+
+    return ContentTypeResponse(
+        id=ct.id,
+        workspace_id=ct.workspace_id,
+        name=ct.name,
+        description=ct.description,
+        is_default=ct.is_default,
+        requires_manager_approval=ct.requires_manager_approval,
+        default_reviewer_id=ct.default_reviewer_id,
+        default_reviewer_name=reviewer_name,
+        order_index=ct.order_index,
+        is_archived=ct.is_archived,
+        created_at=ct.created_at,
+    )
+
+
+@router.put("/{workspace_id}/content-types/{content_type_id}", response_model=ContentTypeResponse)
+def update_content_type(
+    workspace_id: str,
+    content_type_id: str,
+    req: UpdateContentTypeRequest,
+    user: UserModel | None = Depends(get_current_user_optional),
+    ctx: WorkspaceContext = Depends(require_role("Admin", "Brand manager")),
+    db: Session = Depends(get_db),
+):
+    """Update content type definition (Admin/Brand manager)."""
+    if ctx.workspace_id != workspace_id and not ctx.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
+
+    ct = (
+        db.query(ContentTypeModel)
+        .filter(
+            ContentTypeModel.id == content_type_id,
+            ContentTypeModel.workspace_id == workspace_id,
+        )
+        .first()
+    )
+    if not ct:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content type not found.")
+
+    if req.name is not None:
+        ct.name = req.name.strip()
+    if req.description is not None:
+        ct.description = req.description.strip()
+    if req.requires_manager_approval is not None:
+        ct.requires_manager_approval = req.requires_manager_approval
+    if req.default_reviewer_id is not None:
+        ct.default_reviewer_id = req.default_reviewer_id if req.default_reviewer_id else None
+    if req.order_index is not None:
+        ct.order_index = req.order_index
+    if req.is_archived is not None:
+        ct.is_archived = req.is_archived
+
+    audit_evt = AuditLogModel(
+        workspace_id=workspace_id,
+        actor_id=user.id if user else "usr-admin",
+        actor_role=ctx.role,
+        action="CONTENT_TYPE_UPDATED",
+        entity="content_type",
+        entity_id=ct.id,
+        detail_json=json.dumps(
+            {
+                "name": ct.name,
+                "requires_manager_approval": ct.requires_manager_approval,
+                "is_archived": ct.is_archived,
+            }
+        ),
+    )
+    db.add(audit_evt)
+    db.commit()
+    db.refresh(ct)
+
+    reviewer_name = None
+    if ct.default_reviewer_id:
+        rev_user = db.query(UserModel).filter(UserModel.id == ct.default_reviewer_id).first()
+        if rev_user:
+            reviewer_name = rev_user.full_name
+
+    return ContentTypeResponse(
+        id=ct.id,
+        workspace_id=ct.workspace_id,
+        name=ct.name,
+        description=ct.description,
+        is_default=ct.is_default,
+        requires_manager_approval=ct.requires_manager_approval,
+        default_reviewer_id=ct.default_reviewer_id,
+        default_reviewer_name=reviewer_name,
+        order_index=ct.order_index,
+        is_archived=ct.is_archived,
+        created_at=ct.created_at,
+    )
+
+
+@router.delete("/{workspace_id}/content-types/{content_type_id}")
+def archive_content_type(
+    workspace_id: str,
+    content_type_id: str,
+    user: UserModel | None = Depends(get_current_user_optional),
+    ctx: WorkspaceContext = Depends(require_role("Admin", "Brand manager")),
+    db: Session = Depends(get_db),
+):
+    """Archive a content type so it no longer appears in new submissions."""
+    if ctx.workspace_id != workspace_id and not ctx.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
+
+    ct = (
+        db.query(ContentTypeModel)
+        .filter(
+            ContentTypeModel.id == content_type_id,
+            ContentTypeModel.workspace_id == workspace_id,
+        )
+        .first()
+    )
+    if not ct:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content type not found.")
+
+    ct.is_archived = True
+    audit_evt = AuditLogModel(
+        workspace_id=workspace_id,
+        actor_id=user.id if user else "usr-admin",
+        actor_role=ctx.role,
+        action="CONTENT_TYPE_ARCHIVED",
+        entity="content_type",
+        entity_id=ct.id,
+        detail_json=json.dumps({"name": ct.name}),
+    )
+    db.add(audit_evt)
+    db.commit()
+    return {"status": "archived", "id": ct.id, "message": f"Content type '{ct.name}' archived."}
+
+
+# ---------------------------------------------------------------------------
+# Data Retention Policy Execution & Export
+# ---------------------------------------------------------------------------
+
+
+@router.post("/{workspace_id}/retention/run", response_model=RetentionRunResponse)
+def run_retention_policy(
+    workspace_id: str,
+    user: UserModel | None = Depends(get_current_user_optional),
+    ctx: WorkspaceContext = Depends(require_role("Admin")),
+    db: Session = Depends(get_db),
+):
+    """Run data retention policy: prune reviews older than retention_days (Admin only)."""
+    if ctx.workspace_id != workspace_id and not ctx.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
+
+    ws = db.query(WorkspaceModel).filter(WorkspaceModel.id == workspace_id).first()
+    if not ws:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found.")
+
+    if ws.retention_days <= 0:
+        return RetentionRunResponse(
+            deleted_count=0,
+            retained_count=db.query(ReviewModel)
+            .filter(ReviewModel.workspace_id == workspace_id)
+            .count(),
+            retention_days=0,
+            message="Retention is configured to keep all data indefinitely. No records deleted.",
+        )
+
+    cutoff_date = datetime.now(UTC) - timedelta(days=ws.retention_days)
+
+    if ws.is_demo:
+        deleted_count = 0
+        total_reviews = (
+            db.query(ReviewModel).filter(ReviewModel.workspace_id == workspace_id).count()
+        )
+        message = f"Simulated retention sweep. No reviews older than {ws.retention_days} days in the active 56-day demo window."
+    else:
+        # In non-demo workspace, delete reviews older than cutoff
+        # Strip tzinfo for SQLite datetime comparison
+        cutoff_naive = cutoff_date.replace(tzinfo=None)
+        expired_reviews = (
+            db.query(ReviewModel)
+            .filter(
+                ReviewModel.workspace_id == workspace_id,
+                ReviewModel.created_at < cutoff_naive,
+            )
+            .all()
+        )
+        deleted_count = len(expired_reviews)
+        for rev in expired_reviews:
+            db.delete(rev)
+        db.commit()
+        total_reviews = (
+            db.query(ReviewModel).filter(ReviewModel.workspace_id == workspace_id).count()
+        )
+        message = f"Retention policy executed. {deleted_count} expired reviews removed."
+
+    audit_evt = AuditLogModel(
+        workspace_id=workspace_id,
+        actor_id=user.id if user else "usr-meera",
+        actor_role="Admin",
+        action="RETENTION_POLICY_EXECUTED",
+        entity="workspace",
+        entity_id=workspace_id,
+        detail_json=json.dumps(
+            {"retention_days": ws.retention_days, "deleted_count": deleted_count}
+        ),
+    )
+    db.add(audit_evt)
+    db.commit()
+
+    return RetentionRunResponse(
+        deleted_count=deleted_count,
+        retained_count=total_reviews,
+        retention_days=ws.retention_days,
+        message=message,
+    )
+
+
+@router.get("/{workspace_id}/export")
+def export_workspace_data(
+    workspace_id: str,
+    user: UserModel | None = Depends(get_current_user_optional),
+    ctx: WorkspaceContext = Depends(require_role("Admin")),
+    db: Session = Depends(get_db),
+):
+    """Export complete workspace configuration, brand kits, and review statistics (Admin only)."""
+    if ctx.workspace_id != workspace_id and not ctx.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
+
+    ws = db.query(WorkspaceModel).filter(WorkspaceModel.id == workspace_id).first()
+    if not ws:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found.")
+
+    kits = db.query(BrandKitModel).filter(BrandKitModel.workspace_id == workspace_id).all()
+    rules = db.query(RuleModel).filter(RuleModel.workspace_id == workspace_id).all()
+    facts = db.query(FactModel).filter(FactModel.workspace_id == workspace_id).all()
+    content_types = (
+        db.query(ContentTypeModel).filter(ContentTypeModel.workspace_id == workspace_id).all()
+    )
+    review_count = db.query(ReviewModel).filter(ReviewModel.workspace_id == workspace_id).count()
+
+    audit_evt = AuditLogModel(
+        workspace_id=workspace_id,
+        actor_id=user.id if user else "usr-meera",
+        actor_role="Admin",
+        action="WORKSPACE_DATA_EXPORTED",
+        entity="workspace",
+        entity_id=workspace_id,
+        detail_json=json.dumps(
+            {"brand_kits": len(kits), "rules": len(rules), "reviews": review_count}
+        ),
+    )
+    db.add(audit_evt)
+    db.commit()
+
+    return {
+        "workspace": {
+            "id": ws.id,
+            "name": ws.name,
+            "industry": ws.industry,
+            "timezone": ws.timezone,
+            "date_format": ws.date_format,
+            "retention_days": ws.retention_days,
+            "ai_enabled": ws.ai_enabled,
+            "sla_hours": ws.sla_hours,
+        },
+        "brand_kits_count": len(kits),
+        "rules_count": len(rules),
+        "facts_count": len(facts),
+        "content_types_count": len(content_types),
+        "total_reviews": review_count,
+        "exported_at": datetime.now(UTC).isoformat(),
+    }
 
 
 @router.delete("/{workspace_id}")

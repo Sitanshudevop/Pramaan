@@ -25,6 +25,13 @@ def get_current_user_optional(
         token = access_token
 
     if not token:
+        # Check for demo persona impersonation in demo workspace
+        demo_user_id = request.headers.get("x-demo-user-id")
+        ws_id = request.headers.get("x-workspace-id") or "ws-demo"
+        if ws_id == "ws-demo" and demo_user_id:
+            demo_user = db.query(UserModel).filter(UserModel.id == demo_user_id).first()
+            if demo_user:
+                return demo_user
         return None
 
     payload = decode_access_token(token)
@@ -148,14 +155,15 @@ def get_workspace_context(
     )
 
 
-def require_role(*allowed_roles: str):
+def require_role(*allowed_roles: str | Role):
     """Enforce membership role authorization."""
+    allowed_str = [r.value if hasattr(r, "value") else str(r) for r in allowed_roles]
 
     def _role_checker(ctx: WorkspaceContext = Depends(get_workspace_context)) -> WorkspaceContext:
-        if ctx.role not in allowed_roles:
+        if ctx.role not in allowed_str:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Action restricted to {', '.join(allowed_roles)}. Your active role in this workspace is {ctx.role}.",
+                detail=f"Action restricted to {', '.join(allowed_str)}. Your active role in this workspace is {ctx.role}.",
             )
         return ctx
 

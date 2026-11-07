@@ -4,6 +4,8 @@ import {
   Role,
   User,
   Workspace,
+  DemoPersona,
+  DEMO_CAST,
 } from './types';
 import {
   authGetMe,
@@ -16,6 +18,7 @@ import {
   listWorkspaces,
   setAuthToken,
   setWorkspaceId,
+  setDemoUserId,
 } from './api';
 
 type Theme = 'light' | 'dark' | 'system';
@@ -27,6 +30,8 @@ interface AppContextType {
   isDemoMode: boolean;
   role: Role;
   setRole: (role: Role) => void;
+  demoPersona: DemoPersona;
+  switchDemoPersona: (personaId: string) => void;
   theme: Theme;
   setTheme: (theme: Theme) => void;
   confidentialMode: boolean;
@@ -48,7 +53,7 @@ const DEMO_WORKSPACE_FALLBACK: Workspace = {
   slug: 'demo-workspace',
   industry: 'Fictional Brands Demo',
   is_demo: true,
-  retention_days: 30,
+  retention_days: 90,
   ai_enabled: true,
   role: 'Creator',
 };
@@ -57,6 +62,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [user, setUser] = useState<User | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(DEMO_WORKSPACE_FALLBACK);
+  const [demoPersona, setDemoPersonaState] = useState<DemoPersona>(() => {
+    const storedId = localStorage.getItem('pramaan_demo_persona');
+    return (DEMO_CAST.find((c) => c.id === storedId) || DEMO_CAST[4]) as DemoPersona; // Priya Nair
+  });
   const [demoRole, setDemoRole] = useState<Role>(() => {
     return (localStorage.getItem('pramaan_demo_role') as Role) || 'Creator';
   });
@@ -196,10 +205,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const switchDemoPersona = (personaId: string) => {
+    const persona = DEMO_CAST.find((c) => c.id === personaId);
+    if (persona) {
+      setDemoPersonaState(persona);
+      setDemoUserId(persona.id);
+      setDemoRole(persona.role);
+      localStorage.setItem('pramaan_demo_persona', persona.id);
+      localStorage.setItem('pramaan_demo_role', persona.role);
+    }
+  };
+
   const setRole = (newRole: Role) => {
     if (isDemoMode) {
       setDemoRole(newRole);
       localStorage.setItem('pramaan_demo_role', newRole);
+      const matched = DEMO_CAST.find((c) => c.role === newRole);
+      if (matched) {
+        setDemoPersonaState(matched);
+        setDemoUserId(matched.id);
+        localStorage.setItem('pramaan_demo_persona', matched.id);
+      }
     }
   };
 
@@ -212,6 +238,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isDemoMode,
         role,
         setRole,
+        demoPersona,
+        switchDemoPersona,
         theme,
         setTheme,
         confidentialMode,

@@ -1,7 +1,7 @@
-"""Repository for brand insights, rule ambiguity metrics, and simulated events."""
+"""Repository for brand insights, rule ambiguity metrics, and compliance analytics."""
 
 from app.constants import Severity
-from app.models.entities import SimulatedEventModel
+from app.models.entities import DecisionModel, FindingModel, ReviewModel, RuleModel, WorkspaceModel
 from app.schemas.schemas import (
     AmbiguousRuleStat,
     InsightsResponse,
@@ -12,33 +12,60 @@ from sqlalchemy.orm import Session
 
 
 class InsightsRepository:
-    """Aggregates rule violations, overrides, and ambiguity indices."""
+    """Aggregates rule violations, overrides, and ambiguity indices strictly from real review findings."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, workspace_id: str | None = None):
         self.db = db
+        self.workspace_id = workspace_id or "ws-demo"
 
     def get_insights(self, brand_kit_id: str | None = None) -> InsightsResponse:
-        """Calculate calm, explainable brand insights."""
-        query = self.db.query(SimulatedEventModel)
+        """Calculate calm, explainable brand insights strictly from real review findings and decisions."""
+        # Query reviews belonging to this workspace
+        review_query = self.db.query(ReviewModel).filter(
+            ReviewModel.workspace_id == self.workspace_id
+        )
         if brand_kit_id:
-            query = query.filter(SimulatedEventModel.brand_kit_id == brand_kit_id)
+            review_query = review_query.filter(ReviewModel.kit_id == brand_kit_id)
 
-        all_events = query.all()
-        total_count = len(all_events)
+        review_ids = [r.id for r in review_query.all()]
+        ws = self.db.query(WorkspaceModel).filter(WorkspaceModel.id == self.workspace_id).first()
+        is_demo = ws.is_demo if ws else (self.workspace_id == "ws-demo")
 
-        # 1. Top repeated violations
-        violations = [e for e in all_events if e.action in ("violation_detected", "violated")]
+        if not review_ids:
+            return InsightsResponse(
+                total_events=0,
+                top_repeated_violations=[],
+                most_overridden_rules=[],
+                unclear_rules=[],
+                simulated_notice="Demo data is fictional" if is_demo else None,
+            )
+
+        # 1. Fetch all findings associated with these reviews
+        findings = (
+            self.db.query(FindingModel)
+            .filter(FindingModel.review_id.in_(review_ids), FindingModel.rule_id.isnot(None))
+            .all()
+        )
+
+        # 2. Fetch all rules for title lookup
+        rules_lookup: dict[str, RuleModel] = {str(r.id): r for r in self.db.query(RuleModel).all()}
+
+        # 3. Aggregate violations by rule_id
         rule_counts: dict[str, dict] = {}
-        for v in violations:
-            if v.rule_id not in rule_counts:
-                rule_counts[v.rule_id] = {
-                    "rule_id": v.rule_id,
-                    "rule_name": v.rule_name,
-                    "category": v.category,
-                    "severity": v.severity,
+        for f in findings:
+            if not f.rule_id:
+                continue
+            r_id = str(f.rule_id)
+            if r_id not in rule_counts:
+                rule_obj = rules_lookup.get(r_id)
+                rule_counts[r_id] = {
+                    "rule_id": r_id,
+                    "rule_name": rule_obj.title if rule_obj else (f.source_title or r_id),
+                    "category": f.category,
+                    "severity": f.severity,
                     "count": 0,
                 }
-            rule_counts[v.rule_id]["count"] += 1
+            rule_counts[r_id]["count"] += 1
 
         sorted_violations = sorted(rule_counts.values(), key=lambda x: x["count"], reverse=True)[:5]
         top_violations = [
@@ -50,26 +77,43 @@ class InsightsRepository:
                 if item["severity"] in [s.value for s in Severity]
                 else Severity.MAJOR,
                 count=item["count"],
-                simulated=True,
+                simulated=False,
             )
             for item in sorted_violations
         ]
 
-        # 2. Most overridden rules
-        overrides = [e for e in all_events if e.action == "overridden"]
+        # 4. Fetch human decisions on these findings (overrides)
+        finding_ids = [f.id for f in findings]
+        override_decisions = []
+        if finding_ids:
+            override_decisions = (
+                self.db.query(DecisionModel)
+                .filter(
+                    DecisionModel.finding_id.in_(finding_ids), DecisionModel.action == "override"
+                )
+                .all()
+            )
+
+        # Map finding_id to rule_id
+        finding_to_rule = {f.id: f.rule_id for f in findings if f.rule_id}
+
         override_map: dict[str, dict] = {}
-        for o in overrides:
-            if o.rule_id not in override_map:
-                override_map[o.rule_id] = {
-                    "rule_id": o.rule_id,
-                    "rule_name": o.rule_name,
-                    "category": o.category,
+        for o in override_decisions:
+            r_id = finding_to_rule.get(o.finding_id)
+            if not r_id:
+                continue
+            if r_id not in override_map:
+                rule_obj = rules_lookup.get(r_id)
+                override_map[r_id] = {
+                    "rule_id": r_id,
+                    "rule_name": rule_obj.title if rule_obj else r_id,
+                    "category": rule_obj.category if rule_obj else "Guidelines",
                     "override_count": 0,
                     "reasons": [],
                 }
-            override_map[o.rule_id]["override_count"] += 1
-            if o.reason and o.reason not in override_map[o.rule_id]["reasons"]:
-                override_map[o.rule_id]["reasons"].append(o.reason)
+            override_map[r_id]["override_count"] += 1
+            if o.reason and o.reason not in override_map[r_id]["reasons"]:
+                override_map[r_id]["reasons"].append(o.reason)
 
         sorted_overrides = sorted(
             override_map.values(), key=lambda x: x["override_count"], reverse=True
@@ -81,44 +125,51 @@ class InsightsRepository:
                 category=item["category"],
                 override_count=item["override_count"],
                 reasons=item["reasons"][:3],
-                simulated=True,
+                simulated=False,
             )
             for item in sorted_overrides
         ]
 
-        # 3. Rule ambiguity calculation
-        # Ambiguity score = (overrides / (violations + overrides)) bounded between 0 and 1
+        # 5. Rule Ambiguity Calculation
         ambiguous_rules: list[AmbiguousRuleStat] = []
-        for rule_id, v_data in rule_counts.items():
-            o_data = override_map.get(rule_id, {"override_count": 0})
+        for r_id, v_data in rule_counts.items():
+            o_data = override_map.get(r_id, {"override_count": 0})
             v_cnt = v_data["count"]
             o_cnt = o_data["override_count"]
-            total_rule_evals = v_cnt + o_cnt
-            if total_rule_evals >= 3:
-                score = round(o_cnt / total_rule_evals, 2)
+            total_evals = v_cnt + o_cnt
+            if total_evals >= 3:
+                score = round(o_cnt / total_evals, 2)
                 if score >= 0.25:
                     rec = "Reviewers frequently override this rule. Recommend clarifying exceptions in Brand Hub."
                 else:
                     rec = "Rule is consistently respected with low reviewer disagreement."
                 ambiguous_rules.append(
                     AmbiguousRuleStat(
-                        rule_id=rule_id,
+                        rule_id=r_id,
                         rule_name=v_data["rule_name"],
                         category=v_data["category"],
                         violation_count=v_cnt,
                         override_count=o_cnt,
                         ambiguity_score=score,
                         recommendation=rec,
-                        simulated=True,
+                        simulated=False,
                     )
                 )
 
         ambiguous_rules.sort(key=lambda x: x.ambiguity_score, reverse=True)
+
+        # Total compliance events: all rule findings flagged + all human decisions taken
+        total_decisions = (
+            self.db.query(DecisionModel).filter(DecisionModel.finding_id.in_(finding_ids)).count()
+            if finding_ids
+            else 0
+        )
+        total_count = len(findings) + total_decisions
 
         return InsightsResponse(
             total_events=total_count,
             top_repeated_violations=top_violations,
             most_overridden_rules=most_overridden,
             unclear_rules=ambiguous_rules[:5],
-            simulated_notice="Seed insights are populated with simulated review events for demonstration.",
+            simulated_notice="Demo data is fictional" if is_demo else None,
         )
