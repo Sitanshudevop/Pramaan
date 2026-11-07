@@ -9,7 +9,6 @@ from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 
 from app.api import audit, auth, brands, health, insights, notifications, reviews, workspaces
-from app.config import settings
 from app.deps import limiter
 from app.models.base import SessionLocal
 from app.security import SecurityHeadersMiddleware
