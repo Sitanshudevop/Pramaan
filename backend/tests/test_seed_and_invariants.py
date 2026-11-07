@@ -84,3 +84,37 @@ def test_span_offset_invariant_across_all_samples():
             else:
                 # Missing constraint / document-level finding: start=0, end=0
                 assert f.start == 0 and f.end == 0
+
+
+def test_sample_drafts_never_mention_foreign_brands_or_domains():
+    """Every sample purpose card and draft must only reference its own brand kit identity."""
+    samples_file = Path(__file__).parent.parent / "app" / "seed" / "sample_drafts.json"
+    with open(samples_file, encoding="utf-8") as f:
+        samples = json.load(f)
+
+    # Disallowed cross-brand references per brand kit
+    cross_brand_forbidden = {
+        "kettle-and-co": ["chaicraft", "chaicraft.in", "ledgerleaf", "leafsave"],
+        "ledgerleaf": ["kettle", "chaicraft", "chaicraft.in", "masala chai"],
+    }
+
+    for sample in samples:
+        kit_id = sample["brand_kit_id"]
+        forbidden_list = cross_brand_forbidden.get(kit_id, [])
+
+        purpose = sample.get("purpose_card", {})
+        combined_text = " ".join(
+            [
+                sample.get("content", ""),
+                purpose.get("goal", ""),
+                purpose.get("audience", ""),
+                purpose.get("key_message", ""),
+                purpose.get("call_to_action", ""),
+                " ".join(purpose.get("locked_phrases", [])),
+            ]
+        ).lower()
+
+        for forbidden in forbidden_list:
+            assert forbidden not in combined_text, (
+                f"Sample {sample['id']} ({kit_id}) improperly references foreign brand or domain '{forbidden}': {combined_text}"
+            )

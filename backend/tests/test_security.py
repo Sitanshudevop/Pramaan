@@ -160,3 +160,42 @@ def test_creator_cannot_publish_guidelines(client):
         json={"title": "Unauthorized Change", "reason": "Testing permission enforcement"},
     )
     assert res.status_code == 403
+
+
+def test_submit_review_role_permissions(client):
+    """Enforce review submission permissions: Creator and Brand Manager can submit; Reviewer and Admin return 403."""
+    payload = {
+        "brand_kit_id": "kettle-and-co",
+        "content": "Fresh organic Masala Chai for your everyday ritual.",
+        "content_type": "Promotional Email",
+        "purpose_card": {
+            "goal": "Launch announcement",
+            "audience": "Tea drinkers",
+            "key_message": "Organic tea",
+            "call_to_action": "Order today at kettleandco.example",
+            "locked_phrases": ["Masala Chai"],
+            "content_type": "Promotional Email",
+            "ai_declared": False,
+        },
+        "ai_declared": False,
+    }
+
+    # Reviewer cannot submit drafts -> 403
+    reviewer_res = client.post("/api/reviews", headers={"X-Demo-Role": "Reviewer"}, json=payload)
+    assert reviewer_res.status_code == 403
+    assert "FORBIDDEN" in reviewer_res.json()["detail"]["error"]["code"]
+
+    # Admin cannot submit drafts -> 403
+    admin_res = client.post("/api/reviews", headers={"X-Demo-Role": "Admin"}, json=payload)
+    assert admin_res.status_code == 403
+    assert "FORBIDDEN" in admin_res.json()["detail"]["error"]["code"]
+
+    # Creator can submit drafts -> 201
+    creator_res = client.post("/api/reviews", headers={"X-Demo-Role": "Creator"}, json=payload)
+    assert creator_res.status_code == 201
+    assert "id" in creator_res.json()
+
+    # Brand Manager can submit drafts -> 201
+    bm_res = client.post("/api/reviews", headers={"X-Demo-Role": "Brand manager"}, json=payload)
+    assert bm_res.status_code == 201
+    assert "id" in bm_res.json()
