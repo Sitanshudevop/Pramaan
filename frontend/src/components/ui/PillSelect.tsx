@@ -38,7 +38,7 @@ export const PillSelect: React.FC<PillSelectProps> = ({
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
         aria-label={ariaLabel}
-        className={`appearance-none rounded-pill bg-surface border border-border text-text text-xs py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer font-medium hover:border-text-muted/50 transition-colors disabled:cursor-not-allowed ${
+        className={`appearance-none rounded-pill bg-surface border border-border text-text text-xs py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer font-medium hover:border-text-muted/50 transition-colors disabled:cursor-not-allowed w-full max-w-full min-w-0 truncate ${
           icon ? 'pl-8 pr-7' : 'pl-3.5 pr-7'
         }`}
         {...rest}

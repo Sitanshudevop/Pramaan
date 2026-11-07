@@ -300,11 +300,11 @@ export const NewReview: React.FC = () => {
         ];
 
   return (
-    <div className="max-w-[880px] mx-auto py-4 sm:py-8 space-y-6 pb-24 sm:pb-8">
+    <div className="max-w-[880px] mx-auto py-4 sm:py-8 space-y-6 pb-24 sm:pb-8 w-full min-w-0">
       {/* Header */}
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text">New Content Review</h1>
-        <p className="text-xs text-text-muted max-w-md mx-auto leading-relaxed">
+      <div className="text-center space-y-2 w-full min-w-0">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text break-anywhere">New Content Review</h1>
+        <p className="text-xs text-text-muted max-w-md mx-auto leading-relaxed break-anywhere">
           Evaluate draft copy against active rules, claims policies, and approved facts before publishing.
         </p>
       </div>
@@ -408,12 +408,12 @@ export const NewReview: React.FC = () => {
           </div>
 
           {/* Section: Draft Copy Input */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="space-y-2 w-full min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <label htmlFor="content-input" className="text-xs font-semibold text-text">
                 Draft Content (Text)
               </label>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -424,7 +424,7 @@ export const NewReview: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-2.5 py-1 rounded-pill text-[11px] font-medium border border-border bg-surface text-text hover:bg-surface-2 transition-colors flex items-center space-x-1"
+                  className="px-2.5 py-1 rounded-pill text-[11px] font-medium border border-border bg-surface text-text hover:bg-surface-2 transition-colors flex items-center space-x-1 shrink-0"
                 >
                   <Upload className="w-3 h-3 text-text-muted" />
                   <span>Upload File</span>
@@ -432,12 +432,12 @@ export const NewReview: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleClearForm}
-                  className="px-2.5 py-1 rounded-pill text-[11px] font-medium border border-border bg-surface text-text hover:bg-surface-2 transition-colors flex items-center space-x-1"
+                  className="px-2.5 py-1 rounded-pill text-[11px] font-medium border border-border bg-surface text-text hover:bg-surface-2 transition-colors flex items-center space-x-1 shrink-0"
                 >
                   <RotateCcw className="w-3 h-3 text-text-muted" />
                   <span>Clear</span>
                 </button>
-                <span className="text-[11px] font-mono text-text-muted">
+                <span className="text-[11px] font-mono text-text-muted shrink-0">
                   {content.length} / 20,000 chars
                 </span>
               </div>

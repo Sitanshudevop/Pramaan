@@ -23,7 +23,7 @@ export const GlowBackdrop: React.FC<GlowBackdropProps> = ({
     >
       {/* Radial soft orange ellipse */}
       <div
-        className={`absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full pointer-events-none ${opacityClass}`}
+        className={`absolute -top-32 left-1/2 -translate-x-1/2 w-full max-w-[700px] h-[400px] rounded-full pointer-events-none ${opacityClass}`}
         style={{
           background:
             'radial-gradient(ellipse at 50% 35%, var(--glow-color) 0%, rgba(255,138,76,0.12) 45%, transparent 72%)',

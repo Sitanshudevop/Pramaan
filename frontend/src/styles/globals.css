@@ -69,7 +69,8 @@
 }
 
 /* Base resets & typography */
-*, ::before, ::after {
+*, *::before, *::after {
+  box-sizing: border-box;
   border-color: var(--border);
 }
 
@@ -103,7 +104,6 @@ body {
   line-height: 1.6;
   background-color: var(--bg);
   color: var(--text);
-  overflow-x: hidden;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   min-height: 100dvh;
 }
@@ -121,6 +121,20 @@ html {
 .text-fluid-numeral {
   font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
   line-height: 1.1;
+}
+
+/* Text inside cards: overflow-wrap anywhere; never nowrap */
+.rounded-card,
+[data-card] {
+  overflow-wrap: anywhere;
+}
+.rounded-card p,
+.rounded-card h1,
+.rounded-card h2,
+.rounded-card h3,
+.rounded-card h4,
+[data-card] p {
+  overflow-wrap: anywhere;
 }
 
 /* Form inputs: minimum 16px font-size to prevent iOS safari auto-zoom on mobile */

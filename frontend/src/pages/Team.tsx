@@ -88,11 +88,11 @@ export const Team: React.FC = () => {
 
   if (currentWorkspace?.is_demo) {
     return (
-      <div className="max-w-app mx-auto py-12 text-center space-y-4">
-        <div className="p-8 rounded-card border border-border bg-surface shadow-floating max-w-md mx-auto space-y-3">
+      <div className="max-w-app mx-auto py-12 text-center space-y-4 w-full min-w-0">
+        <div className="p-8 rounded-card border border-border bg-surface shadow-floating max-w-md mx-auto space-y-3 w-full min-w-0">
           <Building2 className="w-10 h-10 text-orange-text mx-auto" />
-          <h2 className="text-xl font-bold text-text">Demo Workspace</h2>
-          <p className="text-xs text-text-muted leading-relaxed">
+          <h2 className="text-xl font-bold text-text break-anywhere">Demo Workspace</h2>
+          <p className="text-xs text-text-muted leading-relaxed break-anywhere">
             Team collaboration and invite links require a registered workspace.
             Sign up or create your workspace to invite teammates and assign roles.
           </p>
@@ -102,12 +102,12 @@ export const Team: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-app mx-auto py-2">
+    <div className="space-y-6 max-w-app mx-auto py-2 w-full min-w-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-text">Team & Members</h1>
-          <p className="text-xs text-text-muted mt-1 leading-relaxed">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full min-w-0">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text break-anywhere">Team & Members</h1>
+          <p className="text-xs text-text-muted mt-1 leading-relaxed break-anywhere">
             Manage workspace teammates, membership roles, and shareable invitation links.
           </p>
         </div>

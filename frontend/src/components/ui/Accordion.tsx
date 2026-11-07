@@ -46,13 +46,13 @@ export const AccordionItem: React.FC<AccordionItemProps> = ({
           onClick={handleToggle}
           className="w-full text-left p-3.5 sm:p-4 flex items-center justify-between gap-3 hover:bg-surface-2 transition-colors touch-target select-none min-w-0"
         >
-          <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap min-w-0">
-              <span className="font-semibold text-text text-sm truncate">{title}</span>
+              <span className="font-semibold text-text text-sm break-anywhere">{title}</span>
               {badge}
             </div>
             {subtitle && (
-              <p className="text-xs text-text-muted mt-0.5 truncate">{subtitle}</p>
+              <p className="text-xs text-text-muted mt-0.5 break-anywhere leading-relaxed">{subtitle}</p>
             )}
           </div>
           <ChevronDown

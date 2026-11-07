@@ -42,12 +42,12 @@ export const Insights: React.FC = () => {
     })) || [];
 
   return (
-    <div className="space-y-6 max-w-app mx-auto py-2">
+    <div className="space-y-6 max-w-app mx-auto py-2 w-full min-w-0">
       {/* Title & Brand Filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-text">Brand Insights & Radar</h1>
-          <p className="text-xs text-text-muted mt-1 leading-relaxed">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full min-w-0">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text break-anywhere">Brand Insights & Radar</h1>
+          <p className="text-xs text-text-muted mt-1 leading-relaxed break-anywhere">
             Aggregate compliance trends, repeated exceptions, and rule ambiguity detection.
           </p>
         </div>

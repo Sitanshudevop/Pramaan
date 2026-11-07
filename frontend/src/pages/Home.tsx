@@ -30,7 +30,7 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="relative max-w-app mx-auto py-6 sm:py-10 space-y-16">
+    <div className="relative max-w-app mx-auto py-6 sm:py-10 space-y-16 w-full min-w-0 overflow-hidden">
       {/* Background Decorative Atmosphere */}
       <GlowBackdrop intensity="normal" />
 

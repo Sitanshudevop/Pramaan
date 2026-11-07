@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 export interface TabItem {
   id: string;
@@ -24,6 +24,28 @@ export const ScrollTabs: React.FC<ScrollTabsProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const activeTabRef = useRef<HTMLButtonElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 2);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [tabs]);
 
   // Auto-scroll active tab into view when activeTab changes
   useEffect(() => {
@@ -34,6 +56,8 @@ export const ScrollTabs: React.FC<ScrollTabsProps> = ({
         inline: 'center',
       });
     }
+    // Re-check scroll indicators after tab changes
+    setTimeout(checkScroll, 150);
   }, [activeTab]);
 
   // Keyboard arrow navigation
@@ -62,13 +86,22 @@ export const ScrollTabs: React.FC<ScrollTabsProps> = ({
   };
 
   return (
-    <div className={`relative max-w-full ${className}`}>
+    <div className={`relative w-full min-w-0 max-w-full overflow-hidden ${className}`}>
+      {/* Left edge fade */}
+      <div
+        className={`pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-bg to-transparent z-10 transition-opacity duration-200 rounded-l-pill ${
+          canScrollLeft ? 'opacity-100' : 'opacity-0'
+        }`}
+        aria-hidden="true"
+      />
+
       {/* Scrollable Container with pill background */}
       <div
         ref={containerRef}
         role="tablist"
         aria-label={ariaLabel}
-        className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar scroll-smooth p-1 bg-surface-2 rounded-pill border border-border select-none"
+        data-scrollable="true"
+        className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar scroll-smooth p-1 bg-surface-2 rounded-pill border border-border select-none w-full min-w-0"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {tabs.map((tab, idx) => {
@@ -108,6 +141,14 @@ export const ScrollTabs: React.FC<ScrollTabsProps> = ({
           );
         })}
       </div>
+
+      {/* Right edge fade */}
+      <div
+        className={`pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-bg to-transparent z-10 transition-opacity duration-200 rounded-r-pill ${
+          canScrollRight ? 'opacity-100' : 'opacity-0'
+        }`}
+        aria-hidden="true"
+      />
     </div>
   );
 };

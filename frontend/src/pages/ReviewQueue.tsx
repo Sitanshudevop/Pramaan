@@ -139,12 +139,12 @@ export const ReviewQueue: React.FC = () => {
     (searchQuery.trim() ? 1 : 0);
 
   return (
-    <div className="space-y-6 max-w-app mx-auto py-2">
+    <div className="space-y-6 max-w-app mx-auto py-2 w-full min-w-0">
       {/* Top Header Row with Title & Primary Pill Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-text">Review Queue</h1>
-          <p className="text-xs text-text-muted mt-1 leading-relaxed">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full min-w-0">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text break-anywhere">Review Queue</h1>
+          <p className="text-xs text-text-muted mt-1 leading-relaxed break-anywhere">
             Content drafts awaiting human review, overrides, or manager sign-off.
           </p>
         </div>

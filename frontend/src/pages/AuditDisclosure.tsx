@@ -83,10 +83,10 @@ export const AuditDisclosure: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6 max-w-app mx-auto py-2">
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-text">Audit & AI Disclosure</h1>
-        <p className="text-xs text-text-muted mt-1 leading-relaxed">
+    <div className="space-y-6 max-w-app mx-auto py-2 w-full min-w-0">
+      <div className="w-full min-w-0">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text break-anywhere">Audit & AI Disclosure</h1>
+        <p className="text-xs text-text-muted mt-1 leading-relaxed break-anywhere">
           Immutable append-only governance trail and runtime AI model processing ledger.
         </p>
       </div>
@@ -147,7 +147,7 @@ export const AuditDisclosure: React.FC = () => {
       )}
 
       {/* ScrollTabs Selector & Action Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full min-w-0">
         <ScrollTabs
           tabs={tabs}
           activeTab={activeTab}
@@ -155,12 +155,12 @@ export const AuditDisclosure: React.FC = () => {
         />
 
         {activeTab === 'audit' && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={handleVerify}
               disabled={isVerifying}
-              className="px-3.5 py-1.5 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-90 shadow-xs flex items-center space-x-1.5"
+              className="px-3.5 py-1.5 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-90 shadow-xs flex items-center space-x-1.5 shrink-0"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>{isVerifying ? 'Verifying...' : 'Verify Trail Integrity'}</span>
@@ -169,7 +169,7 @@ export const AuditDisclosure: React.FC = () => {
               type="button"
               onClick={() => handleExport('csv')}
               disabled={isExporting}
-              className="px-3 py-1.5 rounded-pill border border-border bg-surface text-text hover:bg-surface-2 text-xs font-medium flex items-center space-x-1"
+              className="px-3 py-1.5 rounded-pill border border-border bg-surface text-text hover:bg-surface-2 text-xs font-medium flex items-center space-x-1 shrink-0"
             >
               <Download className="w-3.5 h-3.5 text-text-muted" />
               <span>CSV</span>
@@ -178,7 +178,7 @@ export const AuditDisclosure: React.FC = () => {
               type="button"
               onClick={() => handleExport('json')}
               disabled={isExporting}
-              className="px-3 py-1.5 rounded-pill border border-border bg-surface text-text hover:bg-surface-2 text-xs font-medium flex items-center space-x-1"
+              className="px-3 py-1.5 rounded-pill border border-border bg-surface text-text hover:bg-surface-2 text-xs font-medium flex items-center space-x-1 shrink-0"
             >
               <Download className="w-3.5 h-3.5 text-text-muted" />
               <span>JSON</span>
@@ -189,10 +189,10 @@ export const AuditDisclosure: React.FC = () => {
 
       {/* Tab 1: Audit Log Table */}
       {activeTab === 'audit' && (
-        <div className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3">
+        <div className="p-4 sm:p-5 rounded-card border border-border bg-surface shadow-floating space-y-3 w-full min-w-0">
           {/* Role Filter Pills */}
-          <div className="flex items-center space-x-1.5 pb-2 border-b border-border/60">
-            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mr-1">
+          <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b border-border/60">
+            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mr-1 shrink-0">
               Actor Role:
             </span>
             {['ALL', 'Creator', 'Reviewer', 'Brand manager', 'Admin'].map((r) => (
@@ -200,7 +200,7 @@ export const AuditDisclosure: React.FC = () => {
                 key={r}
                 type="button"
                 onClick={() => setRoleFilter(r)}
-                className={`px-3 py-1 rounded-pill text-xs font-medium transition-colors ${
+                className={`px-2.5 py-1 rounded-pill text-[11px] font-semibold transition-colors shrink-0 ${
                   roleFilter === r
                     ? 'bg-text text-bg font-bold shadow-xs'
                     : 'bg-surface-2 text-text-muted hover:text-text'
@@ -211,7 +211,7 @@ export const AuditDisclosure: React.FC = () => {
             ))}
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto w-full min-w-0" data-scrollable="true">
             {loadingAudit ? (
               <div className="py-12 text-center text-xs text-text-muted font-mono">Loading audit trail...</div>
             ) : filteredAuditLogs.length === 0 ? (
@@ -299,7 +299,7 @@ export const AuditDisclosure: React.FC = () => {
 
       {/* Tab 2: AI Disclosure Ledger */}
       {activeTab === 'disclosure' && (
-        <div className="p-5 rounded-card border border-border bg-surface shadow-floating overflow-x-auto">
+        <div className="p-4 sm:p-5 rounded-card border border-border bg-surface shadow-floating overflow-x-auto w-full min-w-0" data-scrollable="true">
           {loadingDisc ? (
             <div className="py-12 text-center text-xs text-text-muted font-mono">Loading disclosure ledger...</div>
           ) : !disclosures || disclosures.length === 0 ? (

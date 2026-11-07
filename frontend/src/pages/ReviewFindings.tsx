@@ -304,19 +304,19 @@ export const ReviewFindings: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0 max-w-app mx-auto py-2">
       {/* Top Header Summary */}
-      <div className="p-6 rounded-card border border-border bg-surface shadow-floating flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center space-x-2 text-xs text-text-muted mb-1">
-            <span className="font-mono font-medium">{review.id}</span>
+      <div className="p-4 sm:p-6 rounded-card border border-border bg-surface shadow-floating flex flex-col md:flex-row md:items-center justify-between gap-4 w-full min-w-0">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted mb-1 font-mono">
+            <span className="font-medium">{review.id}</span>
             <span>·</span>
             <span className="capitalize">{review.kit_id.replace('-', ' ')}</span>
             <span>·</span>
             <span>{review.content_type}</span>
           </div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-text flex items-center space-x-2.5">
-            <span>Review Workspace</span>
+          <h1 className="text-2xl font-extrabold tracking-tight text-text flex flex-wrap items-center gap-2.5">
+            <span className="break-anywhere">Review Workspace</span>
             <Chip
               variant={
                 review.status === 'Approved'
@@ -457,8 +457,8 @@ export const ReviewFindings: React.FC = () => {
       </div>
 
       {/* Workflow Progress Pill Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-card border border-border bg-surface shadow-xs">
-        <div className="flex items-center space-x-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-card border border-border bg-surface shadow-xs w-full min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold text-text uppercase tracking-wider">
             Review Lifecycle:
           </span>
@@ -466,7 +466,7 @@ export const ReviewFindings: React.FC = () => {
         </div>
 
         {/* Version Switcher Pills */}
-        <div className="flex items-center space-x-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-[11px] text-text-muted mr-1">Version:</span>
           {review.versions.map((v) => (
             <button

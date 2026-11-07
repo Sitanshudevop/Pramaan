@@ -544,18 +544,18 @@ export const Settings: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6 max-w-app mx-auto py-3">
+    <div className="space-y-6 max-w-app mx-auto py-3 w-full min-w-0">
       {/* Page Title & Demo Notice */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-text">Settings</h1>
-          <p className="text-xs text-text-muted mt-1 leading-relaxed">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full min-w-0">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text break-anywhere">Settings</h1>
+          <p className="text-xs text-text-muted mt-1 leading-relaxed break-anywhere">
             Workspace governance control centre, approval gates, retention schedules, and account parameters.
           </p>
         </div>
 
         {isDemo && (
-          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-pill bg-orange-500/10 border border-orange-500/20 text-orange-text text-[11px] font-medium self-start sm:self-auto">
+          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-pill bg-orange-500/10 border border-orange-500/20 text-orange-text text-[11px] font-medium self-start sm:self-auto shrink-0">
             <Info className="w-3.5 h-3.5 shrink-0" />
             <span>Changes in the Demo workspace reset daily.</span>
           </div>
@@ -563,7 +563,7 @@ export const Settings: React.FC = () => {
       </div>
 
       {/* Section Picker: Mobile Select (< sm) and Horizontal ScrollTabs (>= sm) */}
-      <div className="sm:hidden w-full">
+      <div className="sm:hidden w-full min-w-0">
         <PillSelect
           value={activeTab}
           onChange={setActiveTab}
@@ -572,7 +572,7 @@ export const Settings: React.FC = () => {
           className="w-full"
         />
       </div>
-      <div className="hidden sm:block">
+      <div className="hidden sm:block w-full min-w-0 max-w-full overflow-hidden">
         <ScrollTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
       </div>
 

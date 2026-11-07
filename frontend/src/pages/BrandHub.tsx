@@ -10,6 +10,7 @@ import {
   Download,
   Upload,
   FileText,
+  ChevronDown,
 } from 'lucide-react';
 import {
   getBrandKits,
@@ -371,18 +372,18 @@ export const BrandHub: React.FC = () => {
   const canManage = role === 'Brand manager' || role === 'Admin';
 
   return (
-    <div className="space-y-6 max-w-app mx-auto py-2">
+    <div className="space-y-6 max-w-app mx-auto py-2 w-full min-w-0">
       {/* Title & Brand Kit Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-text">Brand Knowledge Hub</h1>
-          <p className="text-xs text-text-muted mt-1 leading-relaxed">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full min-w-0">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text break-anywhere">Brand Knowledge Hub</h1>
+          <p className="text-xs text-text-muted mt-1 leading-relaxed break-anywhere">
             Approved guidelines, facts register, terminology constraints, and claims policies.
           </p>
         </div>
 
         {/* Mobile Brand Kit Select (< sm) */}
-        <div className="sm:hidden w-full space-y-2">
+        <div className="sm:hidden w-full space-y-2 min-w-0">
           <PillSelect
             value={selectedKitId}
             onChange={setSelectedKitId}
@@ -393,7 +394,7 @@ export const BrandHub: React.FC = () => {
         </div>
 
         {/* Brand Kit Selector Pills (>= sm) */}
-        <div className="hidden sm:flex flex-wrap items-center gap-1.5 p-1 rounded-pill bg-surface-2 border border-border/70 self-start sm:self-auto">
+        <div className="hidden sm:flex flex-wrap items-center gap-1.5 p-1 rounded-pill bg-surface-2 border border-border/70 self-start sm:self-auto min-w-0">
           {kits?.map((k) => (
             <button
               key={k.id}
@@ -453,10 +454,10 @@ export const BrandHub: React.FC = () => {
 
       {/* Empty State when workspace has no brand kits */}
       {(!kits || kits.length === 0) && (
-        <div className="py-16 text-center space-y-4 p-8 rounded-card border border-border bg-surface shadow-floating max-w-lg mx-auto">
+        <div className="py-16 text-center space-y-4 p-8 rounded-card border border-border bg-surface shadow-floating max-w-lg mx-auto w-full min-w-0">
           <Building2 className="w-12 h-12 text-orange-text mx-auto" />
           <h2 className="text-xl font-bold text-text">No brand kits yet</h2>
-          <p className="text-xs text-text-muted leading-relaxed">
+          <p className="text-xs text-text-muted leading-relaxed break-anywhere">
             Add your brand kit to configure guidelines, approved facts, terminology constraints, and start running reviews.
           </p>
           {canManage && (
@@ -472,9 +473,9 @@ export const BrandHub: React.FC = () => {
       )}
 
       {activeKit && (
-        <div className="space-y-6">
+        <div className="space-y-6 w-full min-w-0">
           {/* Row of Three Small StatCards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full min-w-0">
             <StatCard
               label="Active Guidelines"
               value={activeRules.length}
@@ -494,18 +495,18 @@ export const BrandHub: React.FC = () => {
           </div>
 
           {/* Brand Kit Overview Description Card */}
-          <div className="p-6 rounded-card border border-border bg-surface shadow-floating flex flex-col md:flex-row justify-between gap-4">
-            <div className="space-y-1.5">
+          <div className="p-4 sm:p-6 rounded-card border border-border bg-surface shadow-floating flex flex-col md:flex-row justify-between gap-4 w-full min-w-0">
+            <div className="space-y-1.5 min-w-0 flex-1">
               <span className="text-xs uppercase tracking-wider text-orange-text font-bold">
                 {activeKit.industry}
               </span>
-              <h2 className="text-xl font-extrabold text-text tracking-tight">{activeKit.name}</h2>
-              <p className="text-xs text-text-muted leading-relaxed max-w-xl">
+              <h2 className="text-xl font-extrabold text-text tracking-tight break-anywhere">{activeKit.name}</h2>
+              <p className="text-xs text-text-muted leading-relaxed max-w-xl break-anywhere">
                 {activeKit.description}
               </p>
             </div>
-            <div className="text-xs text-text-muted space-y-1 md:text-right border-t md:border-t-0 md:border-l border-border pt-3 md:pt-0 md:pl-6">
-              <div>
+            <div className="text-xs text-text-muted space-y-1 md:text-right border-t md:border-t-0 md:border-l border-border pt-3 md:pt-0 md:pl-6 min-w-0 shrink-0">
+              <div className="break-anywhere">
                 <strong className="text-text">Voice & Tone: </strong>
                 {activeKit.voice_tone}
               </div>
@@ -525,12 +526,12 @@ export const BrandHub: React.FC = () => {
 
           {/* TAB 1: RULES & GUIDELINES */}
           {activeTab === 'rules' && (
-            <div className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-border/60">
+            <div className="p-4 sm:p-5 rounded-card border border-border bg-surface shadow-floating space-y-3 w-full min-w-0">
+              <div className="flex flex-wrap items-center justify-between pb-2 border-b border-border/60 gap-2 min-w-0">
                 <span className="text-xs font-bold text-text uppercase tracking-wider">
                   Active Brand Rules
                 </span>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 flex-wrap gap-1">
                   {canManage ? (
                     <button
                       type="button"
@@ -555,13 +556,13 @@ export const BrandHub: React.FC = () => {
               ) : (
                 <div className="divide-y divide-border/60">
                   {activeKit.rules.map((rule) => (
-                    <div key={rule.id} className="py-4 space-y-2 first:pt-1">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center space-x-2">
+                    <div key={rule.id} className="py-4 space-y-2 first:pt-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 flex-wrap">
+                        <div className="flex items-center flex-wrap gap-1.5 min-w-0">
                           <Chip variant="accent" size="sm">
                             {rule.id}
                           </Chip>
-                          <span className="text-xs font-bold text-text">{rule.title}</span>
+                          <span className="text-xs font-bold text-text break-anywhere">{rule.title}</span>
                           <Chip
                             variant={
                               rule.severity === 'Blocker'
@@ -580,7 +581,7 @@ export const BrandHub: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => openEditModal(rule)}
-                            className="p-1.5 rounded-pill text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
+                            className="p-1.5 rounded-pill text-text-muted hover:text-text hover:bg-surface-2 transition-colors shrink-0"
                             title="Edit rule and publish new version"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -588,21 +589,64 @@ export const BrandHub: React.FC = () => {
                         ) : null}
                       </div>
 
-                      <p className="text-xs text-text-muted leading-relaxed">{rule.text}</p>
+                      <p className="text-xs text-text-muted leading-relaxed break-anywhere">{rule.text}</p>
 
-                      <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-text-muted">
-                        <span>Category: {rule.category}</span>
-                        <span>·</span>
-                        <span>v{rule.version}</span>
-                        <span>·</span>
-                        <span>Owner: {rule.owner}</span>
+                      {/* Desktop Metadata Line (>= 768px) */}
+                      <div className="hidden md:flex flex-wrap items-center gap-2 text-[11px] font-mono text-text-muted">
+                        <span className="inline-flex items-center gap-1 bg-surface-2 px-2 py-0.5 rounded-pill border border-border/60">
+                          <span className="text-text-muted">Category:</span>
+                          <span className="text-text font-semibold">{rule.category}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 bg-surface-2 px-2 py-0.5 rounded-pill border border-border/60">
+                          <span className="text-text-muted">v</span>
+                          <span className="text-text font-semibold">{rule.version}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 bg-surface-2 px-2 py-0.5 rounded-pill border border-border/60">
+                          <span className="text-text-muted">Owner:</span>
+                          <span className="text-text font-semibold">{rule.owner}</span>
+                        </span>
                         {rule.banned_terms && rule.banned_terms.length > 0 && (
-                          <>
-                            <span>·</span>
-                            <span className="text-orange-text">
-                              Banned: {rule.banned_terms.join(', ')}
-                            </span>
-                          </>
+                          <span className="inline-flex items-center gap-1 bg-orange-500/10 px-2 py-0.5 rounded-pill border border-orange-500/20 text-orange-text break-anywhere">
+                            <span>Banned:</span>
+                            <span className="font-semibold">{rule.banned_terms.join(', ')}</span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Mobile & Tablet Metadata with Details Accordion (< 768px) */}
+                      <div className="md:hidden space-y-1.5 text-[11px] font-mono text-text-muted">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 bg-surface-2 px-2 py-0.5 rounded-pill border border-border/60">
+                            <span className="text-text-muted">Category:</span>
+                            <span className="text-text font-semibold">{rule.category}</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1 bg-surface-2 px-2 py-0.5 rounded-pill border border-border/60">
+                            <span className="text-text-muted">v</span>
+                            <span className="text-text font-semibold">{rule.version}</span>
+                          </span>
+                        </div>
+
+                        {(rule.owner || (rule.banned_terms && rule.banned_terms.length > 0)) && (
+                          <details className="group pt-0.5">
+                            <summary className="cursor-pointer text-[11px] text-orange-text hover:underline inline-flex items-center gap-1 select-none font-sans font-medium">
+                              <span>Details</span>
+                              <ChevronDown className="w-3 h-3 group-open:rotate-180 transition-transform duration-150 inline" />
+                            </summary>
+                            <div className="mt-1.5 p-2 rounded-inner bg-surface-2 border border-border/60 space-y-1 text-[11px] font-mono">
+                              {rule.owner && (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-text-muted">Owner:</span>
+                                  <span className="text-text font-semibold break-anywhere">{rule.owner}</span>
+                                </div>
+                              )}
+                              {rule.banned_terms && rule.banned_terms.length > 0 && (
+                                <div className="flex flex-col gap-0.5 text-orange-text break-anywhere">
+                                  <span className="font-semibold">Banned Terms:</span>
+                                  <span>{rule.banned_terms.join(', ')}</span>
+                                </div>
+                              )}
+                            </div>
+                          </details>
                         )}
                       </div>
                     </div>
@@ -614,8 +658,8 @@ export const BrandHub: React.FC = () => {
 
           {/* TAB 2: FACTS REGISTER */}
           {activeTab === 'facts' && (
-            <div className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-border/60">
+            <div className="p-4 sm:p-5 rounded-card border border-border bg-surface shadow-floating space-y-3 w-full min-w-0">
+              <div className="flex flex-wrap items-center justify-between pb-2 border-b border-border/60 gap-2 min-w-0">
                 <span className="text-xs font-bold text-text uppercase tracking-wider">
                   Approved Facts Register
                 </span>
@@ -641,15 +685,15 @@ export const BrandHub: React.FC = () => {
               ) : (
                 <div className="divide-y divide-border/60">
                   {activeKit.facts.map((fact) => (
-                    <div key={fact.id} className="py-4 space-y-2 first:pt-1">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center space-x-2">
+                    <div key={fact.id} className="py-4 space-y-2 first:pt-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 flex-wrap">
+                        <div className="flex items-center flex-wrap gap-1.5 min-w-0">
                           <Chip variant="accent" size="sm">
                             {fact.id}
                           </Chip>
-                          <span className="text-xs font-bold text-text">{fact.subject}</span>
+                          <span className="text-xs font-bold text-text break-anywhere">{fact.subject}</span>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 shrink-0">
                           <Chip variant={fact.status === 'active' ? 'success' : 'neutral'} size="sm">
                             {fact.status}
                           </Chip>
@@ -666,16 +710,51 @@ export const BrandHub: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="p-3 rounded-inner bg-surface-2 font-mono text-xs text-text">
+                      <div className="p-3 rounded-inner bg-surface-2 font-mono text-xs text-text break-anywhere">
                         <strong className="text-orange-text">Permitted wording:</strong> &ldquo;{fact.permitted_wording}&rdquo;
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-text-muted">
-                        <span>Value: {fact.value} {fact.unit}</span>
-                        <span>·</span>
-                        <span>Valid: {fact.valid_from} to {fact.valid_to}</span>
-                        <span>·</span>
-                        <span>Source: {fact.source}</span>
+                      {/* Desktop Facts Metadata (>= 768px) */}
+                      <div className="hidden md:flex flex-wrap items-center gap-2 text-[11px] font-mono text-text-muted">
+                        <span className="inline-flex items-center gap-1 bg-surface-2 px-2 py-0.5 rounded-pill border border-border/60">
+                          <span className="text-text-muted">Value:</span>
+                          <span className="text-text font-semibold">{fact.value} {fact.unit}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 bg-surface-2 px-2 py-0.5 rounded-pill border border-border/60">
+                          <span className="text-text-muted">Valid:</span>
+                          <span className="text-text font-semibold">{fact.valid_from} to {fact.valid_to}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 bg-surface-2 px-2 py-0.5 rounded-pill border border-border/60">
+                          <span className="text-text-muted">Source:</span>
+                          <span className="text-text font-semibold">{fact.source}</span>
+                        </span>
+                      </div>
+
+                      {/* Mobile & Tablet Facts Metadata with Details Accordion (< 768px) */}
+                      <div className="md:hidden space-y-1.5 text-[11px] font-mono text-text-muted">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 bg-surface-2 px-2 py-0.5 rounded-pill border border-border/60">
+                            <span className="text-text-muted">Value:</span>
+                            <span className="text-text font-semibold">{fact.value} {fact.unit}</span>
+                          </span>
+                        </div>
+
+                        <details className="group pt-0.5">
+                          <summary className="cursor-pointer text-[11px] text-orange-text hover:underline inline-flex items-center gap-1 select-none font-sans font-medium">
+                            <span>Details</span>
+                            <ChevronDown className="w-3 h-3 group-open:rotate-180 transition-transform duration-150 inline" />
+                          </summary>
+                          <div className="mt-1.5 p-2 rounded-inner bg-surface-2 border border-border/60 space-y-1 text-[11px] font-mono">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-text-muted">Valid:</span>
+                              <span className="text-text font-semibold">{fact.valid_from} to {fact.valid_to}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-text-muted">Source:</span>
+                              <span className="text-text font-semibold break-anywhere">{fact.source}</span>
+                            </div>
+                          </div>
+                        </details>
                       </div>
                     </div>
                   ))}
@@ -686,13 +765,13 @@ export const BrandHub: React.FC = () => {
 
           {/* TAB 3: TERMINOLOGY & GLOSSARY */}
           {activeTab === 'glossary' && (
-            <div className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-border/60">
+            <div className="p-4 sm:p-5 rounded-card border border-border bg-surface shadow-floating space-y-4 w-full min-w-0">
+              <div className="flex flex-wrap items-center justify-between pb-2 border-b border-border/60 gap-2 min-w-0">
                 <span className="text-xs font-bold text-text uppercase tracking-wider">
                   Brand Glossary & Protected Casing
                 </span>
                 {canManage && (
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 flex-wrap gap-1">
                     <button
                       type="button"
                       onClick={() => openCreateRuleModal('Terminology')}
@@ -718,19 +797,19 @@ export const BrandHub: React.FC = () => {
 
               {/* Glossary Terms List */}
               {glossaryList.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2 w-full min-w-0">
                   <div className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
                     Approved Brand Terms ({glossaryList.length})
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full min-w-0">
                     {glossaryList.map((g, idx) => (
-                      <div key={idx} className="p-3.5 rounded-inner bg-surface-2 border border-border space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-xs text-text">{g.preferred_casing}</span>
-                          <span className="text-[10px] font-mono text-text-muted">Exact Casing</span>
+                      <div key={idx} className="p-3.5 rounded-inner bg-surface-2 border border-border space-y-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="font-bold text-xs text-text break-anywhere">{g.preferred_casing}</span>
+                          <span className="text-[10px] font-mono text-text-muted shrink-0">Exact Casing</span>
                         </div>
                         {g.definition && (
-                          <p className="text-[11px] text-text-muted leading-relaxed">{g.definition}</p>
+                          <p className="text-[11px] text-text-muted leading-relaxed break-anywhere">{g.definition}</p>
                         )}
                       </div>
                     ))}
@@ -739,7 +818,7 @@ export const BrandHub: React.FC = () => {
               )}
 
               {/* Terminology Rules from rules */}
-              <div className="space-y-2 pt-2">
+              <div className="space-y-2 pt-2 w-full min-w-0">
                 <div className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
                   Terminology Rules & Conventions
                 </div>
@@ -747,25 +826,25 @@ export const BrandHub: React.FC = () => {
                   {activeKit.rules
                     .filter((r) => r.category === 'Terminology')
                     .map((rule) => (
-                      <div key={rule.id} className="py-3 space-y-1.5 first:pt-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
+                      <div key={rule.id} className="py-3 space-y-1.5 first:pt-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center space-x-2 flex-wrap gap-1 min-w-0">
                             <Chip variant="accent" size="sm">
                               {rule.id}
                             </Chip>
-                            <span className="text-xs font-bold text-text">{rule.title}</span>
+                            <span className="text-xs font-bold text-text break-anywhere">{rule.title}</span>
                           </div>
                           {canManage && (
                             <button
                               type="button"
                               onClick={() => openEditModal(rule)}
-                              className="p-1 rounded-pill text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
+                              className="p-1 rounded-pill text-text-muted hover:text-text hover:bg-surface-2 transition-colors shrink-0"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                           )}
                         </div>
-                        <p className="text-xs text-text-muted">{rule.text}</p>
+                        <p className="text-xs text-text-muted break-anywhere">{rule.text}</p>
                       </div>
                     ))}
                 </div>
@@ -775,13 +854,13 @@ export const BrandHub: React.FC = () => {
 
           {/* TAB 4: CLAIMS POLICY */}
           {activeTab === 'claims' && (
-            <div className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-border/60">
+            <div className="p-4 sm:p-5 rounded-card border border-border bg-surface shadow-floating space-y-4 w-full min-w-0">
+              <div className="flex flex-wrap items-center justify-between pb-2 border-b border-border/60 gap-2 min-w-0">
                 <span className="text-xs font-bold text-text uppercase tracking-wider">
                   Promotional Claims & Substantiation Policy
                 </span>
                 {canManage && (
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 flex-wrap gap-1">
                     <button
                       type="button"
                       onClick={() => openCreateRuleModal('Promotional claims')}
@@ -807,24 +886,24 @@ export const BrandHub: React.FC = () => {
 
               {/* Claims Patterns List */}
               {claimsList.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2 w-full min-w-0">
                   <div className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
                     Restricted Claim Patterns ({claimsList.length})
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full min-w-0">
                     {claimsList.map((c, idx) => (
-                      <div key={idx} className="p-3.5 rounded-inner bg-surface-2 border border-border space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-xs text-orange-text">
+                      <div key={idx} className="p-3.5 rounded-inner bg-surface-2 border border-border space-y-1.5 min-w-0">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="font-mono font-bold text-xs text-orange-text break-anywhere">
                             &ldquo;{c.pattern}&rdquo;
                           </span>
                           <Chip variant={c.severity === 'Blocker' ? 'danger' : 'accent'} size="sm">
                             {c.severity || 'Major'}
                           </Chip>
                         </div>
-                        <p className="text-[11px] text-text-muted leading-relaxed">{c.reason}</p>
+                        <p className="text-[11px] text-text-muted leading-relaxed break-anywhere">{c.reason}</p>
                         {c.substantiating_fact_id && (
-                          <div className="text-[10px] font-mono text-text">
+                          <div className="text-[10px] font-mono text-text break-anywhere">
                             Substantiating Fact ID: <strong>{c.substantiating_fact_id}</strong>
                           </div>
                         )}
@@ -835,7 +914,7 @@ export const BrandHub: React.FC = () => {
               )}
 
               {/* Claims Rules */}
-              <div className="space-y-2 pt-2">
+              <div className="space-y-2 pt-2 w-full min-w-0">
                 <div className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
                   Claims Compliance Rules
                 </div>
