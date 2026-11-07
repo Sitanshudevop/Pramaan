@@ -124,3 +124,4 @@ export function ResponsiveTable<T>({
     </div>
   );
 }
+

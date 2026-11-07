@@ -16,3 +16,4 @@ export const StickyActionBar: React.FC<StickyActionBarProps> = ({ children, clas
     </div>
   );
 };
+

@@ -56,3 +56,4 @@ export const Truncate: React.FC<TruncateProps> = ({
     </div>
   );
 };
+
