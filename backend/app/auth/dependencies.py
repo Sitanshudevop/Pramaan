@@ -1,12 +1,12 @@
 """Authentication and workspace multi-tenant dependencies."""
 
-from typing import Annotated, Sequence
+from typing import Annotated
 
 from app.auth.security import decode_access_token
 from app.constants import Role
 from app.database import get_db
 from app.models.entities import MembershipModel, UserModel, WorkspaceModel
-from app.security import Permission, ROLE_PERMISSIONS
+from app.security import ROLE_PERMISSIONS, Permission
 from fastapi import Cookie, Depends, Header, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
@@ -31,7 +31,11 @@ def get_current_user_optional(
     if not payload or not payload.get("sub"):
         return None
 
-    user = db.query(UserModel).filter(UserModel.id == payload["sub"], UserModel.is_active.is_(True)).first()
+    user = (
+        db.query(UserModel)
+        .filter(UserModel.id == payload["sub"], UserModel.is_active.is_(True))
+        .first()
+    )
     return user
 
 

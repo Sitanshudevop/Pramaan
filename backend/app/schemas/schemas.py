@@ -289,53 +289,6 @@ class BrandKitSummary(StrictBaseModel):
     facts: list[FactItem]
 
 
-class UpdateRuleRequest(StrictBaseModel):
-    """Brand manager rule update request creating a new rule version."""
-
-    title: str | None = Field(default=None, max_length=256)
-    text: str | None = Field(default=None, max_length=2000)
-    severity: Severity | None = None
-    banned_terms: list[str] | None = None
-    reason: str = Field(..., min_length=MIN_REASON_CHARS, max_length=MAX_REASON_CHARS)
-
-
-class CreateRuleRequest(StrictBaseModel):
-    """Brand manager rule creation request."""
-
-    id: str | None = Field(default=None, max_length=64)
-    category: str = Field(default="Guidelines", max_length=64)
-    title: str = Field(..., min_length=1, max_length=256)
-    text: str = Field(..., min_length=1, max_length=2000)
-    severity: Severity = Field(default=Severity.MAJOR)
-    banned_terms: list[str] = Field(default_factory=list)
-    reason: str | None = Field(default=None, max_length=MAX_REASON_CHARS)
-
-
-class CreateFactRequest(StrictBaseModel):
-    """Brand manager fact registration request."""
-
-    id: str | None = Field(default=None, max_length=64)
-    subject: str = Field(..., min_length=1, max_length=256)
-    value: str = Field(..., min_length=1, max_length=256)
-    unit: str = Field(default="", max_length=64)
-    permitted_wording: str = Field(..., min_length=1, max_length=1000)
-    valid_from: str = Field(default="2026-01-01", max_length=32)
-    valid_to: str = Field(default="2026-12-31", max_length=32)
-    source: str = Field(default="Official Registry", max_length=256)
-
-
-class UpdateFactRequest(StrictBaseModel):
-    """Brand manager fact update or supersede request."""
-
-    subject: str | None = Field(default=None, max_length=256)
-    value: str | None = Field(default=None, max_length=256)
-    unit: str | None = Field(default=None, max_length=64)
-    permitted_wording: str | None = Field(default=None, max_length=1000)
-    valid_from: str | None = Field(default=None, max_length=32)
-    valid_to: str | None = Field(default=None, max_length=32)
-    status: str | None = Field(default=None, max_length=32)
-
-
 # --- Audit & Disclosure Ledger ---
 
 
@@ -578,9 +531,10 @@ class UpdateBrandKitRequest(StrictBaseModel):
 class CreateRuleRequest(StrictBaseModel):
     """Add a new brand rule."""
 
+    id: str | None = Field(default=None, max_length=64)
     category: str = Field(..., max_length=64)  # Terminology, Messaging, Claims, Tone and voice
-    title: str = Field(..., min_length=3, max_length=256)
-    text: str = Field(..., min_length=5, max_length=2000)
+    title: str = Field(..., min_length=1, max_length=256)
+    text: str = Field(..., min_length=1, max_length=2000)
     banned_terms: list[str] = Field(default_factory=list)
     preferred_replacement: str | None = Field(default=None, max_length=256)
     allow_in_quotes: bool = False
@@ -590,14 +544,15 @@ class CreateRuleRequest(StrictBaseModel):
     effective_from: str = Field(default="2026-01-01", max_length=32)
     owner: str = Field(default="Brand Team", max_length=128)
     source: str = Field(default="Brand Guidelines", max_length=256)
+    reason: str | None = Field(default=None, max_length=MAX_REASON_CHARS)
 
 
 class UpdateRuleRequest(StrictBaseModel):
     """Update existing brand rule."""
 
     category: str | None = Field(default=None, max_length=64)
-    title: str | None = Field(default=None, min_length=3, max_length=256)
-    text: str | None = Field(default=None, min_length=5, max_length=2000)
+    title: str | None = Field(default=None, min_length=1, max_length=256)
+    text: str | None = Field(default=None, min_length=1, max_length=2000)
     banned_terms: list[str] | None = None
     preferred_replacement: str | None = Field(default=None, max_length=256)
     allow_in_quotes: bool | None = None
@@ -608,18 +563,20 @@ class UpdateRuleRequest(StrictBaseModel):
     effective_from: str | None = Field(default=None, max_length=32)
     owner: str | None = Field(default=None, max_length=128)
     source: str | None = Field(default=None, max_length=256)
+    reason: str | None = Field(default=None, max_length=MAX_REASON_CHARS)
 
 
 class CreateFactRequest(StrictBaseModel):
     """Add fact to facts register with search keywords."""
 
-    subject: str = Field(..., min_length=2, max_length=256)
+    id: str | None = Field(default=None, max_length=64)
+    subject: str = Field(..., min_length=1, max_length=256)
     aliases: list[str] = Field(default_factory=list)
     value: str = Field(..., min_length=1, max_length=256)
     unit: str = Field(default="", max_length=64)
     valid_from: str = Field(default="2026-01-01", max_length=32)
     valid_to: str = Field(default="2027-12-31", max_length=32)
-    permitted_wording: str = Field(..., min_length=3, max_length=1000)
+    permitted_wording: str = Field(..., min_length=1, max_length=1000)
     owner: str = Field(default="Operations", max_length=128)
     source: str = Field(default="Facts Register", max_length=256)
 
@@ -627,13 +584,13 @@ class CreateFactRequest(StrictBaseModel):
 class UpdateFactRequest(StrictBaseModel):
     """Update fact in register."""
 
-    subject: str | None = Field(default=None, min_length=2, max_length=256)
+    subject: str | None = Field(default=None, min_length=1, max_length=256)
     aliases: list[str] | None = None
     value: str | None = Field(default=None, min_length=1, max_length=256)
     unit: str | None = Field(default=None, max_length=64)
     valid_from: str | None = Field(default=None, max_length=32)
     valid_to: str | None = Field(default=None, max_length=32)
-    permitted_wording: str | None = Field(default=None, min_length=3, max_length=1000)
+    permitted_wording: str | None = Field(default=None, min_length=1, max_length=1000)
     owner: str | None = Field(default=None, max_length=128)
     source: str | None = Field(default=None, max_length=256)
     status: str | None = Field(default=None, max_length=32)  # active, superseded
@@ -692,5 +649,3 @@ class GuidelineExtractRequest(StrictBaseModel):
     """Guideline document text for heuristic extraction."""
 
     content: str = Field(..., min_length=10)
-
-

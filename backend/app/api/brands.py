@@ -1,6 +1,9 @@
 """Brand knowledge hub endpoints scoped by multi-tenant workspace."""
 
+import csv
+import io
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -14,24 +17,20 @@ from app.models.entities import BrandKitModel
 from app.repositories.brand_repo import BrandRepository
 from app.schemas.schemas import (
     BrandKitSummary,
+    BulkImportRulesRequest,
     CreateBrandKitRequest,
     CreateClaimPatternRequest,
     CreateFactRequest,
     CreateGlossaryTermRequest,
     CreateRuleRequest,
     FactItem,
+    GuidelineExtractRequest,
     RuleItem,
     UpdateBrandKitRequest,
     UpdateFactRequest,
     UpdateRuleRequest,
-    BulkImportRulesRequest,
-    GuidelineExtractRequest,
 )
-import csv
-import io
-import re
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/brands", tags=["Brand Hub"])
@@ -132,7 +131,12 @@ def get_brand_kit(
     if not kit:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": {"code": "NOT_FOUND", "message": f"Brand kit '{kit_id}' not found in workspace"}},
+            detail={
+                "error": {
+                    "code": "NOT_FOUND",
+                    "message": f"Brand kit '{kit_id}' not found in workspace",
+                }
+            },
         )
     return _format_brand_kit(kit)
 
@@ -149,7 +153,9 @@ def update_brand_kit(
     repo = BrandRepository(db, ctx.workspace_id)
     kit = repo.update_brand_kit(kit_id, req.model_dump(exclude_unset=True))
     if not kit:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Brand kit '{kit_id}' not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Brand kit '{kit_id}' not found"
+        )
     return _format_brand_kit(kit)
 
 
@@ -164,7 +170,9 @@ def add_rule(
     repo = BrandRepository(db, ctx.workspace_id)
     kit = repo.get_brand_kit(kit_id)
     if not kit:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Brand kit '{kit_id}' not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Brand kit '{kit_id}' not found"
+        )
 
     rule = repo.create_rule(kit_id, req.model_dump())
     return RuleItem(
@@ -196,7 +204,9 @@ def update_rule(
     repo = BrandRepository(db, ctx.workspace_id)
     rule = repo.update_rule(rule_id, req.model_dump(exclude_unset=True))
     if not rule or rule.kit_id != kit_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Rule '{rule_id}' not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Rule '{rule_id}' not found"
+        )
 
     return RuleItem(
         id=rule.id,
@@ -225,7 +235,9 @@ def add_fact(
     repo = BrandRepository(db, ctx.workspace_id)
     kit = repo.get_brand_kit(kit_id)
     if not kit:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Brand kit '{kit_id}' not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Brand kit '{kit_id}' not found"
+        )
 
     fact = repo.create_fact(kit_id, req.model_dump())
     return FactItem(
@@ -256,7 +268,9 @@ def update_fact(
     repo = BrandRepository(db, ctx.workspace_id)
     fact = repo.update_fact(fact_id, req.model_dump(exclude_unset=True))
     if not fact or fact.kit_id != kit_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Fact '{fact_id}' not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Fact '{fact_id}' not found"
+        )
 
     return FactItem(
         id=fact.id,
@@ -283,7 +297,12 @@ def add_claim_pattern(
     """Add a claim pattern policy (Manager/Admin only)."""
     repo = BrandRepository(db, ctx.workspace_id)
     claim = repo.create_claim_pattern(kit_id, req.model_dump())
-    return {"id": claim.id, "pattern": claim.pattern, "severity": claim.severity, "reason": claim.reason}
+    return {
+        "id": claim.id,
+        "pattern": claim.pattern,
+        "severity": claim.severity,
+        "reason": claim.reason,
+    }
 
 
 @router.get("/{kit_id}/claims")
@@ -331,7 +350,15 @@ def list_glossary_terms(
     """List glossary and typography terms."""
     repo = BrandRepository(db, ctx.workspace_id)
     terms = repo.get_glossary_for_kit(kit_id)
-    return [{"id": t.id, "term": t.term, "preferred_casing": t.preferred_casing, "definition": t.definition} for t in terms]
+    return [
+        {
+            "id": t.id,
+            "term": t.term,
+            "preferred_casing": t.preferred_casing,
+            "definition": t.definition,
+        }
+        for t in terms
+    ]
 
 
 @router.get("/{kit_id}/export")
@@ -345,7 +372,9 @@ def export_brand_kit(
     repo = BrandRepository(db, ctx.workspace_id)
     kit = repo.get_brand_kit(kit_id)
     if not kit:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Brand kit '{kit_id}' not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Brand kit '{kit_id}' not found"
+        )
 
     rules = repo.get_rules_for_kit(kit_id)
     facts = repo.get_facts_for_kit(kit_id)
@@ -386,34 +415,58 @@ def export_brand_kit(
                 }
                 for f in facts
             ],
-            "claims": [{"pattern": c.pattern, "severity": c.severity, "reason": c.reason} for c in claims],
-            "glossary": [{"term": g.term, "preferred_casing": g.preferred_casing} for g in glossary],
+            "claims": [
+                {"pattern": c.pattern, "severity": c.severity, "reason": c.reason} for c in claims
+            ],
+            "glossary": [
+                {"term": g.term, "preferred_casing": g.preferred_casing} for g in glossary
+            ],
         }
         return Response(
             content=json.dumps(data, indent=2),
             media_type="application/json",
-            headers={"Content-Disposition": f"attachment; filename={kit.name.lower().replace(' ', '_')}_kit.json"},
+            headers={
+                "Content-Disposition": f"attachment; filename={kit.name.lower().replace(' ', '_')}_kit.json"
+            },
         )
 
     # Format == csv
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Type", "ID", "Category", "Title/Subject", "Detail/Text", "Severity/Value", "Replacement/Unit"])
+    writer.writerow(
+        [
+            "Type",
+            "ID",
+            "Category",
+            "Title/Subject",
+            "Detail/Text",
+            "Severity/Value",
+            "Replacement/Unit",
+        ]
+    )
 
     for r in rules:
-        writer.writerow(["Rule", r.id, r.category, r.title, r.text, r.severity, r.preferred_replacement or ""])
+        writer.writerow(
+            ["Rule", r.id, r.category, r.title, r.text, r.severity, r.preferred_replacement or ""]
+        )
     for f in facts:
-        writer.writerow(["Fact", f.id, "Facts Register", f.subject, f.permitted_wording, f.value, f.unit])
+        writer.writerow(
+            ["Fact", f.id, "Facts Register", f.subject, f.permitted_wording, f.value, f.unit]
+        )
     for c in claims:
         writer.writerow(["Claim", c.id, "Claims Policy", c.pattern, c.reason, c.severity, ""])
     for g in glossary:
-        writer.writerow(["Glossary", g.id, "Glossary", g.term, g.definition or "", g.preferred_casing, ""])
+        writer.writerow(
+            ["Glossary", g.id, "Glossary", g.term, g.definition or "", g.preferred_casing, ""]
+        )
 
     output.seek(0)
     return Response(
         content=output.getvalue(),
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={kit.name.lower().replace(' ', '_')}_kit.csv"},
+        headers={
+            "Content-Disposition": f"attachment; filename={kit.name.lower().replace(' ', '_')}_kit.csv"
+        },
     )
 
 
@@ -428,7 +481,9 @@ def bulk_import_rules(
     repo = BrandRepository(db, ctx.workspace_id)
     kit = repo.get_brand_kit(kit_id)
     if not kit:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Brand kit '{kit_id}' not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Brand kit '{kit_id}' not found"
+        )
 
     imported_rules = []
     for item in req.items:
@@ -446,7 +501,10 @@ def bulk_import_rules(
         r = repo.create_rule(kit_id, rule_data)
         imported_rules.append(r.id)
 
-    return {"message": f"Successfully imported {len(imported_rules)} entries", "rule_ids": imported_rules}
+    return {
+        "message": f"Successfully imported {len(imported_rules)} entries",
+        "rule_ids": imported_rules,
+    }
 
 
 @router.post("/{kit_id}/extract-guideline")
@@ -463,44 +521,60 @@ def extract_guideline_rules(
     for line in lines:
         lower = line.lower()
         # Heuristic 1: Negative / banned terminology
-        if any(w in lower for w in ["never use", "do not use", "don't use", "avoid", "must not use", "banned"]):
+        if any(
+            w in lower
+            for w in ["never use", "do not use", "don't use", "avoid", "must not use", "banned"]
+        ):
             # Extract phrase after trigger if possible
-            match = re.search(r"(?:never use|do not use|don't use|avoid|must not use|banned)\s+[\"']?([a-zA-Z0-9\s\-_]+)[\"']?", line, re.I)
+            match = re.search(
+                r"(?:never use|do not use|don't use|avoid|must not use|banned)\s+[\"']?([a-zA-Z0-9\s\-_]+)[\"']?",
+                line,
+                re.I,
+            )
             banned = [match.group(1).strip()] if match else []
-            proposed.append({
-                "type": "rule",
-                "category": "Terminology",
-                "title": f"Avoid {banned[0] if banned else 'prohibited term'}",
-                "text": line,
-                "banned_terms": banned,
-                "preferred_replacement": None,
-                "severity": "Major",
-                "source": "Proposed by AI / Guideline Extractor",
-            })
+            proposed.append(
+                {
+                    "type": "rule",
+                    "category": "Terminology",
+                    "title": f"Avoid {banned[0] if banned else 'prohibited term'}",
+                    "text": line,
+                    "banned_terms": banned,
+                    "preferred_replacement": None,
+                    "severity": "Major",
+                    "source": "Proposed by AI / Guideline Extractor",
+                }
+            )
         # Heuristic 2: Mandatory lines or disclaimers
-        elif any(w in lower for w in ["must include", "always include", "mandatory disclaimer", "required notice"]):
-            proposed.append({
-                "type": "rule",
-                "category": "Messaging",
-                "title": "Mandatory Messaging Line",
-                "text": line,
-                "banned_terms": [],
-                "preferred_replacement": line,
-                "severity": "Blocker",
-                "source": "Proposed by AI / Guideline Extractor",
-            })
+        elif any(
+            w in lower
+            for w in ["must include", "always include", "mandatory disclaimer", "required notice"]
+        ):
+            proposed.append(
+                {
+                    "type": "rule",
+                    "category": "Messaging",
+                    "title": "Mandatory Messaging Line",
+                    "text": line,
+                    "banned_terms": [],
+                    "preferred_replacement": line,
+                    "severity": "Blocker",
+                    "source": "Proposed by AI / Guideline Extractor",
+                }
+            )
         # Heuristic 3: Product casing or naming
         elif "spelled as" in lower or "capitalized as" in lower or "casing" in lower:
-            proposed.append({
-                "type": "rule",
-                "category": "Terminology",
-                "title": "Brand Terminology & Casing",
-                "text": line,
-                "banned_terms": [],
-                "preferred_replacement": None,
-                "severity": "Minor",
-                "source": "Proposed by AI / Guideline Extractor",
-            })
+            proposed.append(
+                {
+                    "type": "rule",
+                    "category": "Terminology",
+                    "title": "Brand Terminology & Casing",
+                    "text": line,
+                    "banned_terms": [],
+                    "preferred_replacement": None,
+                    "severity": "Minor",
+                    "source": "Proposed by AI / Guideline Extractor",
+                }
+            )
 
     return {
         "kit_id": kit_id,

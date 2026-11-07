@@ -64,7 +64,7 @@ def check_terminology(ctx: CheckContext) -> list[Finding]:
                 if allow_quotes:
                     left_char = text[start - 1] if start > 0 else ""
                     right_char = text[end] if end < len(text) else ""
-                    if left_char in ('"', "'", '“') and right_char in ('"', "'", '”'):
+                    if left_char in ('"', "'", "“") and right_char in ('"', "'", "”"):
                         continue
 
                 is_approved = bool(replacement)
@@ -151,7 +151,9 @@ def check_terminology(ctx: CheckContext) -> list[Finding]:
                             )
                         )
 
-            title_case_match = re.search(r"write\s+['\"](.*?)['\"]\s+in\s+Title\s+Case", rule_text, re.IGNORECASE)
+            title_case_match = re.search(
+                r"write\s+['\"](.*?)['\"]\s+in\s+Title\s+Case", rule_text, re.IGNORECASE
+            )
             if title_case_match:
                 tc_term = title_case_match.group(1)
                 for match in re.finditer(rf"\b{re.escape(tc_term)}\b", text, re.IGNORECASE):
@@ -242,12 +244,14 @@ def check_terminology(ctx: CheckContext) -> list[Finding]:
         else f"Spelling convention ({ctx.primary_language})"
     )
     spelling_severity = (
-        Severity(spelling_rule.get("severity", "Minor"))
-        if spelling_rule
-        else Severity.MINOR
+        Severity(spelling_rule.get("severity", "Minor")) if spelling_rule else Severity.MINOR
     )
 
-    spelling_dict = EN_IN_SPELLINGS if "IN" in ctx.primary_language or "GB" in ctx.primary_language else EN_US_SPELLINGS
+    spelling_dict = (
+        EN_IN_SPELLINGS
+        if "IN" in ctx.primary_language or "GB" in ctx.primary_language
+        else EN_US_SPELLINGS
+    )
     for bad_spelling, correct_spelling in spelling_dict.items():
         pattern = re.compile(rf"\b{re.escape(bad_spelling)}\b", re.IGNORECASE)
         for match in pattern.finditer(text):
@@ -271,7 +275,9 @@ def check_terminology(ctx: CheckContext) -> list[Finding]:
                     source_title=spelling_source_title,
                     source_version=ctx.kit_snapshot_version,
                     reason=f"Spelling '{matched}' does not conform to '{spelling_source_title}'. Use '{correct_spelling}'.",
-                    suggestion=correct_spelling if matched.islower() else correct_spelling.capitalize(),
+                    suggestion=correct_spelling
+                    if matched.islower()
+                    else correct_spelling.capitalize(),
                     suggestion_check=SuggestionCheck(
                         rule_rechecked=True, rule_passed=True, purpose_preserved=True
                     ),

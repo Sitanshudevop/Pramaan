@@ -2,6 +2,7 @@
 
 import json
 import uuid
+
 from app.models.entities import (
     BrandKitModel,
     ClaimPatternModel,
@@ -164,7 +165,10 @@ class BrandRepository:
             rule.allow_in_quotes = updates["allow_in_quotes"]
         if "placement_hint" in updates and updates["placement_hint"]:
             rule.placement_hint = updates["placement_hint"]
-        if "applies_to_content_types" in updates and updates["applies_to_content_types"] is not None:
+        if (
+            "applies_to_content_types" in updates
+            and updates["applies_to_content_types"] is not None
+        ):
             rule.applies_to_content_types_json = json.dumps(updates["applies_to_content_types"])
         if "severity" in updates and updates["severity"]:
             rule.severity = updates["severity"]

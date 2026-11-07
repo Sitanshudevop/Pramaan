@@ -6,9 +6,9 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import jwt
+from app.config import settings
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from app.config import settings
 
 # Argon2id password hasher with production-grade parameters
 hasher = PasswordHasher(
@@ -20,8 +20,16 @@ hasher = PasswordHasher(
 )
 
 COMMON_PASSWORDS = {
-    "password", "password123", "1234567890", "qwertyuiop", "admin12345",
-    "welcome123", "letmein123", "iloveyou12", "pramaan123", "changeme12"
+    "password",
+    "password123",
+    "1234567890",
+    "qwertyuiop",
+    "admin12345",
+    "welcome123",
+    "letmein123",
+    "iloveyou12",
+    "pramaan123",
+    "changeme12",
 }
 
 
@@ -92,4 +100,3 @@ def generate_secure_token(length: int = 32) -> str:
 def hash_token(token: str) -> str:
     """Compute SHA-256 hash of random tokens (stored at rest)."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
-

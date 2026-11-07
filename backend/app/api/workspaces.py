@@ -17,7 +17,6 @@ from app.models.entities import (
     BrandKitModel,
     InvitationModel,
     MembershipModel,
-    RuleModel,
     UserModel,
     WorkspaceModel,
 )
@@ -208,9 +207,13 @@ def list_workspace_members(
 ):
     """List members of current workspace with their assigned roles."""
     if ctx.workspace_id != workspace_id and not ctx.is_demo:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
 
-    memberships = db.query(MembershipModel).filter(MembershipModel.workspace_id == workspace_id).all()
+    memberships = (
+        db.query(MembershipModel).filter(MembershipModel.workspace_id == workspace_id).all()
+    )
     results: list[WorkspaceMemberResponse] = []
     for m in memberships:
         u = db.query(UserModel).filter(UserModel.id == m.user_id).first()
@@ -238,7 +241,9 @@ def create_invitation(
 ):
     """Generate a shareable or email-directed invite link (Admin/Manager only)."""
     if ctx.workspace_id != workspace_id and not ctx.is_demo:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
 
     raw_token = generate_secure_token(24)
     inv_id = f"inv-{uuid.uuid4().hex[:10]}"
@@ -345,10 +350,14 @@ def update_member_role(
 ):
     """Update a team member's role (Admin only)."""
     if ctx.workspace_id != workspace_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
 
     if new_role not in ["Admin", "Brand manager", "Reviewer", "Creator"]:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid role specified.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid role specified."
+        )
 
     mem = (
         db.query(MembershipModel)
@@ -372,7 +381,9 @@ def update_member_role(
         action="ROLE_UPDATED",
         entity="membership",
         entity_id=mem.id,
-        detail_json=json.dumps({"target_user_id": target_user_id, "old_role": old_role, "new_role": new_role}),
+        detail_json=json.dumps(
+            {"target_user_id": target_user_id, "old_role": old_role, "new_role": new_role}
+        ),
     )
     db.add(audit_evt)
     db.commit()
@@ -390,7 +401,9 @@ def remove_workspace_member(
 ):
     """Remove a member from the workspace (Admin only). Workspace must keep at least 1 Admin."""
     if ctx.workspace_id != workspace_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
 
     # Prevent removing last admin
     admins = (
@@ -441,7 +454,9 @@ def update_workspace_settings(
 ):
     """Update workspace settings (Admin only)."""
     if ctx.workspace_id != workspace_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
 
     ws = db.query(WorkspaceModel).filter(WorkspaceModel.id == workspace_id).first()
     if not ws:
@@ -478,13 +493,17 @@ def delete_workspace(
 ):
     """Delete a workspace and cascade-remove its tenant assets (Admin only, non-demo)."""
     if ctx.workspace_id != workspace_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access forbidden."
+        )
 
     ws = db.query(WorkspaceModel).filter(WorkspaceModel.id == workspace_id).first()
     if not ws:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found.")
     if ws.is_demo:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Demo workspace cannot be deleted.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Demo workspace cannot be deleted."
+        )
 
     db.delete(ws)
     db.commit()

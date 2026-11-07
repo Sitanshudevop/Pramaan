@@ -1,7 +1,6 @@
 """SQLAlchemy multi-tenant entity models for Pramaan."""
 
 import json
-from datetime import UTC, datetime
 
 from app.models.base import Base, get_utc_now
 from sqlalchemy import (
@@ -16,7 +15,6 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
-
 
 # ---------------------------------------------------------------------------
 # 1. Accounts, Workspaces, Memberships & Invitations
@@ -39,8 +37,12 @@ class UserModel(Base):
     created_at = Column(DateTime, default=get_utc_now, nullable=False)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False)
 
-    memberships = relationship("MembershipModel", back_populates="user", cascade="all, delete-orphan")
-    refresh_tokens = relationship("RefreshTokenModel", back_populates="user", cascade="all, delete-orphan")
+    memberships = relationship(
+        "MembershipModel", back_populates="user", cascade="all, delete-orphan"
+    )
+    refresh_tokens = relationship(
+        "RefreshTokenModel", back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class RefreshTokenModel(Base):
@@ -49,7 +51,9 @@ class RefreshTokenModel(Base):
     __tablename__ = "refresh_tokens"
 
     id = Column(String(64), primary_key=True)
-    user_id = Column(String(64), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    user_id = Column(
+        String(64), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     token_hash = Column(String(128), unique=True, index=True, nullable=False)
     expires_at = Column(DateTime, nullable=False)
     revoked_at = Column(DateTime, nullable=True)
@@ -69,7 +73,9 @@ class WorkspaceModel(Base):
     industry = Column(String(128), default="Technology", nullable=False)
     is_demo = Column(Boolean, default=False, index=True, nullable=False)
     retention_days = Column(Integer, default=90, nullable=False)  # 0 = retain indefinitely
-    ai_enabled = Column(Boolean, default=False, nullable=False)  # Off by default for new real tenants
+    ai_enabled = Column(
+        Boolean, default=False, nullable=False
+    )  # Off by default for new real tenants
     ai_consent_at = Column(DateTime, nullable=True)
     ai_consent_by_id = Column(String(64), nullable=True)
     ai_consent_version = Column(String(32), nullable=True)
@@ -77,10 +83,16 @@ class WorkspaceModel(Base):
     created_at = Column(DateTime, default=get_utc_now, nullable=False)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False)
 
-    memberships = relationship("MembershipModel", back_populates="workspace", cascade="all, delete-orphan")
-    brand_kits = relationship("BrandKitModel", back_populates="workspace", cascade="all, delete-orphan")
+    memberships = relationship(
+        "MembershipModel", back_populates="workspace", cascade="all, delete-orphan"
+    )
+    brand_kits = relationship(
+        "BrandKitModel", back_populates="workspace", cascade="all, delete-orphan"
+    )
     reviews = relationship("ReviewModel", back_populates="workspace", cascade="all, delete-orphan")
-    invitations = relationship("InvitationModel", back_populates="workspace", cascade="all, delete-orphan")
+    invitations = relationship(
+        "InvitationModel", back_populates="workspace", cascade="all, delete-orphan"
+    )
 
 
 class MembershipModel(Base):
@@ -90,9 +102,15 @@ class MembershipModel(Base):
     __table_args__ = (UniqueConstraint("workspace_id", "user_id", name="uq_workspace_user"),)
 
     id = Column(String(64), primary_key=True)
-    workspace_id = Column(String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False)
-    user_id = Column(String(64), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
-    role = Column(String(32), default="Creator", nullable=False)  # Admin, Brand manager, Reviewer, Creator
+    workspace_id = Column(
+        String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    user_id = Column(
+        String(64), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    role = Column(
+        String(32), default="Creator", nullable=False
+    )  # Admin, Brand manager, Reviewer, Creator
     created_at = Column(DateTime, default=get_utc_now, nullable=False)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now, nullable=False)
 
@@ -106,7 +124,9 @@ class InvitationModel(Base):
     __tablename__ = "invitations"
 
     id = Column(String(64), primary_key=True)
-    workspace_id = Column(String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False)
+    workspace_id = Column(
+        String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     email = Column(String(256), nullable=True)
     token_hash = Column(String(128), unique=True, index=True, nullable=False)
     role = Column(String(32), default="Reviewer", nullable=False)
@@ -131,7 +151,13 @@ class BrandKitModel(Base):
     __tablename__ = "brand_kits"
 
     id = Column(String(64), primary_key=True)
-    workspace_id = Column(String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, default="ws-demo", nullable=False)
+    workspace_id = Column(
+        String(64),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
+        index=True,
+        default="ws-demo",
+        nullable=False,
+    )
     name = Column(String(128), nullable=False)
     tagline = Column(String(256), default="", nullable=False)
     industry = Column(String(128), nullable=False)
@@ -159,16 +185,26 @@ class RuleModel(Base):
     __tablename__ = "rules"
 
     id = Column(String(64), primary_key=True)
-    workspace_id = Column(String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, default="ws-demo", nullable=False)
+    workspace_id = Column(
+        String(64),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
+        index=True,
+        default="ws-demo",
+        nullable=False,
+    )
     kit_id = Column(String(64), ForeignKey("brand_kits.id", ondelete="CASCADE"), nullable=False)
     category = Column(String(64), nullable=False)  # Terminology, Messaging, Claims, Tone and voice
     title = Column(String(256), nullable=False)
     text = Column(Text, nullable=False)
     banned_terms_json = Column(Text, default="[]", nullable=False)
-    preferred_replacement = Column(String(256), nullable=True)  # Allowed suggestion for banned terms
+    preferred_replacement = Column(
+        String(256), nullable=True
+    )  # Allowed suggestion for banned terms
     allow_in_quotes = Column(Boolean, default=False, nullable=False)
     placement_hint = Column(String(32), default="anywhere", nullable=False)  # start, end, anywhere
-    applies_to_content_types_json = Column(Text, default="[]", nullable=False)  # e.g. ["Social post", "Email"]
+    applies_to_content_types_json = Column(
+        Text, default="[]", nullable=False
+    )  # e.g. ["Social post", "Email"]
     severity = Column(String(32), nullable=False)  # Blocker, Major, Minor, Info
     version = Column(String(32), default="1.0", nullable=False)
     status = Column(String(32), default="active", nullable=False)  # draft, active, superseded
@@ -195,10 +231,18 @@ class FactModel(Base):
     __tablename__ = "facts"
 
     id = Column(String(64), primary_key=True)
-    workspace_id = Column(String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, default="ws-demo", nullable=False)
+    workspace_id = Column(
+        String(64),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
+        index=True,
+        default="ws-demo",
+        nullable=False,
+    )
     kit_id = Column(String(64), ForeignKey("brand_kits.id", ondelete="CASCADE"), nullable=False)
     subject = Column(String(256), nullable=False)
-    aliases_json = Column(Text, default="[]", nullable=False)  # Search keywords/aliases e.g. ["Plus price", "fee", "cost"]
+    aliases_json = Column(
+        Text, default="[]", nullable=False
+    )  # Search keywords/aliases e.g. ["Plus price", "fee", "cost"]
     value = Column(String(256), nullable=False)
     unit = Column(String(64), nullable=False)
     valid_from = Column(String(32), nullable=False)
@@ -227,9 +271,13 @@ class ClaimPatternModel(Base):
     __tablename__ = "claim_patterns"
 
     id = Column(String(64), primary_key=True)
-    workspace_id = Column(String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False)
+    workspace_id = Column(
+        String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     kit_id = Column(String(64), ForeignKey("brand_kits.id", ondelete="CASCADE"), nullable=False)
-    pattern = Column(String(256), nullable=False)  # Word or regex pattern (e.g. "pesticide-free", "#1")
+    pattern = Column(
+        String(256), nullable=False
+    )  # Word or regex pattern (e.g. "pesticide-free", "#1")
     category = Column(String(64), default="Promotional claims", nullable=False)
     severity = Column(String(32), default="Major", nullable=False)
     substantiating_fact_id = Column(String(64), nullable=True)  # If null -> status Unsupported
@@ -244,7 +292,9 @@ class GlossaryTermModel(Base):
     __tablename__ = "glossary_terms"
 
     id = Column(String(64), primary_key=True)
-    workspace_id = Column(String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False)
+    workspace_id = Column(
+        String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     kit_id = Column(String(64), ForeignKey("brand_kits.id", ondelete="CASCADE"), nullable=False)
     term = Column(String(128), nullable=False)
     preferred_casing = Column(String(128), nullable=False)
@@ -258,7 +308,9 @@ class ContentTypeModel(Base):
     __tablename__ = "content_types"
 
     id = Column(String(64), primary_key=True)
-    workspace_id = Column(String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False)
+    workspace_id = Column(
+        String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     name = Column(String(64), nullable=False)
     description = Column(String(256), nullable=True)
     is_default = Column(Boolean, default=False, nullable=False)
@@ -276,7 +328,13 @@ class ReviewModel(Base):
     __tablename__ = "reviews"
 
     id = Column(String(64), primary_key=True)
-    workspace_id = Column(String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, default="ws-demo", nullable=False)
+    workspace_id = Column(
+        String(64),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
+        index=True,
+        default="ws-demo",
+        nullable=False,
+    )
     kit_id = Column(String(64), ForeignKey("brand_kits.id", ondelete="CASCADE"), nullable=False)
     status = Column(String(64), default="Draft", nullable=False)
     content_type = Column(String(64), default="Promotional Copy", nullable=False)
@@ -417,8 +475,12 @@ class NotificationModel(Base):
     __tablename__ = "notifications"
 
     id = Column(String(64), primary_key=True)
-    workspace_id = Column(String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False)
-    user_id = Column(String(64), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    workspace_id = Column(
+        String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    user_id = Column(
+        String(64), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     type = Column(String(64), nullable=False)  # assignment, mention, status_change, invite
     title = Column(String(256), nullable=False)
     body = Column(Text, nullable=False)
@@ -466,7 +528,9 @@ class ApiTokenModel(Base):
     __tablename__ = "api_tokens"
 
     id = Column(String(64), primary_key=True)
-    workspace_id = Column(String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False)
+    workspace_id = Column(
+        String(64), ForeignKey("workspaces.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     name = Column(String(128), nullable=False)
     token_prefix = Column(String(16), nullable=False)  # e.g. "prm_live_..."
     token_hash = Column(String(128), unique=True, index=True, nullable=False)

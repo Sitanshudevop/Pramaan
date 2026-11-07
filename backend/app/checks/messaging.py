@@ -32,11 +32,15 @@ def check_messaging(ctx: CheckContext) -> list[Finding]:
         applicable_types = []
         if applies_json:
             try:
-                applicable_types = json.loads(applies_json) if isinstance(applies_json, str) else applies_json
+                applicable_types = (
+                    json.loads(applies_json) if isinstance(applies_json, str) else applies_json
+                )
             except Exception:
                 applicable_types = []
 
-        if applicable_types and not any(t.lower() in ctx.content_type.lower() for t in applicable_types):
+        if applicable_types and not any(
+            t.lower() in ctx.content_type.lower() for t in applicable_types
+        ):
             continue
 
         # Check contextual triggers in rule description
@@ -44,7 +48,16 @@ def check_messaging(ctx: CheckContext) -> list[Finding]:
         if any(w in rule_lower for w in ("investment", "market risk", "securities")):
             is_invest_text = any(
                 kw in text.lower()
-                for kw in ("invest", "stock", "portfolio", "mutual fund", "returns", "equity", "wealth", "yield")
+                for kw in (
+                    "invest",
+                    "stock",
+                    "portfolio",
+                    "mutual fund",
+                    "returns",
+                    "equity",
+                    "wealth",
+                    "yield",
+                )
             )
             if not is_invest_text:
                 continue
@@ -58,8 +71,12 @@ def check_messaging(ctx: CheckContext) -> list[Finding]:
                 continue
 
         # Extract required phrase: use preferred_replacement or quoted phrase in rule text
-        quoted = [q.strip() for q in re.findall(r"['\"](.*?)['\"]", rule_text) if len(q.strip()) > 3]
-        required_phrase = rule.get("preferred_replacement") or (quoted[-1] if quoted else rule.get("title"))
+        quoted = [
+            q.strip() for q in re.findall(r"['\"](.*?)['\"]", rule_text) if len(q.strip()) > 3
+        ]
+        required_phrase = rule.get("preferred_replacement") or (
+            quoted[-1] if quoted else rule.get("title")
+        )
         if not required_phrase and len(rule_text) < 150:
             required_phrase = rule_text
 

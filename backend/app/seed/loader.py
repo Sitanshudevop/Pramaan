@@ -38,7 +38,10 @@ def seed_database(db: Session) -> None:
         db.commit()
 
     # 2. Seed Brand Kits, Rules, and Facts under ws-demo
-    if db.query(BrandKitModel).filter(BrandKitModel.workspace_id == "ws-demo").count() == 0 and brand_kits_path.exists():
+    if (
+        db.query(BrandKitModel).filter(BrandKitModel.workspace_id == "ws-demo").count() == 0
+        and brand_kits_path.exists()
+    ):
         with open(brand_kits_path, encoding="utf-8") as f:
             kits_data = json.load(f)
 

@@ -3,6 +3,7 @@
 import json
 import uuid
 
+from app.auth.dependencies import WorkspaceContext, get_current_user_optional, get_workspace_context
 from app.checks.context import CheckContext
 from app.checks.runner import run_deterministic_checks
 from app.constants import (
@@ -36,7 +37,6 @@ from app.schemas.schemas import (
     ReviseReviewRequest,
     SuggestionCheck,
 )
-from app.auth.dependencies import WorkspaceContext, get_current_user_optional, get_workspace_context
 from app.security import (
     Permission,
     get_current_role,
@@ -209,7 +209,9 @@ def get_review(
         if not review:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail={"error": {"code": "NOT_FOUND", "message": f"Review '{review_id}' not found"}},
+                detail={
+                    "error": {"code": "NOT_FOUND", "message": f"Review '{review_id}' not found"}
+                },
             )
     return _format_review(review, active_version=version)
 

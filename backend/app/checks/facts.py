@@ -29,12 +29,10 @@ def check_facts(ctx: CheckContext) -> list[Finding]:
         unit = str(fact.get("unit", "")).strip()
         valid_to = fact.get("valid_to", "2099-12-31")
         is_stale = fact.get("status") == "superseded" or valid_to < now_date_str
-        permitted = fact.get("permitted_wording", "")
         aliases = fact.get("aliases") or []
 
         # Find search terms (subject, aliases, and specific numeric claim expressions)
         search_terms = [subject] + [a for a in aliases if a]
-        combined_val_str = f"{val} {unit}".strip()
 
         # Check for expired/stale fact usage
         if is_stale and val:
@@ -50,10 +48,18 @@ def check_facts(ctx: CheckContext) -> list[Finding]:
                 # Locate active counterpart if available
                 subj_key = subject.lower()
                 active_sibling = next(
-                    (s for s in facts_by_subject.get(subj_key, []) if s.get("status") == "active" and s.get("valid_to", "") >= now_date_str),
+                    (
+                        s
+                        for s in facts_by_subject.get(subj_key, [])
+                        if s.get("status") == "active" and s.get("valid_to", "") >= now_date_str
+                    ),
                     None,
                 )
-                active_suggestion = f"{active_sibling.get('value')} {active_sibling.get('unit', '')}".strip() if active_sibling else None
+                active_suggestion = (
+                    f"{active_sibling.get('value')} {active_sibling.get('unit', '')}".strip()
+                    if active_sibling
+                    else None
+                )
 
                 findings.append(
                     Finding(
@@ -72,7 +78,12 @@ def check_facts(ctx: CheckContext) -> list[Finding]:
                         fact_id=fact_id,
                         source_title=f"{subject} (Expired)",
                         source_version=ctx.kit_snapshot_version,
-                        reason=f"Claim '{matched}' references an expired fact (expired {valid_to})." + (f" Active approved fact is {active_suggestion}." if active_suggestion else ""),
+                        reason=f"Claim '{matched}' references an expired fact (expired {valid_to})."
+                        + (
+                            f" Active approved fact is {active_suggestion}."
+                            if active_suggestion
+                            else ""
+                        ),
                         suggestion=active_suggestion or "Update to current approved figure",
                         suggestion_check=SuggestionCheck(
                             rule_rechecked=True, rule_passed=True, purpose_preserved=True
@@ -96,16 +107,22 @@ def check_facts(ctx: CheckContext) -> list[Finding]:
                         rf"\b(\d+(?:\.\d+)?)\s*(?:{re.escape(unit)})?\s*{re.escape(term)}\b|\b{re.escape(term)}\s*.*?\b(\d+(?:\.\d+)?)\s*(?:{re.escape(unit)})?\b"
                     ]
                     if unit and len(unit) >= 4:
-                        patterns_to_check.append(rf"\b(\d+(?:\.\d+)?)\s*(?:linked\s+)?{re.escape(unit)}\b")
+                        patterns_to_check.append(
+                            rf"\b(\d+(?:\.\d+)?)\s*(?:linked\s+)?{re.escape(unit)}\b"
+                        )
 
                     for pat_str in patterns_to_check:
                         pattern = re.compile(pat_str, re.IGNORECASE)
                         for m in pattern.finditer(text):
-                            found_num = m.group(1) if len(m.groups()) == 1 else (m.group(1) or m.group(2))
+                            found_num = (
+                                m.group(1) if len(m.groups()) == 1 else (m.group(1) or m.group(2))
+                            )
                             if found_num and found_num != target_num:
                                 start, end = m.span()
                                 matched = m.group(0)
-                                if not any(f.fact_id == fact_id and f.start == start for f in findings):
+                                if not any(
+                                    f.fact_id == fact_id and f.start == start for f in findings
+                                ):
                                     findings.append(
                                         Finding(
                                             id=f"find-fact-val-{ctx.review_id}-v{ctx.version}-{fact_id.lower()}-{start}",
@@ -126,7 +143,9 @@ def check_facts(ctx: CheckContext) -> list[Finding]:
                                             reason=f"Claim '{matched}' contradicts approved Fact {fact_id}: approved specification is {val}.",
                                             suggestion=matched.replace(found_num, target_num),
                                             suggestion_check=SuggestionCheck(
-                                                rule_rechecked=True, rule_passed=True, purpose_preserved=True
+                                                rule_rechecked=True,
+                                                rule_passed=True,
+                                                purpose_preserved=True,
                                             ),
                                             decision=None,
                                             created_at=now,

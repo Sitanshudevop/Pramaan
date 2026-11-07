@@ -1,11 +1,12 @@
 """In-app notifications router for review assignments, mentions, and workflow events."""
 
 from datetime import UTC, datetime
+
 from app.auth.dependencies import WorkspaceContext, get_current_user_optional, get_workspace_context
 from app.database import get_db
 from app.models.entities import NotificationModel, UserModel
 from app.schemas.schemas import NotificationResponse
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
@@ -96,4 +97,3 @@ def mark_all_read(
         ).update({"is_read": True})
         db.commit()
     return {"status": "ok"}
-

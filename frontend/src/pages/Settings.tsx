@@ -99,8 +99,8 @@ export const Settings: React.FC = () => {
       a.href = url;
       a.download = `pramaan_export_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
-    } catch (e: any) {
-      alert(e.message || 'Failed to export data');
+    } catch (e: unknown) {
+      alert((e as Error).message || 'Failed to export data');
     }
   };
 
@@ -113,8 +113,8 @@ export const Settings: React.FC = () => {
       try {
         await authDeleteAccount();
         signOut();
-      } catch (e: any) {
-        alert(e.message || 'Failed to delete account');
+      } catch (e: unknown) {
+        alert((e as Error).message || 'Failed to delete account');
       }
     }
   };

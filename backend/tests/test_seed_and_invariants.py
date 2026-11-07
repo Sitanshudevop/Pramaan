@@ -2,13 +2,14 @@
 
 import json
 from pathlib import Path
-from app.checks.context import CheckContext
-from app.checks.terminology import check_terminology
-from app.checks.messaging import check_messaging
-from app.checks.claims import check_claims
-from app.checks.facts import check_facts
-from app.checks.purpose import check_purpose_card
+
 from app.checks.accessibility import check_accessibility_and_tone
+from app.checks.claims import check_claims
+from app.checks.context import CheckContext
+from app.checks.facts import check_facts
+from app.checks.messaging import check_messaging
+from app.checks.purpose import check_purpose_card
+from app.checks.terminology import check_terminology
 from app.schemas.schemas import PurposeCard
 
 
@@ -27,8 +28,12 @@ def test_no_placeholder_text_in_seeded_rules():
             text = rule.get("text", "")
 
             for word in forbidden_words:
-                assert word not in title.lower(), f"Rule {rule_id} title contains placeholder '{word}': {title}"
-                assert word not in text.lower(), f"Rule {rule_id} text contains placeholder '{word}': {text}"
+                assert word not in title.lower(), (
+                    f"Rule {rule_id} title contains placeholder '{word}': {title}"
+                )
+                assert word not in text.lower(), (
+                    f"Rule {rule_id} text contains placeholder '{word}': {text}"
+                )
 
 
 def test_span_offset_invariant_across_all_samples():

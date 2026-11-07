@@ -37,8 +37,7 @@ def check_claims(ctx: CheckContext) -> list[Finding]:
             substantiated = False
             if fact_id:
                 substantiated = any(
-                    f.get("id") == fact_id and f.get("status") == "active"
-                    for f in ctx.facts
+                    f.get("id") == fact_id and f.get("status") == "active" for f in ctx.facts
                 )
 
             if not substantiated:
@@ -74,7 +73,10 @@ def check_claims(ctx: CheckContext) -> list[Finding]:
 
     # 2. Evaluate Generic Claims Rules from Brand Kit
     for rule in ctx.rules:
-        if rule.get("status") != "active" or rule.get("category") not in ("Claims", "Promotional claims"):
+        if rule.get("status") != "active" or rule.get("category") not in (
+            "Claims",
+            "Promotional claims",
+        ):
             continue
 
         rule_id = rule.get("id", "CLAIM-000")
@@ -83,10 +85,25 @@ def check_claims(ctx: CheckContext) -> list[Finding]:
 
         # Check performance / return risk disclaimer requirement
         rule_lower = rule.get("text", "").lower()
-        if any(w in rule_lower for w in ("return", "yield", "gain", "performance")) and "risk" in rule_lower:
-            perf_match = re.search(r"(\d+(?:\.\d+)?%\s*(?:annualized|annual|return|gain|yield)?|annualized return|historic yields)", text, re.IGNORECASE)
+        if (
+            any(w in rule_lower for w in ("return", "yield", "gain", "performance"))
+            and "risk" in rule_lower
+        ):
+            perf_match = re.search(
+                r"(\d+(?:\.\d+)?%\s*(?:annualized|annual|return|gain|yield)?|annualized return|historic yields)",
+                text,
+                re.IGNORECASE,
+            )
             if perf_match:
-                has_notice = any(w in text.lower() for w in ("market risks", "risk notice", "past performance is not", "subject to market"))
+                has_notice = any(
+                    w in text.lower()
+                    for w in (
+                        "market risks",
+                        "risk notice",
+                        "past performance is not",
+                        "subject to market",
+                    )
+                )
                 if not has_notice:
                     m_val = perf_match.group(0)
                     findings.append(

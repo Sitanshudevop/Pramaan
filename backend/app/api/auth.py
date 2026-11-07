@@ -16,7 +16,6 @@ from app.config import settings
 from app.database import get_db
 from app.models.entities import (
     AuditLogModel,
-    BrandKitModel,
     MembershipModel,
     RefreshTokenModel,
     ReviewModel,
@@ -210,13 +209,17 @@ def signin(req: UserSignInRequest, response: Response, db: Session = Depends(get
             is_demo=False,
         )
         db.add(ws)
-        mem = MembershipModel(id=f"mem-{uuid.uuid4().hex[:12]}", workspace_id=ws_id, user_id=user.id, role="Admin")
+        mem = MembershipModel(
+            id=f"mem-{uuid.uuid4().hex[:12]}", workspace_id=ws_id, user_id=user.id, role="Admin"
+        )
         db.add(mem)
         db.commit()
         memberships = [mem]
 
     primary_mem = memberships[0]
-    workspace = db.query(WorkspaceModel).filter(WorkspaceModel.id == primary_mem.workspace_id).first()
+    workspace = (
+        db.query(WorkspaceModel).filter(WorkspaceModel.id == primary_mem.workspace_id).first()
+    )
 
     # Generate rotating refresh token
     raw_refresh = generate_secure_token(32)
@@ -230,7 +233,9 @@ def signin(req: UserSignInRequest, response: Response, db: Session = Depends(get
     db.commit()
 
     _set_refresh_cookie(response, raw_refresh)
-    access_token = create_access_token(user.id, user.email, workspace.id if workspace else None, primary_mem.role)
+    access_token = create_access_token(
+        user.id, user.email, workspace.id if workspace else None, primary_mem.role
+    )
 
     all_ws_resps: list[WorkspaceResponse] = []
     for m in memberships:
@@ -249,15 +254,19 @@ def signin(req: UserSignInRequest, response: Response, db: Session = Depends(get
                 )
             )
 
-    curr_ws_resp = all_ws_resps[0] if all_ws_resps else WorkspaceResponse(
-        id="ws-demo",
-        name="Demo Workspace",
-        slug="demo-workspace",
-        industry="Demo",
-        is_demo=True,
-        retention_days=30,
-        ai_enabled=True,
-        role="Creator",
+    curr_ws_resp = (
+        all_ws_resps[0]
+        if all_ws_resps
+        else WorkspaceResponse(
+            id="ws-demo",
+            name="Demo Workspace",
+            slug="demo-workspace",
+            industry="Demo",
+            is_demo=True,
+            retention_days=30,
+            ai_enabled=True,
+            role="Creator",
+        )
     )
 
     return AuthSessionResponse(
@@ -309,10 +318,16 @@ def refresh_session(
     # Revoke current refresh token (rotation)
     token_record.revoked_at = now
 
-    user = db.query(UserModel).filter(UserModel.id == token_record.user_id, UserModel.is_active.is_(True)).first()
+    user = (
+        db.query(UserModel)
+        .filter(UserModel.id == token_record.user_id, UserModel.is_active.is_(True))
+        .first()
+    )
     if not user:
         _clear_refresh_cookie(response)
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account disabled.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User account disabled."
+        )
 
     # Issue new refresh token
     new_raw_refresh = generate_secure_token(32)
@@ -346,15 +361,19 @@ def refresh_session(
                 )
             )
 
-    curr = all_ws_resps[0] if all_ws_resps else WorkspaceResponse(
-        id="ws-demo",
-        name="Demo Workspace",
-        slug="demo-workspace",
-        industry="Demo",
-        is_demo=True,
-        retention_days=30,
-        ai_enabled=True,
-        role="Creator",
+    curr = (
+        all_ws_resps[0]
+        if all_ws_resps
+        else WorkspaceResponse(
+            id="ws-demo",
+            name="Demo Workspace",
+            slug="demo-workspace",
+            industry="Demo",
+            is_demo=True,
+            retention_days=30,
+            ai_enabled=True,
+            role="Creator",
+        )
     )
 
     access_token = create_access_token(user.id, user.email, curr.id, curr.role)
@@ -383,7 +402,9 @@ def signout(
     """Revoke refresh token and clear session cookies."""
     if refresh_token:
         t_hash = hash_token(refresh_token)
-        token_rec = db.query(RefreshTokenModel).filter(RefreshTokenModel.token_hash == t_hash).first()
+        token_rec = (
+            db.query(RefreshTokenModel).filter(RefreshTokenModel.token_hash == t_hash).first()
+        )
         if token_rec:
             token_rec.revoked_at = datetime.now(UTC)
             db.commit()
@@ -413,15 +434,19 @@ def get_me(user: UserModel = Depends(get_current_user), db: Session = Depends(ge
                 )
             )
 
-    curr = all_ws_resps[0] if all_ws_resps else WorkspaceResponse(
-        id="ws-demo",
-        name="Demo Workspace",
-        slug="demo-workspace",
-        industry="Demo",
-        is_demo=True,
-        retention_days=30,
-        ai_enabled=True,
-        role="Creator",
+    curr = (
+        all_ws_resps[0]
+        if all_ws_resps
+        else WorkspaceResponse(
+            id="ws-demo",
+            name="Demo Workspace",
+            slug="demo-workspace",
+            industry="Demo",
+            is_demo=True,
+            retention_days=30,
+            ai_enabled=True,
+            role="Creator",
+        )
     )
 
     access_token = create_access_token(user.id, user.email, curr.id, curr.role)
@@ -454,7 +479,9 @@ def update_profile(
         user.avatar_url = req.avatar_url
 
     if req.new_password:
-        if not req.current_password or not verify_password(req.current_password, user.password_hash):
+        if not req.current_password or not verify_password(
+            req.current_password, user.password_hash
+        ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Current password is required and must be correct to set a new password.",
@@ -510,4 +537,3 @@ def delete_account(
 
     _clear_refresh_cookie(response)
     return {"message": "Account successfully deleted."}
-

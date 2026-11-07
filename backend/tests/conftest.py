@@ -45,4 +45,3 @@ def override_db_dependency():
     app.dependency_overrides[get_db] = _override_get_db
     yield
     app.dependency_overrides.pop(get_db, None)
-

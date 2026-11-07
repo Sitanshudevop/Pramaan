@@ -1,17 +1,11 @@
 """Multi-tenant isolation, Argon2id authentication, and data-driven engine verification tests."""
 
-from datetime import UTC, datetime
 from app.auth.security import hash_password, validate_password_strength, verify_password
 from app.checks.context import CheckContext
 from app.checks.runner import run_deterministic_checks
-from app.constants import Severity
-from app.database import get_db
 from app.main import app
-from app.models.entities import BrandKitModel, MembershipModel, RuleModel, UserModel, WorkspaceModel
 from app.schemas.schemas import PurposeCard
 from fastapi.testclient import TestClient
-import pytest
-
 
 client = TestClient(app)
 
@@ -40,7 +34,11 @@ def test_tenant_isolation_cross_workspace_protection():
     # 1. Sign up User A
     res_a = client.post(
         "/api/auth/signup",
-        json={"email": "usera@example.com", "password": "Password12345#A", "full_name": "User Alpha"},
+        json={
+            "email": "usera@example.com",
+            "password": "Password12345#A",
+            "full_name": "User Alpha",
+        },
     )
     assert res_a.status_code == 201
     token_a = res_a.json()["access_token"]
@@ -49,7 +47,11 @@ def test_tenant_isolation_cross_workspace_protection():
     # 2. Sign up User B
     res_b = client.post(
         "/api/auth/signup",
-        json={"email": "userb@example.com", "password": "Password12345#B", "full_name": "User Beta"},
+        json={
+            "email": "userb@example.com",
+            "password": "Password12345#B",
+            "full_name": "User Beta",
+        },
     )
     assert res_b.status_code == 201
     token_b = res_b.json()["access_token"]
@@ -174,6 +176,9 @@ def test_empty_brand_kit_produces_zero_false_findings():
 
     findings = run_deterministic_checks(ctx)
     # No terminology, claims, or facts findings generated
-    policy_findings = [f for f in findings if f.category in ("Terminology", "Facts", "Promotional claims", "Messaging")]
+    policy_findings = [
+        f
+        for f in findings
+        if f.category in ("Terminology", "Facts", "Promotional claims", "Messaging")
+    ]
     assert len(policy_findings) == 0
-
