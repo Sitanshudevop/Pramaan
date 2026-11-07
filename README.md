@@ -1,6 +1,8 @@
 # Pramaan (प्रमाण)
 ### Evidence-Backed Brand Governance Platform for Pre-Publication Content Review
 
+[![Live Demo](https://img.shields.io/badge/Live_App-pramaan--kohl.vercel.app-FF5500.svg?logo=vercel&logoColor=white)](https://pramaan-kohl.vercel.app)
+[![API Status](https://img.shields.io/badge/API-Render_Live-46E3B7.svg?logo=render&logoColor=white)](https://pramaan-backend-vfsv.onrender.com/api/docs)
 [![CI](https://github.com/Sitanshudevop/Pramaan/actions/workflows/ci.yml/badge.svg)](https://github.com/Sitanshudevop/Pramaan/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -10,6 +12,20 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 
 > *"Every finding has evidence. Every correction preserves the creator’s purpose. Every final decision remains human."*
+
+---
+
+## 🚀 Live Production Deployment
+
+Pramaan is deployed live and monitored 24/7:
+
+| Component | Production URL | Description |
+|---|---|---|
+| **Live Web Application** | **[https://pramaan-kohl.vercel.app](https://pramaan-kohl.vercel.app)** | Production React 18 / Vite frontend on Vercel |
+| **Backend REST API** | **[https://pramaan-backend-vfsv.onrender.com](https://pramaan-backend-vfsv.onrender.com)** | Production FastAPI service on Render |
+| **Interactive API Documentation** | **[https://pramaan-backend-vfsv.onrender.com/api/docs](https://pramaan-backend-vfsv.onrender.com/api/docs)** | Live Swagger / OpenAPI interactive sandbox |
+| **Uptime & Health Probe** | **[https://pramaan-backend-vfsv.onrender.com/health](https://pramaan-backend-vfsv.onrender.com/health)** | 24/7 automated keep-alive probe via UptimeRobot |
+| **GitHub Repository** | **[https://github.com/Sitanshudevop/Pramaan](https://github.com/Sitanshudevop/Pramaan)** | Full source code, test suites, and CI/CD workflows |
 
 ---
 
@@ -32,10 +48,12 @@ Pramaan replaces post-publication damage control with an **evidence-or-abstain**
 
 ## 2. 5-Step Demo Walkthrough (for Judges)
 
-You can test Pramaan immediately in any browser (including Incognito) with **zero login**:
+You can test Pramaan immediately on the live production deployment in any browser (including Incognito) with **zero login required**:
+
+👉 **[Open Live App: https://pramaan-kohl.vercel.app](https://pramaan-kohl.vercel.app)**
 
 1. **Step 1: Open the App & Choose a Persona / Sample**
-   - Navigate to `/` (Home) or click **New Review** (`/app/new`).
+   - Navigate to [Home (`/`)](https://pramaan-kohl.vercel.app) or click [New Review (`/app/new`)](https://pramaan-kohl.vercel.app/app/new).
    - Use the **"View as"** menu in the top bar to switch between 6 fictional team personas:
      - **Meera Kapoor** (*Admin*): Owns settings, team invites, and retention.
      - **Anika Rao** (*Brand manager*): Publishes rules and issues final approvals.
@@ -60,11 +78,14 @@ You can test Pramaan immediately in any browser (including Incognito) with **zer
    - As a `Brand manager`, sign off on the review. If a `Blocker` finding remains unresolved, unauthorized lower-role sign-off is blocked.
 5. **Step 5: Download Certificate & Verify Audit Integrity**
    - Click **Certificate** to inspect the tamper-evident proof record.
-   - Navigate to **Audit & Disclosure** (`/app/audit`) to view the hash-chained audit log and AI disclosure ledger. Click **Verify Trail Integrity** to confirm the SHA-256 cryptographic chain.
+   - Navigate to [Audit & Disclosure (`/app/audit`)](https://pramaan-kohl.vercel.app/app/audit) to view the hash-chained audit log and AI disclosure ledger. Click **Verify Trail Integrity** to confirm the SHA-256 cryptographic chain.
 
 ---
 
 ## 3. Quickstart & Local Setup
+
+> [!TIP]
+> **Instant Live Access:** You do not need to install anything locally to evaluate Pramaan. The production deployment is running at **[https://pramaan-kohl.vercel.app](https://pramaan-kohl.vercel.app)** with live API docs at **[https://pramaan-backend-vfsv.onrender.com/api/docs](https://pramaan-backend-vfsv.onrender.com/api/docs)**.
 
 ### Prerequisites
 - Python 3.12+ (or 3.11+)
@@ -88,7 +109,7 @@ source backend/venv/bin/activate
 # Install dependencies
 pip install -r backend/requirements.txt
 
-# Run backend API server (runs on http://localhost:8000)
+# Run backend API server (runs on http://localhost:8000; live at https://pramaan-backend-vfsv.onrender.com)
 cd backend
 uvicorn app.main:app --reload --port 8000
 ```
@@ -101,22 +122,22 @@ cd frontend
 # Install dependencies
 npm install
 
-# Start Vite development server (runs on http://localhost:5173)
+# Start Vite development server (runs on http://localhost:5173; live at https://pramaan-kohl.vercel.app)
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+Open `http://localhost:5173` (or **[https://pramaan-kohl.vercel.app](https://pramaan-kohl.vercel.app)**) in your browser.
 
 ---
 
 ## 4. One-Command Docker Run
 
-You can run the entire full stack with Docker Compose:
+You can run the full stack locally with Docker Compose:
 ```bash
 docker-compose up --build
 ```
-- Frontend: `http://localhost:5173`
-- Backend API Docs: `http://localhost:8000/docs`
+- Local Frontend: `http://localhost:5173` (Live Production: **[https://pramaan-kohl.vercel.app](https://pramaan-kohl.vercel.app)**)
+- Local Backend API Docs: `http://localhost:8000/api/docs` (Live Production: **[https://pramaan-backend-vfsv.onrender.com/api/docs](https://pramaan-backend-vfsv.onrender.com/api/docs)**)
 
 ---
 
@@ -156,11 +177,10 @@ flowchart TD
 ## 7. Responsive Multi-Device Design & Screenshots
 
 Pramaan is mobile-first, uncluttered, and adaptive across viewports from **320 px up to 2560 px ultra-wide**:
-- **Mobile (< 1024 px):** Accessible off-canvas hamburger navigation drawer (`role="dialog"`, `aria-label="Navigation Menu"`, focus trapped, swipe-to-close, body scroll lock, Esc close). Adaptive top bar with bottom sheet / popover overflow.
-- **Laptop (1024 – 1279 px):** Collapsed 72 px icon rail with accessible tooltips, toggles to 240 px sidebar.
-- **Desktop (≥ 1280 px):** Expanded 240 px sidebar with one-click rail collapse, choice saved in `localStorage`.
-- **Reusable Building Blocks:** `BottomSheet`, `ScrollTabs`, `AccordionItem`, `ResponsiveTable`, `StickyActionBar`, `Truncate`.
-- **Zero Horizontal Overflow:** Verified across 13 distinct viewports (320px, 360px, 390px, 414px, 600px, 768px, 820px, 1024px, 1280px, 1440px, 1920px, 2560px, and landscape 844×390px). Touch targets ≥ 44×44px.
+- **Mobile & Tablet (< 1024 px):** 44×44px touch-target hamburger at far left opens an accessible off-canvas drawer (`role="dialog"`, `aria-label="Navigation Menu"`, focus trapped, scrim tap, body scroll lock, Esc close) with logo mark + Pramaan wordmark and close button directly above "Home". Below 640px, top bar displays compact `[hamburger] [page title, truncated] [bell] [avatar menu]` with logo omitted to prevent redundancy.
+- **Desktop (≥ 1024 px):** Persistent 240px sidebar with logo mark, wordmark, nav items, and footer links. The hamburger button is completely hidden from display and tab order (`display: none`).
+- **Reusable Building Blocks:** `BottomSheet`, `ScrollTabs` (with `data-scrollable` edge fading), `AccordionItem`, `ResponsiveTable`, `StickyActionBar`, `Truncate`.
+- **Zero Horizontal Overflow:** Verified across 14 distinct viewports (360px, 390px, 414px, 480px, 520px, 560px, 600px, 640px, 700px, 768px, 900px, 1000px, 1023px, 1024px+). Card text wraps anywhere; secondary metadata collapses into accessible `<details>` accordions on narrow screens. Touch targets ≥ 44×44px.
 
 | Screen | Mobile (390px) | Tablet (768px) | Desktop (1440px) |
 |---|---|---|---|
