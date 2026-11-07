@@ -9,9 +9,9 @@ This document catalogs every interactive element across Pramaan, its trigger, an
 | Component | Element / Selector | Trigger | Expected Result | Role-Gated Behavior |
 |---|---|---|---|---|
 | **Logo** | `header a[href="/"]` or sidebar logo | Click | Navigates to `/` (Home), updates URL and view | None |
-| **Hamburger Button** | `header button[aria-controls="app-navigation"]` | Click | `<1024px`: Opens/closes off-canvas drawer with scrim, focus trap, and body scroll lock. `1024-1279px`: Toggles 72px icon rail and 240px expanded sidebar. `>=1280px`: Toggles 240px expanded sidebar (default) and 72px rail. Choice persisted in `localStorage`. | None |
-| **Off-Canvas Drawer** | `dialog[aria-label="Navigation Menu"]` | Esc / Swipe Left / Scrim Tap | Closes drawer immediately, releases scroll lock, returns focus to hamburger button | None |
-| **Collapsed Icon Rail** | `<aside id="app-navigation">` (72px) | Hover / Focus | Shows accessible tooltip for each product destination | None |
+| **Hamburger Button** | `header button[aria-controls="app-navigation"]` | Click | **Desktop (≥1024px)**: Completely hidden (`display: none`, not focusable, removed from tab order).<br>**Below 1024px**: Placed at far left of top bar (44×44px touch target). Opens off-canvas drawer. Inside drawer, header row (Logo + "Pramaan" on left, Close button on right) sits directly above "Home". Drawer retains focus trap, Esc close, scrim tap, closes on selection, locks body scroll, and returns focus to hamburger on close. | None |
+| **Desktop Sidebar** | `<aside id="app-navigation">` (240px) | Persistent | Persistent 240px full sidebar on desktop (≥1024px) with icons and text labels. Icon-rail/collapse mode and `localStorage` toggle removed entirely. Below 1024px, sidebar is hidden. | None |
+| **Narrow TopBar (<640px)** | `header` | Layout | Compact mobile layout: `[hamburger] [page title, truncated] [bell] [avatar menu]`. Logo mark is suppressed in the top bar below 640px to prevent redundancy with the drawer header. | None |
 | **TopBar Mobile Overflow** | `header button[aria-label="More options"]` | Click | Opens bottom sheet (<640px) or popover (640-1023px) containing workspace switcher, persona switcher, theme picker, and sign-in button | None |
 | **Confidential Toggle** | TopBar button (Confidential Chip) | Click | Toggles Confidential Mode between ON and OFF; sends `X-Confidential-Mode` | None |
 | **Demo Persona Switcher** | TopBar persona dropdown / select | Select / Click | Switches active persona (`Meera Kapoor`, `Anika Rao`, `Rohan Mehta`, `Dev Malhotra`, `Priya Nair`, `Imran Sheikh`); updates permissions and views | Demo workspace |
@@ -123,3 +123,23 @@ This document catalogs every interactive element across Pramaan, its trigger, an
 | **"Edit in Brand Hub →" Link** | Click | Directly navigates to Brand Hub to update ambiguous guidelines | All roles |
 | **Restricted Role Card** | Visible on load | Shows explanation when loaded in `Creator` role | Creator role |
 | **"Switch to Reviewer Role" Button** | Click | Immediately switches role to `Reviewer` and refetches data | Creator role |
+
+---
+
+## 9. Responsive Layout & Viewport Verification (Two Layout Fixes)
+
+Verified via Playwright across 14 distinct viewport widths (`360px`, `390px`, `414px`, `480px`, `520px`, `560px`, `600px`, `640px`, `700px`, `768px`, `900px`, `1000px`, `1023px`, and `1024px`) across all application routes in both `light` and `dark` themes:
+
+1. **Strict 1024px Breakpoint**:
+   - `≥1024px`: Hamburger is completely hidden (`display: none`, not focusable, absent from tab order). Sidebar is persistently 240px wide with logo, wordmark, nav links, and footer links.
+   - `<1024px`: Sidebar is hidden. Hamburger is the first element at far left of the top bar with 44×44px touch target. Drawer header (logo mark + "Pramaan" + close button) sits directly above "Home".
+2. **Zero Horizontal Overflow & Cut-Off Content**:
+   - Removed artificial `overflow-x: hidden` / `overflow-x-clip` wrappers from `html`, `body`, and app shell.
+   - Card text configured with `overflow-wrap: anywhere; word-break: break-word`.
+   - All flex and grid child text containers enforce `min-w-0`.
+   - Headers wrap gracefully (`flex-wrap: wrap`) so status badges like "Read-only" are never clipped.
+   - Long metadata strings (ID, category, version, owner, banned terms) render as wrapping label/value pill rows. Below 768px (`md:`), secondary metadata (owner, banned terms, source) cleanly collapses into an accessible `<details>` accordion.
+   - Only components with explicit `data-scrollable="true"` (such as `ScrollTabs`) may scroll horizontally, complete with left and right gradient edge fades.
+   - Full automated Playwright tests verify `scrollWidth <= clientWidth + 1` (no hidden clipped text) and DOM bounds within `window.innerWidth + 1`.
+   - Visual regression screenshots saved at 480px and 560px in `docs/screenshots/`.
+
