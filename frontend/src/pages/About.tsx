@@ -74,7 +74,7 @@ export function About() {
   };
 
   return (
-    <div className="space-y-6 max-w-app mx-auto py-4">
+    <div className="space-y-6 max-w-reading mx-auto py-4">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-5">
         <img

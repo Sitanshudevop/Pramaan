@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Inbox, ArrowRight, Plus, CheckCircle2, Download, Trash2, X } from 'lucide-react';
+import { Inbox, ArrowRight, Plus, CheckCircle2, Download, Trash2, X, Filter } from 'lucide-react';
 import { listReviews, submitApproval, deleteReview, getBrandKits, assignReview, listWorkspaceMembers } from '../lib/api';
 import { useApp } from '../lib/context';
-import { SearchPill, PillSelect, Chip } from '../components/ui';
+import { SearchPill, PillSelect, Chip, BottomSheet } from '../components/ui';
 
 export const ReviewQueue: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +22,7 @@ export const ReviewQueue: React.FC = () => {
   const [kitFilter, setKitFilter] = useState(urlKit);
   const [ruleFilter, setRuleFilter] = useState(urlRule);
   const [viewTab, setViewTab] = useState<'all' | 'mine' | 'assigned'>('all');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('status')) setStatusFilter(searchParams.get('status')!);
@@ -130,6 +131,13 @@ export const ReviewQueue: React.FC = () => {
     return true;
   });
 
+  const activeFiltersCount =
+    (statusFilter !== 'ALL' ? 1 : 0) +
+    (severityFilter !== 'ALL' ? 1 : 0) +
+    (kitFilter !== 'ALL' ? 1 : 0) +
+    (ruleFilter ? 1 : 0) +
+    (searchQuery.trim() ? 1 : 0);
+
   return (
     <div className="space-y-6 max-w-app mx-auto py-2">
       {/* Top Header Row with Title & Primary Pill Button */}
@@ -207,22 +215,45 @@ export const ReviewQueue: React.FC = () => {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Mobile Filter Trigger (< sm) */}
+      <div className="flex sm:hidden items-center justify-between gap-2">
+        <SearchPill
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Filter reviews..."
+          className="flex-1"
+        />
+        <button
+          type="button"
+          onClick={() => setMobileFiltersOpen(true)}
+          className="px-3.5 py-2 rounded-pill border border-border bg-surface hover:bg-surface-2 text-xs font-semibold text-text flex items-center space-x-1.5 touch-target shrink-0"
+        >
+          <Filter className="w-3.5 h-3.5 text-orange-text" />
+          <span>Filters</span>
+          {activeFiltersCount > 0 && (
+            <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center">
+              {activeFiltersCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Desktop & Tablet Inline Filters (>= sm) */}
+      <div className="hidden sm:flex flex-wrap items-center gap-3">
+        <SearchPill
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Filter reviews by ID, brand, or creator..."
+          className="w-full sm:w-72"
+        />
 
         <PillSelect
           value={kitFilter}
           onChange={setKitFilter}
           options={kitOptions}
           ariaLabel="Filter by brand kit"
-        />
-      </div>
-
-      {/* Filter Row: SearchPill and PillSelects */}
-      <div className="flex flex-wrap items-center gap-3">
-        <SearchPill
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Filter reviews by ID, brand, or creator..."
-          className="w-full sm:w-72"
         />
 
         <PillSelect
@@ -239,6 +270,71 @@ export const ReviewQueue: React.FC = () => {
           ariaLabel="Filter by severity"
         />
       </div>
+
+      {/* Mobile BottomSheet for Filters */}
+      <BottomSheet
+        isOpen={mobileFiltersOpen}
+        onClose={() => setMobileFiltersOpen(false)}
+        title="Filter Reviews"
+      >
+        <div className="space-y-4 text-xs">
+          <div>
+            <label className="block font-semibold text-text mb-1.5">Brand Kit</label>
+            <PillSelect
+              value={kitFilter}
+              onChange={setKitFilter}
+              options={kitOptions}
+              ariaLabel="Filter by brand kit"
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-text mb-1.5">Status</label>
+            <PillSelect
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={statusOptions}
+              ariaLabel="Filter by status"
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-text mb-1.5">Severity</label>
+            <PillSelect
+              value={severityFilter}
+              onChange={setSeverityFilter}
+              options={severityOptions}
+              ariaLabel="Filter by severity"
+              className="w-full"
+            />
+          </div>
+
+          <div className="pt-3 flex items-center justify-between border-t border-border">
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter('ALL');
+                setSeverityFilter('ALL');
+                setKitFilter('ALL');
+                setRuleFilter('');
+                setSearchQuery('');
+              }}
+              className="text-text-muted hover:text-text font-medium"
+            >
+              Reset Filters
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen(false)}
+              className="px-5 py-2 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange font-semibold"
+            >
+              Apply ({filteredReviews.length} results)
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
 
       {/* Table in a White Card with Rounded Rows */}
       {isLoading ? (

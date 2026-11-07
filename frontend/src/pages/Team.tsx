@@ -17,7 +17,7 @@ import {
   updateWorkspaceMemberRole,
   removeWorkspaceMember,
 } from '../lib/api';
-import { Chip } from '../components/ui';
+import { Chip, BottomSheet } from '../components/ui';
 
 const ROLES: Role[] = ['Admin', 'Brand manager', 'Reviewer', 'Creator'];
 
@@ -236,7 +236,7 @@ export const Team: React.FC = () => {
 
       {/* Invite Member Modal */}
       {inviteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+        <div className="hidden sm:fixed inset-0 z-50 sm:flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
           <div className="w-full max-w-md p-6 rounded-card bg-surface border border-border shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-text flex items-center space-x-2">
@@ -246,7 +246,8 @@ export const Team: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setInviteModalOpen(false)}
-                className="text-text-muted hover:text-text text-sm"
+                className="text-text-muted hover:text-text text-sm p-1"
+                aria-label="Close modal"
               >
                 ✕
               </button>
@@ -373,6 +374,113 @@ export const Team: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Mobile Phone BottomSheet version (< sm) */}
+      <div className="sm:hidden">
+        <BottomSheet
+          isOpen={inviteModalOpen}
+          onClose={() => setInviteModalOpen(false)}
+          title="Invite Teammate"
+        >
+          <div className="space-y-4">
+            {errorMessage && (
+              <div className="p-3 rounded-inner bg-danger/10 border border-danger/20 text-danger text-xs font-medium">
+                {errorMessage}
+              </div>
+            )}
+
+            {!createdInvite ? (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-text">
+                    Email Address (Optional)
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="teammate@company.com"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-inner border border-border bg-surface-2 text-xs text-text focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                  <p className="text-[11px] text-text-muted">
+                    If SMTP is not configured, an instant copyable link will be created.
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-text">
+                    Workspace Role
+                  </label>
+                  <select
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as Role)}
+                    className="w-full px-3.5 py-2.5 rounded-inner border border-border bg-surface-2 text-xs text-text focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  >
+                    {ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => inviteMutation.mutate()}
+                    disabled={inviteMutation.isPending}
+                    className="w-full py-3 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-90 disabled:opacity-50 shadow-sm touch-target"
+                  >
+                    {inviteMutation.isPending ? 'Generating...' : 'Create Invite Link'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-3.5 rounded-inner bg-success/10 border border-success/30 text-success-text text-xs space-y-1">
+                  <div className="font-bold flex items-center space-x-1">
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Invite link ready!</span>
+                  </div>
+                  <div className="text-[11px]">
+                    Share this link with your teammate. It grants{' '}
+                    <strong>{createdInvite.role}</strong> access to {currentWorkspace?.name}.
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-text">
+                    Shareable Invitation URL
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={createdInvite.invite_url}
+                      className="w-full px-3 py-2 rounded-inner border border-border bg-surface-2 text-xs font-mono text-text select-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCopyInvite(createdInvite.invite_url)}
+                      className="px-3 py-2 rounded-inner bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold shrink-0"
+                    >
+                      {copied ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setInviteModalOpen(false)}
+                  className="w-full py-2.5 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold"
+                >
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
+        </BottomSheet>
+      </div>
     </div>
   );
 };

@@ -142,10 +142,10 @@ export const Insights: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Top Row: Dark GaugeCard + BarChart Card + StatCard */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          {/* Top Row: Gauge first, then Charts at full width on phone, 2 cols on tablet, 3-col on desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
             {/* Dark GaugeCard (4 cols) */}
-            <div className="lg:col-span-4">
+            <div className="md:col-span-2 lg:col-span-4">
               <GaugeCard
                 value={clarityScore}
                 max={100}
@@ -157,7 +157,7 @@ export const Insights: React.FC = () => {
             </div>
 
             {/* BarChart of Top Repeated Violations (5 cols) */}
-            <div className="lg:col-span-5 p-6 rounded-card border border-border bg-surface shadow-floating flex flex-col justify-between">
+            <div className="md:col-span-1 lg:col-span-5 p-5 sm:p-6 rounded-card border border-border bg-surface shadow-floating flex flex-col justify-between">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xs font-bold text-text uppercase tracking-wider">
@@ -183,7 +183,7 @@ export const Insights: React.FC = () => {
             </div>
 
             {/* Total Override Events StatCard (3 cols) */}
-            <div className="lg:col-span-3 flex flex-col justify-between">
+            <div className="md:col-span-1 lg:col-span-3 flex flex-col justify-between">
               <StatCard
                 label="Total Review Events"
                 value={insights.total_events}

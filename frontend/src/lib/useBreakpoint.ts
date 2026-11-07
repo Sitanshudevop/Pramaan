@@ -40,3 +40,4 @@ export function useBreakpoint(): Breakpoints {
     isXlUp: width >= 1280,
   };
 }
+

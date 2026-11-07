@@ -57,12 +57,12 @@ export const Home: React.FC = () => {
             &ldquo;Every finding has evidence. Every correction preserves the creator’s purpose. Every final decision remains human.&rdquo;
           </p>
 
-          {/* Action Buttons: Primary (Real Workspace) & Secondary (Demo) */}
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          {/* Action Buttons: Full width on phone, row on tablet/desktop */}
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 pt-2">
             {user ? (
               <button
                 onClick={() => navigate('/app/hub')}
-                className="inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange font-semibold text-sm hover:opacity-95 shadow-md transition-all active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3.5 sm:py-3 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange font-semibold text-sm hover:opacity-95 shadow-md transition-all active:scale-[0.99] touch-target"
               >
                 <span>Go to {currentWorkspace?.name || 'Workspace'}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -70,7 +70,7 @@ export const Home: React.FC = () => {
             ) : (
               <button
                 onClick={handleCreateWorkspace}
-                className="inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange font-semibold text-sm hover:opacity-95 shadow-md transition-all active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3.5 sm:py-3 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange font-semibold text-sm hover:opacity-95 shadow-md transition-all active:scale-[0.99] touch-target"
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>Create your workspace</span>
@@ -79,7 +79,7 @@ export const Home: React.FC = () => {
 
             <button
               onClick={handleTryDemo}
-              className="inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-pill border border-border bg-surface text-text font-medium text-sm hover:bg-surface-2 transition-colors shadow-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3.5 sm:py-3 rounded-pill border border-border bg-surface text-text font-medium text-sm hover:bg-surface-2 transition-colors shadow-xs touch-target"
             >
               <Play className="w-3.5 h-3.5 text-orange-text fill-orange-text" />
               <span>Try a sample review</span>
@@ -87,13 +87,13 @@ export const Home: React.FC = () => {
 
             <button
               onClick={() => navigate('/app/hub')}
-              className="inline-flex items-center justify-center space-x-2 px-5 py-3 rounded-pill border border-border bg-surface text-text font-medium text-sm hover:bg-surface-2 transition-colors shadow-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-5 py-3.5 sm:py-3 rounded-pill border border-border bg-surface text-text font-medium text-sm hover:bg-surface-2 transition-colors shadow-xs touch-target"
             >
               <span>Open Brand Hub</span>
             </button>
           </div>
 
-          <div className="flex items-center space-x-4 text-xs text-text-muted pt-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted pt-1">
             <span>✓ Complete tenant isolation</span>
             <span>·</span>
             <span>✓ Proof-or-abstain engine</span>
@@ -102,8 +102,8 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Floating Cards (5 cols) */}
-        <div className="lg:col-span-5 flex justify-center lg:justify-end">
+        {/* Right Column: Floating Cards (Decorative - hidden on phone < 640px) */}
+        <div className="hidden sm:flex lg:col-span-5 justify-center lg:justify-end">
           <FloatingCards
             brandKitCount={2}
             activeRulesCount={14}
@@ -112,7 +112,7 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Three Core Commitments Cards */}
+      {/* Three Core Commitments Cards: 1-col on phone, 2-col on tablet, 3-col on desktop */}
       <section className="space-y-4">
         <div className="flex items-center space-x-2">
           <span className="text-xs font-bold tracking-wider text-text-muted uppercase">
@@ -121,7 +121,7 @@ export const Home: React.FC = () => {
           <div className="h-px bg-border flex-1" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {/* Commitment 1 */}
           <div className="p-6 rounded-card border border-border bg-surface shadow-floating space-y-3 transition-all hover:border-text-muted/40">
             <div className="w-10 h-10 rounded-pill bg-orange-500/10 text-orange-text flex items-center justify-center">

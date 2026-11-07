@@ -20,7 +20,7 @@ import {
 import { useApp } from '../lib/context';
 import { useToast } from '../lib/toast';
 import { SampleDraft } from '../lib/types';
-import { PillSelect, Chip } from '../components/ui';
+import { PillSelect, Chip, StickyActionBar, AccordionItem } from '../components/ui';
 
 export const NewReview: React.FC = () => {
   const navigate = useNavigate();
@@ -60,6 +60,7 @@ export const NewReview: React.FC = () => {
   const [aiDeclared, setAiDeclared] = useState<boolean>(false);
 
   // Purpose Card State
+  const [purposeCardOpen, setPurposeCardOpen] = useState<boolean>(false);
   const [goal, setGoal] = useState<string>('');
   const [audience, setAudience] = useState<string>('');
   const [keyMessage, setKeyMessage] = useState<string>('');
@@ -148,6 +149,7 @@ export const NewReview: React.FC = () => {
     setKeyMessage(sample.purpose_card.key_message);
     setCta(sample.purpose_card.call_to_action);
     setLockedPhrasesStr(sample.purpose_card.locked_phrases.join(', '));
+    setPurposeCardOpen(true);
 
     // Clear validation states
     setContentError(null);
@@ -298,10 +300,10 @@ export const NewReview: React.FC = () => {
         ];
 
   return (
-    <div className="max-w-[800px] mx-auto py-6 sm:py-8 space-y-6">
+    <div className="max-w-[880px] mx-auto py-4 sm:py-8 space-y-6 pb-24 sm:pb-8">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-extrabold tracking-tight text-text">New Content Review</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text">New Content Review</h1>
         <p className="text-xs text-text-muted max-w-md mx-auto leading-relaxed">
           Evaluate draft copy against active rules, claims policies, and approved facts before publishing.
         </p>
@@ -345,7 +347,7 @@ export const NewReview: React.FC = () => {
       )}
 
       {/* Single Centered Main Card */}
-      <div className="p-6 sm:p-8 rounded-card border border-border bg-surface shadow-floating">
+      <div className="p-4 sm:p-6 lg:p-8 rounded-card border border-border bg-surface shadow-floating min-w-0 max-w-full overflow-hidden">
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           {/* Section: Configuration Controls (Clean 2-Column Layout) */}
           <div className="space-y-4 pb-4 border-b border-border/80">
@@ -466,144 +468,145 @@ export const NewReview: React.FC = () => {
             )}
           </div>
 
-          {/* Section: Purpose Card in Two Columns on Desktop */}
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
-                Creator Purpose Card
-              </span>
-              <Chip variant="accent" size="sm">
-                Intent Preserved
-              </Chip>
-            </div>
+          {/* Section: Purpose Card as a collapsible section (collapsed by default if empty) */}
+          <div className="pt-2">
+            <AccordionItem
+              id="purpose-card"
+              title="Creator Purpose Card"
+              subtitle="Guarantees creator intent is preserved during proof verification"
+              badge={<Chip variant="accent" size="sm">Intent Preserved</Chip>}
+              isOpen={purposeCardOpen}
+              onToggle={() => setPurposeCardOpen(!purposeCardOpen)}
+              className="border-border/70 bg-surface-2"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div>
+                  <label htmlFor="goal-input" className="block text-[11px] font-semibold text-text mb-1">
+                    Primary Goal
+                  </label>
+                  <input
+                    id="goal-input"
+                    ref={goalInputRef}
+                    type="text"
+                    placeholder="e.g. Announce new product launch"
+                    value={goal}
+                    onChange={(e) => {
+                      setGoal(e.target.value);
+                      if (goalError) setGoalError(null);
+                    }}
+                    className={`w-full px-3.5 py-1.5 rounded-pill border bg-surface text-text text-xs focus:outline-none focus:ring-2 placeholder:text-text-muted/60 ${
+                      goalError
+                        ? 'border-danger focus:ring-danger/50'
+                        : 'border-border focus:ring-orange-500'
+                    }`}
+                  />
+                  {goalError && (
+                    <p className="text-[11px] text-danger font-medium mt-1">{goalError}</p>
+                  )}
+                </div>
 
-            <div className="p-5 rounded-inner bg-surface-2 border border-border/70 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="goal-input" className="block text-[11px] font-semibold text-text mb-1">
-                  Primary Goal
-                </label>
-                <input
-                  id="goal-input"
-                  ref={goalInputRef}
-                  type="text"
-                  placeholder="e.g. Announce new product launch"
-                  value={goal}
-                  onChange={(e) => {
-                    setGoal(e.target.value);
-                    if (goalError) setGoalError(null);
-                  }}
-                  className={`w-full px-3.5 py-1.5 rounded-pill border bg-surface text-text text-xs focus:outline-none focus:ring-2 placeholder:text-text-muted/60 ${
-                    goalError
-                      ? 'border-danger focus:ring-danger/50'
-                      : 'border-border focus:ring-orange-500'
-                  }`}
-                />
-                {goalError && (
-                  <p className="text-[11px] text-danger font-medium mt-1">{goalError}</p>
-                )}
-              </div>
+                <div>
+                  <label htmlFor="audience-input" className="block text-[11px] font-semibold text-text mb-1">
+                    Target Audience
+                  </label>
+                  <input
+                    id="audience-input"
+                    ref={audienceInputRef}
+                    type="text"
+                    placeholder="e.g. Health-conscious professionals"
+                    value={audience}
+                    onChange={(e) => {
+                      setAudience(e.target.value);
+                      if (audienceError) setAudienceError(null);
+                    }}
+                    className={`w-full px-3.5 py-1.5 rounded-pill border bg-surface text-text text-xs focus:outline-none focus:ring-2 placeholder:text-text-muted/60 ${
+                      audienceError
+                        ? 'border-danger focus:ring-danger/50'
+                        : 'border-border focus:ring-orange-500'
+                    }`}
+                  />
+                  {audienceError && (
+                    <p className="text-[11px] text-danger font-medium mt-1">{audienceError}</p>
+                  )}
+                </div>
 
-              <div>
-                <label htmlFor="audience-input" className="block text-[11px] font-semibold text-text mb-1">
-                  Target Audience
-                </label>
-                <input
-                  id="audience-input"
-                  ref={audienceInputRef}
-                  type="text"
-                  placeholder="e.g. Health-conscious professionals"
-                  value={audience}
-                  onChange={(e) => {
-                    setAudience(e.target.value);
-                    if (audienceError) setAudienceError(null);
-                  }}
-                  className={`w-full px-3.5 py-1.5 rounded-pill border bg-surface text-text text-xs focus:outline-none focus:ring-2 placeholder:text-text-muted/60 ${
-                    audienceError
-                      ? 'border-danger focus:ring-danger/50'
-                      : 'border-border focus:ring-orange-500'
-                  }`}
-                />
-                {audienceError && (
-                  <p className="text-[11px] text-danger font-medium mt-1">{audienceError}</p>
-                )}
-              </div>
+                <div>
+                  <label htmlFor="keymessage-input" className="block text-[11px] font-semibold text-text mb-1">
+                    Key Message
+                  </label>
+                  <input
+                    id="keymessage-input"
+                    ref={keyMessageInputRef}
+                    type="text"
+                    placeholder="e.g. Fresh organic ingredients"
+                    value={keyMessage}
+                    onChange={(e) => {
+                      setKeyMessage(e.target.value);
+                      if (keyMessageError) setKeyMessageError(null);
+                    }}
+                    className={`w-full px-3.5 py-1.5 rounded-pill border bg-surface text-text text-xs focus:outline-none focus:ring-2 placeholder:text-text-muted/60 ${
+                      keyMessageError
+                        ? 'border-danger focus:ring-danger/50'
+                        : 'border-border focus:ring-orange-500'
+                    }`}
+                  />
+                  {keyMessageError && (
+                    <p className="text-[11px] text-danger font-medium mt-1">{keyMessageError}</p>
+                  )}
+                </div>
 
-              <div>
-                <label htmlFor="keymessage-input" className="block text-[11px] font-semibold text-text mb-1">
-                  Key Message
-                </label>
-                <input
-                  id="keymessage-input"
-                  ref={keyMessageInputRef}
-                  type="text"
-                  placeholder="e.g. Fresh organic ingredients"
-                  value={keyMessage}
-                  onChange={(e) => {
-                    setKeyMessage(e.target.value);
-                    if (keyMessageError) setKeyMessageError(null);
-                  }}
-                  className={`w-full px-3.5 py-1.5 rounded-pill border bg-surface text-text text-xs focus:outline-none focus:ring-2 placeholder:text-text-muted/60 ${
-                    keyMessageError
-                      ? 'border-danger focus:ring-danger/50'
-                      : 'border-border focus:ring-orange-500'
-                  }`}
-                />
-                {keyMessageError && (
-                  <p className="text-[11px] text-danger font-medium mt-1">{keyMessageError}</p>
-                )}
-              </div>
+                <div>
+                  <label htmlFor="cta-input" className="block text-[11px] font-semibold text-text mb-1">
+                    Call to Action (CTA)
+                  </label>
+                  <input
+                    id="cta-input"
+                    ref={ctaInputRef}
+                    type="text"
+                    placeholder="e.g. Order today on our website"
+                    value={cta}
+                    onChange={(e) => {
+                      setCta(e.target.value);
+                      if (ctaError) setCtaError(null);
+                    }}
+                    className={`w-full px-3.5 py-1.5 rounded-pill border bg-surface text-text text-xs focus:outline-none focus:ring-2 placeholder:text-text-muted/60 ${
+                      ctaError
+                        ? 'border-danger focus:ring-danger/50'
+                        : 'border-border focus:ring-orange-500'
+                    }`}
+                  />
+                  {ctaError && (
+                    <p className="text-[11px] text-danger font-medium mt-1">{ctaError}</p>
+                  )}
+                </div>
 
-              <div>
-                <label htmlFor="cta-input" className="block text-[11px] font-semibold text-text mb-1">
-                  Call to Action (CTA)
-                </label>
-                <input
-                  id="cta-input"
-                  ref={ctaInputRef}
-                  type="text"
-                  placeholder="e.g. Order today on our website"
-                  value={cta}
-                  onChange={(e) => {
-                    setCta(e.target.value);
-                    if (ctaError) setCtaError(null);
-                  }}
-                  className={`w-full px-3.5 py-1.5 rounded-pill border bg-surface text-text text-xs focus:outline-none focus:ring-2 placeholder:text-text-muted/60 ${
-                    ctaError
-                      ? 'border-danger focus:ring-danger/50'
-                      : 'border-border focus:ring-orange-500'
-                  }`}
-                />
-                {ctaError && (
-                  <p className="text-[11px] text-danger font-medium mt-1">{ctaError}</p>
-                )}
+                <div className="sm:col-span-2">
+                  <label htmlFor="locked-input" className="block text-[11px] font-semibold text-text mb-1">
+                    Locked Phrases (Comma-separated; AI suggestions must preserve)
+                  </label>
+                  <input
+                    id="locked-input"
+                    type="text"
+                    placeholder="e.g. Masala Chai, Kettle & Co."
+                    value={lockedPhrasesStr}
+                    onChange={(e) => setLockedPhrasesStr(e.target.value)}
+                    className="w-full px-3.5 py-1.5 rounded-pill border border-border bg-surface text-text text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder:text-text-muted/60"
+                  />
+                </div>
               </div>
-
-              <div className="md:col-span-2">
-                <label htmlFor="locked-input" className="block text-[11px] font-semibold text-text mb-1">
-                  Locked Phrases (Comma-separated; AI suggestions must preserve)
-                </label>
-                <input
-                  id="locked-input"
-                  type="text"
-                  placeholder="e.g. Masala Chai, Kettle & Co."
-                  value={lockedPhrasesStr}
-                  onChange={(e) => setLockedPhrasesStr(e.target.value)}
-                  className="w-full px-3.5 py-1.5 rounded-pill border border-border bg-surface text-text text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder:text-text-muted/60"
-                />
-              </div>
-            </div>
+            </AccordionItem>
           </div>
 
           {/* AI Disclosure Toggle */}
-          <div className="flex items-center space-x-2.5 pt-1">
+          <div className="flex items-start space-x-2.5 pt-1 min-w-0">
             <input
               type="checkbox"
               id="ai-declaration"
               checked={aiDeclared}
               onChange={(e) => setAiDeclared(e.target.checked)}
-              className="w-4 h-4 rounded text-orange-500 focus:ring-orange-500 accent-orange-500 cursor-pointer"
+              className="w-4 h-4 rounded text-orange-500 focus:ring-orange-500 accent-orange-500 cursor-pointer mt-0.5 shrink-0"
             />
-            <label htmlFor="ai-declaration" className="text-xs text-text cursor-pointer select-none">
+            <label htmlFor="ai-declaration" className="text-xs text-text cursor-pointer select-none leading-relaxed break-words min-w-0">
               Declare AI assistance was used in drafting this content (recorded in disclosure ledger)
             </label>
           </div>
@@ -659,8 +662,8 @@ export const NewReview: React.FC = () => {
             </div>
           )}
 
-          {/* Submit Action Button */}
-          <div className="pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
+          {/* Submit Action Button with StickyActionBar on phones */}
+          <StickyActionBar className="pt-4 border-t border-border">
             <span className="text-[11px] text-text-muted hidden sm:inline">
               Deterministic + AI Proof-or-Abstain verification
             </span>
@@ -668,7 +671,7 @@ export const NewReview: React.FC = () => {
               type="submit"
               disabled={reviewMutation.isPending || loadingKits || !canSubmit}
               title={!canSubmit ? `Your role (${role}) can't submit drafts. Switch to a Creator or Brand manager.` : undefined}
-              className="inline-flex items-center justify-center space-x-2 px-7 py-3 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange font-semibold text-xs hover:opacity-95 shadow-md transition-all active:scale-[0.99] disabled:opacity-50 sm:ml-auto w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center space-x-2 px-7 py-3 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange font-semibold text-xs hover:opacity-95 shadow-md transition-all active:scale-[0.99] disabled:opacity-50 sm:ml-auto w-full sm:w-auto touch-target focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:cursor-not-allowed"
             >
               {reviewMutation.isPending ? (
                 <>
@@ -682,7 +685,7 @@ export const NewReview: React.FC = () => {
                 </>
               )}
             </button>
-          </div>
+          </StickyActionBar>
         </form>
       </div>
     </div>

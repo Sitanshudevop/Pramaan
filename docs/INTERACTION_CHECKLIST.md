@@ -9,16 +9,12 @@ This document catalogs every interactive element across Pramaan, its trigger, an
 | Component | Element / Selector | Trigger | Expected Result | Role-Gated Behavior |
 |---|---|---|---|---|
 | **Logo** | `header a[href="/"]` or sidebar logo | Click | Navigates to `/` (Home), updates URL and view | None |
-| **Sidebar Navigation** | NavLink `Home` (`/`) | Click | Navigates to `/`, sets active soft tint, loads Home view | None |
-| **Sidebar Navigation** | NavLink `New review` (`/app/new`) | Click | Navigates to `/app/new`, loads New Review form | None |
-| **Sidebar Navigation** | NavLink `Review queue` (`/app/queue`) | Click | Navigates to `/app/queue`, loads review table | None |
-| **Sidebar Navigation** | NavLink `Brand Hub` (`/app/hub`) | Click | Navigates to `/app/hub`, loads Brand Guidelines & Rules | None |
-| **Sidebar Navigation** | NavLink `Audit & disclosure` (`/app/audit`) | Click | Navigates to `/app/audit`, loads Audit Ledger | None |
-| **Sidebar Navigation** | NavLink `Insights` (`/app/insights`) | Click | Navigates to `/app/insights`, loads analytics radar | Requires Reviewer/Manager/Admin |
-| **Sidebar Navigation** | NavLink `About Pramaan` (`/about`) | Click | Navigates to `/about`, loads About & Disclosures page | None |
-| **TopBar Drawer Toggle** | Button `[aria-label="Toggle navigation drawer"]` | Click | Opens/closes mobile drawer on `< 1024px` | Mobile/tablet only |
+| **Hamburger Button** | `header button[aria-controls="app-navigation"]` | Click | `<1024px`: Opens/closes off-canvas drawer with scrim, focus trap, and body scroll lock. `1024-1279px`: Toggles 72px icon rail and 240px expanded sidebar. `>=1280px`: Toggles 240px expanded sidebar (default) and 72px rail. Choice persisted in `localStorage`. | None |
+| **Off-Canvas Drawer** | `dialog[aria-label="Navigation Menu"]` | Esc / Swipe Left / Scrim Tap | Closes drawer immediately, releases scroll lock, returns focus to hamburger button | None |
+| **Collapsed Icon Rail** | `<aside id="app-navigation">` (72px) | Hover / Focus | Shows accessible tooltip for each product destination | None |
+| **TopBar Mobile Overflow** | `header button[aria-label="More options"]` | Click | Opens bottom sheet (<640px) or popover (640-1023px) containing workspace switcher, persona switcher, theme picker, and sign-in button | None |
 | **Confidential Toggle** | TopBar button (Confidential Chip) | Click | Toggles Confidential Mode between ON and OFF; sends `X-Confidential-Mode` | None |
-| **Demo Role Switcher** | TopBar `select[aria-label="Demo Role Switcher"]` | Change | Switches active role (`Creator`, `Reviewer`, `Brand manager`, `Admin`); updates permissions | None |
+| **Demo Persona Switcher** | TopBar persona dropdown / select | Select / Click | Switches active persona (`Meera Kapoor`, `Anika Rao`, `Rohan Mehta`, `Dev Malhotra`, `Priya Nair`, `Imran Sheikh`); updates permissions and views | Demo workspace |
 | **Theme Toggle** | TopBar button `[aria-label^="Cycle theme"]` | Click | Cycles theme between `light`, `dark`, and `system`; persists in localStorage | None |
 | **Demo Notice Strip** | Dismiss button `[aria-label="Dismiss notice"]` | Click | Dismisses demo notice strip and persists dismissal in localStorage | None |
 

@@ -10,7 +10,7 @@ import {
 } from '../lib/api';
 import { useApp } from '../lib/context';
 import { AuditVerifyResult } from '../lib/types';
-import { PillTabs, Chip } from '../components/ui';
+import { Chip, ScrollTabs } from '../components/ui';
 
 export const AuditDisclosure: React.FC = () => {
   const { role, confidentialMode, setConfidentialMode } = useApp();
@@ -146,9 +146,9 @@ export const AuditDisclosure: React.FC = () => {
         </div>
       )}
 
-      {/* PillTabs Selector & Action Toolbar */}
+      {/* ScrollTabs Selector & Action Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <PillTabs
+        <ScrollTabs
           tabs={tabs}
           activeTab={activeTab}
           onChange={setActiveTab}
@@ -226,40 +226,72 @@ export const AuditDisclosure: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <table className="w-full text-xs text-left">
-                <thead>
-                  <tr className="border-b border-border/80 text-text-muted text-[11px] font-semibold uppercase tracking-wider">
-                    <th className="py-3 px-3">Seq</th>
-                    <th className="py-3 px-3">Timestamp (UTC)</th>
-                    <th className="py-3 px-3">Actor Role</th>
-                    <th className="py-3 px-3">Action</th>
-                    <th className="py-3 px-3">Target Entity</th>
-                    <th className="py-3 px-3">Metadata Detail</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/50 font-mono">
+              <>
+                {/* Mobile Card List (< md) */}
+                <div className="md:hidden space-y-3">
                   {filteredAuditLogs.map((entry) => (
-                    <tr key={entry.seq} className="hover:bg-surface-2/60 transition-colors">
-                      <td className="py-3 px-3 text-orange-text font-bold">#{entry.seq}</td>
-                      <td className="py-3 px-3 text-text-muted text-[11px]">
-                        {new Date(entry.created_at).toISOString().replace('T', ' ').slice(0, 19)}
-                      </td>
-                      <td className="py-3 px-3 font-semibold text-text font-sans">{entry.actor_role}</td>
-                      <td className="py-3 px-3">
-                        <Chip variant="neutral" size="sm">
-                          {entry.action}
-                        </Chip>
-                      </td>
-                      <td className="py-3 px-3 text-text">
+                    <div key={entry.seq} className="p-3.5 rounded-inner bg-surface-2 border border-border/70 space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-bold text-orange-text">#{entry.seq}</span>
+                        <Chip variant="neutral" size="sm">{entry.action}</Chip>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-text-muted">
+                        <span>Role: <strong className="text-text font-sans">{entry.actor_role}</strong></span>
+                        <span>{new Date(entry.created_at).toISOString().replace('T', ' ').slice(0, 19)}</span>
+                      </div>
+                      <div className="text-[11px] font-mono break-anywhere text-text">
                         {entry.entity}: <span className="text-orange-text">{entry.entity_id}</span>
-                      </td>
-                      <td className="py-3 px-3 text-text-muted text-[11px] max-w-xs truncate">
-                        {JSON.stringify(entry.detail)}
-                      </td>
-                    </tr>
+                      </div>
+                      <details className="pt-1 text-[11px] text-text-muted">
+                        <summary className="cursor-pointer font-semibold text-orange-text hover:underline">
+                          Metadata details
+                        </summary>
+                        <pre className="mt-1 p-2 rounded bg-surface border border-border/60 text-[10px] break-anywhere whitespace-pre-wrap font-mono">
+                          {JSON.stringify(entry.detail, null, 2)}
+                        </pre>
+                      </details>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+
+                {/* Desktop & Tablet Semantic Table (>= md) */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="border-b border-border/80 text-text-muted text-[11px] font-semibold uppercase tracking-wider">
+                        <th className="py-3 px-3">Seq</th>
+                        <th className="py-3 px-3">Timestamp (UTC)</th>
+                        <th className="py-3 px-3">Actor Role</th>
+                        <th className="py-3 px-3">Action</th>
+                        <th className="py-3 px-3">Target Entity</th>
+                        <th className="py-3 px-3">Metadata Detail</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50 font-mono">
+                      {filteredAuditLogs.map((entry) => (
+                        <tr key={entry.seq} className="hover:bg-surface-2/60 transition-colors">
+                          <td className="py-3 px-3 text-orange-text font-bold">#{entry.seq}</td>
+                          <td className="py-3 px-3 text-text-muted text-[11px]">
+                            {new Date(entry.created_at).toISOString().replace('T', ' ').slice(0, 19)}
+                          </td>
+                          <td className="py-3 px-3 font-semibold text-text font-sans">{entry.actor_role}</td>
+                          <td className="py-3 px-3">
+                            <Chip variant="neutral" size="sm">
+                              {entry.action}
+                            </Chip>
+                          </td>
+                          <td className="py-3 px-3 text-text">
+                            {entry.entity}: <span className="text-orange-text">{entry.entity_id}</span>
+                          </td>
+                          <td className="py-3 px-3 text-text-muted text-[11px] max-w-xs break-anywhere">
+                            {JSON.stringify(entry.detail)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -273,47 +305,78 @@ export const AuditDisclosure: React.FC = () => {
           ) : !disclosures || disclosures.length === 0 ? (
             <div className="py-12 text-center text-xs text-text-muted">No AI processing requests recorded yet.</div>
           ) : (
-            <table className="w-full text-xs text-left">
-              <thead>
-                <tr className="border-b border-border/80 text-text-muted text-[11px] font-semibold uppercase tracking-wider">
-                  <th className="py-3 px-3">Timestamp</th>
-                  <th className="py-3 px-3">Review ID</th>
-                  <th className="py-3 px-3">AI Provider</th>
-                  <th className="py-3 px-3">Model</th>
-                  <th className="py-3 px-3">Data Class</th>
-                  <th className="py-3 px-3">PII Redacted</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50 font-mono">
+            <>
+              {/* Mobile Card List (< md) */}
+              <div className="md:hidden space-y-3">
                 {disclosures.map((d) => (
-                  <tr key={d.id} className="hover:bg-surface-2/60 transition-colors">
-                    <td className="py-3 px-3 text-text-muted text-[11px]">
-                      {new Date(d.created_at).toISOString().replace('T', ' ').slice(0, 19)}
-                    </td>
-                    <td className="py-3 px-3 text-orange-text font-bold">{d.review_id}</td>
-                    <td className="py-3 px-3 font-semibold text-text flex items-center space-x-1.5 pt-3">
-                      <Cpu className="w-3.5 h-3.5 text-text-muted" />
-                      <span>{d.provider}</span>
-                    </td>
-                    <td className="py-3 px-3 text-text">{d.model}</td>
-                    <td className="py-3 px-3">
-                      <Chip variant="neutral" size="sm">
-                        {d.data_class}
-                      </Chip>
-                    </td>
-                    <td className="py-3 px-3">
+                  <div key={d.id} className="p-3.5 rounded-inner bg-surface-2 border border-border/70 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-orange-text">{d.review_id}</span>
+                      <Chip variant="neutral" size="sm">{d.data_class}</Chip>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-text-muted">
+                      <span>Provider: <strong className="text-text font-sans">{d.provider} ({d.model})</strong></span>
+                      <span>{new Date(d.created_at).toISOString().replace('T', ' ').slice(0, 19)}</span>
+                    </div>
+                    <div className="pt-1 flex items-center justify-between border-t border-border/50 text-[11px]">
+                      <span className="text-text-muted">PII Redacted:</span>
                       {d.pii_redacted ? (
                         <Chip variant="success" size="sm" icon={<ShieldCheck className="w-3 h-3" />}>
                           Redacted
                         </Chip>
                       ) : (
-                        <span className="text-text-muted text-[11px]">Clean</span>
+                        <span className="text-text-muted">Clean</span>
                       )}
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop & Tablet Table (>= md) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="border-b border-border/80 text-text-muted text-[11px] font-semibold uppercase tracking-wider">
+                      <th className="py-3 px-3">Timestamp</th>
+                      <th className="py-3 px-3">Review ID</th>
+                      <th className="py-3 px-3">AI Provider</th>
+                      <th className="py-3 px-3">Model</th>
+                      <th className="py-3 px-3">Data Class</th>
+                      <th className="py-3 px-3">PII Redacted</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/50 font-mono">
+                    {disclosures.map((d) => (
+                      <tr key={d.id} className="hover:bg-surface-2/60 transition-colors">
+                        <td className="py-3 px-3 text-text-muted text-[11px]">
+                          {new Date(d.created_at).toISOString().replace('T', ' ').slice(0, 19)}
+                        </td>
+                        <td className="py-3 px-3 text-orange-text font-bold">{d.review_id}</td>
+                        <td className="py-3 px-3 font-semibold text-text flex items-center space-x-1.5 pt-3">
+                          <Cpu className="w-3.5 h-3.5 text-text-muted" />
+                          <span>{d.provider}</span>
+                        </td>
+                        <td className="py-3 px-3 text-text">{d.model}</td>
+                        <td className="py-3 px-3">
+                          <Chip variant="neutral" size="sm">
+                            {d.data_class}
+                          </Chip>
+                        </td>
+                        <td className="py-3 px-3">
+                          {d.pii_redacted ? (
+                            <Chip variant="success" size="sm" icon={<ShieldCheck className="w-3 h-3" />}>
+                              Redacted
+                            </Chip>
+                          ) : (
+                            <span className="text-text-muted text-[11px]">Clean</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}

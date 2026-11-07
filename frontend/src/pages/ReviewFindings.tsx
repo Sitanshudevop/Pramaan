@@ -26,7 +26,7 @@ import {
 } from '../lib/api';
 import { useApp } from '../lib/context';
 import { DecisionAction, Finding, ReviewResponse } from '../lib/types';
-import { StatCard, GaugeCard, ProgressPill, PillTabs, Chip } from '../components/ui';
+import { StatCard, GaugeCard, ProgressPill, ScrollTabs, Chip } from '../components/ui';
 
 export const ReviewFindings: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -422,32 +422,38 @@ export const ReviewFindings: React.FC = () => {
         </div>
       </div>
 
-      {/* Top Row: Two StatCards and One Dark Feature GaugeCard */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <StatCard
-          label="Total Findings"
-          value={totalFindings}
-          hint={totalFindings === 0 ? 'No issues flagged' : `${totalFindings} item(s) in active draft`}
-        />
+      {/* Top Row: Two StatCards in 2-up grid on phone + One Full-Width GaugeCard; 3-cols on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+        <div className="col-span-1">
+          <StatCard
+            label="Total Findings"
+            value={totalFindings}
+            hint={totalFindings === 0 ? 'No issues flagged' : `${totalFindings} item(s) in active draft`}
+          />
+        </div>
 
-        <StatCard
-          label="Blocker Violations"
-          value={blockerCount}
-          delta={
-            blockerCount > 0
-              ? { direction: 'down', label: 'Requires Sign-off' }
-              : { direction: 'up', label: 'Clean' }
-          }
-          hint={blockerCount > 0 ? 'Brand manager approval gate required' : 'No blocker policy issues'}
-        />
+        <div className="col-span-1">
+          <StatCard
+            label="Blocker Violations"
+            value={blockerCount}
+            delta={
+              blockerCount > 0
+                ? { direction: 'down', label: 'Requires Sign-off' }
+                : { direction: 'up', label: 'Clean' }
+            }
+            hint={blockerCount > 0 ? 'Brand manager approval gate required' : 'No blocker policy issues'}
+          />
+        </div>
 
-        <GaugeCard
-          value={Math.round(coverageRate)}
-          max={100}
-          unit="%"
-          label="Evidence Coverage"
-          caption={`${Math.round(coverageRate)}% of shown findings link to active approved rules, facts, or purpose constraints.`}
-        />
+        <div className="col-span-2 lg:col-span-1">
+          <GaugeCard
+            value={Math.round(coverageRate)}
+            max={100}
+            unit="%"
+            label="Evidence Coverage"
+            caption={`${Math.round(coverageRate)}% of shown findings link to active approved rules, facts, or purpose constraints.`}
+          />
+        </div>
       </div>
 
       {/* Workflow Progress Pill Row */}
@@ -482,7 +488,7 @@ export const ReviewFindings: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column (7 cols): Tabs and Cards */}
         <div className="lg:col-span-7 space-y-4">
-          <PillTabs
+          <ScrollTabs
             tabs={tabs}
             activeTab={activeTab}
             onChange={setActiveTab}

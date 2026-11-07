@@ -39,7 +39,7 @@ import {
   CreateGlossaryPayload,
   BulkImportItem,
 } from '../lib/types';
-import { StatCard, PillTabs, Chip } from '../components/ui';
+import { StatCard, ScrollTabs, Chip, PillSelect } from '../components/ui';
 
 export const BrandHub: React.FC = () => {
   const { role } = useApp();
@@ -381,8 +381,19 @@ export const BrandHub: React.FC = () => {
           </p>
         </div>
 
-        {/* Brand Kit Selector Pills */}
-        <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-pill bg-surface-2 border border-border/70 self-start sm:self-auto">
+        {/* Mobile Brand Kit Select (< sm) */}
+        <div className="sm:hidden w-full space-y-2">
+          <PillSelect
+            value={selectedKitId}
+            onChange={setSelectedKitId}
+            options={kits?.map((k) => ({ value: k.id, label: k.name })) || []}
+            ariaLabel="Select Brand Kit"
+            className="w-full"
+          />
+        </div>
+
+        {/* Brand Kit Selector Pills (>= sm) */}
+        <div className="hidden sm:flex flex-wrap items-center gap-1.5 p-1 rounded-pill bg-surface-2 border border-border/70 self-start sm:self-auto">
           {kits?.map((k) => (
             <button
               key={k.id}
@@ -505,8 +516,8 @@ export const BrandHub: React.FC = () => {
             </div>
           </div>
 
-          {/* Navigation PillTabs */}
-          <PillTabs
+          {/* Navigation ScrollTabs */}
+          <ScrollTabs
             tabs={tabs}
             activeTab={activeTab}
             onChange={setActiveTab}

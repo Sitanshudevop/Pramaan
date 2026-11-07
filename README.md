@@ -148,7 +148,29 @@ flowchart TD
 
 ---
 
-## 7. Submission & Governance Documentation
+## 7. Responsive Multi-Device Design & Screenshots
+
+Pramaan is mobile-first, uncluttered, and adaptive across viewports from **320 px up to 2560 px ultra-wide**:
+- **Mobile (<1024px):** Accessible off-canvas hamburger navigation drawer (`role="dialog"`, `aria-label="Navigation Menu"`, focus trapped, swipe-to-close, body scroll lock, Esc close). Adaptive top bar with bottom sheet / popover overflow.
+- **Laptop (1024–1279px):** Collapsed 72 px icon rail with accessible tooltips, toggles to 240 px sidebar.
+- **Desktop (≥1280px):** Expanded 240 px sidebar with one-click rail collapse, choice saved in `localStorage`.
+- **Reusable Building Blocks:** `BottomSheet`, `ScrollTabs`, `AccordionItem`, `ResponsiveTable`, `StickyActionBar`, `Truncate`.
+- **Zero Horizontal Overflow:** Verified across 13 distinct viewports (320px, 360px, 390px, 414px, 600px, 768px, 820px, 1024px, 1280px, 1440px, 1920px, 2560px, and landscape 844×390px). Touch targets ≥ 44×44px.
+
+| Screen | Mobile (390px) | Tablet (768px) | Desktop (1440px) |
+|---|---|---|---|
+| **Home** | [Screenshot](docs/screenshots/home_mobile_390px_dark.png) | [Screenshot](docs/screenshots/home_tablet_768px_dark.png) | [Screenshot](docs/screenshots/home_desktop_1440px_dark.png) |
+| **New Review** | [Screenshot](docs/screenshots/new_review_mobile_390px_dark.png) | [Screenshot](docs/screenshots/new_review_tablet_768px_dark.png) | [Screenshot](docs/screenshots/new_review_desktop_1440px_dark.png) |
+| **Review Queue** | [Screenshot](docs/screenshots/review_queue_mobile_390px_dark.png) | [Screenshot](docs/screenshots/review_queue_tablet_768px_dark.png) | [Screenshot](docs/screenshots/review_queue_desktop_1440px_dark.png) |
+| **Brand Knowledge Hub** | [Screenshot](docs/screenshots/brand_hub_mobile_390px_dark.png) | [Screenshot](docs/screenshots/brand_hub_tablet_768px_dark.png) | [Screenshot](docs/screenshots/brand_hub_desktop_1440px_dark.png) |
+| **Review Findings** | [Screenshot](docs/screenshots/review_findings_mobile_390px_dark.png) | [Screenshot](docs/screenshots/review_findings_tablet_768px_dark.png) | [Screenshot](docs/screenshots/review_findings_desktop_1440px_dark.png) |
+| **Audit & Disclosure** | [Screenshot](docs/screenshots/audit_disclosure_mobile_390px_dark.png) | [Screenshot](docs/screenshots/audit_disclosure_tablet_768px_dark.png) | [Screenshot](docs/screenshots/audit_disclosure_desktop_1440px_dark.png) |
+| **Insights** | [Screenshot](docs/screenshots/insights_mobile_390px_dark.png) | [Screenshot](docs/screenshots/insights_tablet_768px_dark.png) | [Screenshot](docs/screenshots/insights_desktop_1440px_dark.png) |
+| **Settings** | [Screenshot](docs/screenshots/settings_mobile_390px_dark.png) | [Screenshot](docs/screenshots/settings_tablet_768px_dark.png) | [Screenshot](docs/screenshots/settings_desktop_1440px_dark.png) |
+
+---
+
+## 8. Submission & Governance Documentation
 
 All required submission documents are stored in `/docs` and accessible within the app:
 

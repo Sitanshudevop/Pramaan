@@ -43,7 +43,7 @@ import {
   setConfidentialModeBackend,
 } from '../lib/api';
 import { ContentType, ActiveSession } from '../lib/types';
-import { PillTabs, PillSelect, Chip } from '../components/ui';
+import { PillSelect, Chip, ScrollTabs } from '../components/ui';
 import { useToast } from '../lib/toast';
 
 const AVATAR_COLORS = [
@@ -562,9 +562,18 @@ export const Settings: React.FC = () => {
         )}
       </div>
 
-      {/* Responsive Horizontal PillTabs */}
-      <div className="overflow-x-auto pb-1 scrollbar-none">
-        <PillTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+      {/* Section Picker: Mobile Select (< sm) and Horizontal ScrollTabs (>= sm) */}
+      <div className="sm:hidden w-full">
+        <PillSelect
+          value={activeTab}
+          onChange={setActiveTab}
+          options={tabs.map((t) => ({ value: t.id, label: `${t.label}${t.count !== undefined ? ` (${t.count})` : ''}` }))}
+          ariaLabel="Settings section picker"
+          className="w-full"
+        />
+      </div>
+      <div className="hidden sm:block">
+        <ScrollTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
       </div>
 
       {/* ------------------------------------------------------------------- */}

@@ -8,4 +8,9 @@ export * from './PillSelect';
 export * from './SearchPill';
 export * from './GlowBackdrop';
 export * from './FloatingCards';
-
+export * from './BottomSheet';
+export * from './Accordion';
+export * from './ScrollTabs';
+export * from './StickyActionBar';
+export * from './Truncate';
+export * from './ResponsiveTable';

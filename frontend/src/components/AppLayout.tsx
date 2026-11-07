@@ -40,7 +40,7 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-bg flex flex-col antialiased">
+    <div className="min-h-[100dvh] bg-bg flex flex-col antialiased overflow-x-clip">
       {/* Skip to main content for accessibility */}
       <a
         href="#main-content"
