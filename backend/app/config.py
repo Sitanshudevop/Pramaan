@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     PORT: int = 8000
     HOST: str = "0.0.0.0"
-    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+    ALLOWED_ORIGINS: str = "*"
 
     # SQLite Database file location (absolute path fallback)
     DATABASE_URL: str = f"sqlite:///{DEFAULT_DB_PATH}"

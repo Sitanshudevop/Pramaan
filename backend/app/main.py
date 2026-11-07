@@ -56,14 +56,11 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONRe
 
 
 # Security headers & CORS
-cors_origins = settings.allowed_origins_list
-has_wildcard = "*" in cors_origins
-
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[] if has_wildcard else cors_origins,
-    allow_origin_regex=".*" if has_wildcard else None,
+    allow_origins=[],
+    allow_origin_regex=".*",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
