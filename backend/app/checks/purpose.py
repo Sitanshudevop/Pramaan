@@ -23,21 +23,24 @@ def check_purpose_card(ctx: CheckContext) -> list[Finding]:
                     review_id=ctx.review_id,
                     version=ctx.version,
                     category="Purpose card",
-                    severity=Severity.MAJOR,
-                    status=FindingStatus.CONTRADICTED,
+                    severity=Severity.MINOR,
+                    status=FindingStatus.NEEDS_HUMAN_JUDGEMENT,
                     method=CheckMethod.DETERMINISTIC,
                     confidence=1.0,
-                    excerpt=text[: min(len(text), 80)],
+                    excerpt="Locked phrase not found in the draft",
                     start=0,
-                    end=min(len(text), 80),
-                    rule_id=None,
+                    end=0,
+                    rule_id="PC-LOCKED-PHRASE",
                     fact_id=None,
                     source_title="Creator Purpose Card Constraint",
                     source_version="1.0",
-                    reason=f"Mandatory locked phrase '{locked}' specified in the Purpose Card is missing from the content.",
-                    suggestion=f"{text.rstrip()} (Featuring {locked})",
+                    reason=f"Mandatory locked phrase '{locked}' specified in the Purpose Card is missing from the draft.",
+                    suggestion=None,
                     suggestion_check=SuggestionCheck(
-                        rule_rechecked=True, rule_passed=True, purpose_preserved=True
+                        rule_rechecked=True,
+                        rule_passed=False,
+                        purpose_preserved=False,
+                        note="Review draft to include the locked phrase or adjust the Purpose Card.",
                     ),
                     decision=None,
                     created_at=now,
@@ -48,6 +51,8 @@ def check_purpose_card(ctx: CheckContext) -> list[Finding]:
     cta = card.call_to_action.strip()
     if cta:
         cta_words = [w.lower() for w in cta.split() if len(w) > 3]
+        if not cta_words:
+            cta_words = [w.lower() for w in cta.split() if len(w) > 0]
         cta_present = any(w in text.lower() for w in cta_words)
         if not cta_present and len(text) > 30:
             findings.append(
@@ -60,17 +65,20 @@ def check_purpose_card(ctx: CheckContext) -> list[Finding]:
                     status=FindingStatus.NEEDS_HUMAN_JUDGEMENT,
                     method=CheckMethod.DETERMINISTIC,
                     confidence=0.85,
-                    excerpt=text[-min(len(text), 60) :],
-                    start=max(0, len(text) - 60),
-                    end=len(text),
-                    rule_id=None,
+                    excerpt="Target CTA not found in the draft",
+                    start=0,
+                    end=0,
+                    rule_id="PC-CTA",
                     fact_id=None,
                     source_title="Creator Purpose Card: Call to Action",
                     source_version="1.0",
                     reason=f"Draft lacks clear reference to target Call to Action: '{cta}'.",
-                    suggestion=f"{text.rstrip()} {cta}.",
+                    suggestion=None,
                     suggestion_check=SuggestionCheck(
-                        rule_rechecked=True, rule_passed=True, purpose_preserved=True
+                        rule_rechecked=True,
+                        rule_passed=False,
+                        purpose_preserved=False,
+                        note="Draft should include a call to action aligned with target CTA.",
                     ),
                     decision=None,
                     created_at=now,

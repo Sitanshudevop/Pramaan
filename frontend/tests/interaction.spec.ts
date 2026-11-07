@@ -181,6 +181,40 @@ test.describe('Pramaan Core Interaction & Accessibility Verification', () => {
     await expect(page.locator('button[role="tab"]:has-text("Disclosure Ledger")')).toHaveAttribute('aria-selected', 'true');
   });
 
+  test('Audit & Disclosure trail verification and export', async ({ page }) => {
+    await page.goto('/app/audit');
+
+    // Click Verify Trail Integrity button
+    const verifyBtn = page.locator('button:has-text("Verify Trail Integrity")');
+    await expect(verifyBtn).toBeVisible();
+    await verifyBtn.click();
+
+    // Verification banner appears with hash
+    await expect(page.locator('text=Audit Trail Integrity Confirmed')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=SHA-256')).toBeVisible();
+  });
+
+  test('Review Findings suggestions, inline editing, and draft revision re-check', async ({ page }) => {
+    await page.goto('/app/new');
+    await page.locator('button:has-text("Sample 1")').click();
+    await page.locator('button:has-text("Run Review")').click();
+    await expect(page).toHaveURL(/\/app\/review\//, { timeout: 10000 });
+
+    // Open Suggestions tab
+    await page.locator('button[role="tab"]:has-text("Suggestions")').click();
+    const acceptBtn = page.locator('button:has-text("Accept Suggestion")').first();
+    await expect(acceptBtn).toBeVisible();
+
+    // Test Edit Draft button
+    const editDraftBtn = page.locator('button:has-text("Edit Draft")');
+    await expect(editDraftBtn).toBeVisible();
+    await editDraftBtn.click();
+
+    // Verify textarea appears with "Save & Re-run Checks" button
+    const saveRerunBtn = page.locator('button:has-text("Save & Re-run Checks")');
+    await expect(saveRerunBtn).toBeVisible();
+  });
+
   test('Accessibility axe audit passes on Home and Review pages without critical violations', async ({ page }) => {
     await page.goto('/');
     const accessibilityScanResults = await new AxeBuilder({ page })

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Info } from 'lucide-react';
+import { Info, RefreshCw, ArrowRight, BarChart2 } from 'lucide-react';
 import { getInsights, getBrandKits } from '../lib/api';
 import { useApp } from '../lib/context';
 import { GaugeCard, BarChart, PillSelect, Chip, StatCard } from '../components/ui';
 
 export const Insights: React.FC = () => {
-  const { role, setRole } = useApp();
+  const { role, setRole, isDemoMode } = useApp();
   const [selectedKit, setSelectedKit] = useState<string>('');
 
   const { data: kits } = useQuery({
@@ -51,26 +52,38 @@ export const Insights: React.FC = () => {
           </p>
         </div>
 
-        <PillSelect
-          value={selectedKit}
-          onChange={setSelectedKit}
-          options={kitOptions}
-          ariaLabel="Filter by brand kit"
-        />
-      </div>
-
-      {/* Mandatory Simulated Data Disclosure Banner */}
-      <div className="p-4 rounded-card border border-border bg-surface-2 flex items-start space-x-3 text-xs text-text-muted">
-        <Info className="w-4 h-4 text-orange-text mt-0.5 shrink-0" />
-        <div className="space-y-0.5">
-          <span className="font-semibold text-text">Simulated Data Disclosure: </span>
-          <span>{insights?.simulated_notice || 'Insights are populated with 120 simulated review events for prototype demonstration.'}</span>
+        <div className="flex items-center space-x-2">
+          <PillSelect
+            value={selectedKit}
+            onChange={setSelectedKit}
+            options={kitOptions}
+            ariaLabel="Filter by brand kit"
+          />
+          <button
+            type="button"
+            onClick={() => refetch()}
+            title="Refresh analytics data"
+            className="p-2 rounded-pill border border-border bg-surface text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
+      {/* Mandatory Simulated Data Disclosure Banner ONLY in Demo Workspace */}
+      {isDemoMode && (
+        <div className="p-4 rounded-card border border-border bg-surface-2 flex items-start space-x-3 text-xs text-text-muted">
+          <Info className="w-4 h-4 text-orange-text mt-0.5 shrink-0" />
+          <div className="space-y-0.5">
+            <span className="font-semibold text-text">Simulated Data Disclosure: </span>
+            <span>{insights?.simulated_notice || 'Demo workspace: Insights are populated with 120 simulated review events for demonstration.'}</span>
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="py-24 text-center text-xs text-text-muted font-mono">
-          Aggregating governance metrics from simulated events...
+          Aggregating governance metrics...
         </div>
       ) : role === 'Creator' || error ? (
         <div className="p-8 rounded-card border border-border bg-surface text-center space-y-4 shadow-floating max-w-lg mx-auto">
@@ -100,6 +113,27 @@ export const Insights: React.FC = () => {
                 Retry Request
               </button>
             )}
+          </div>
+        </div>
+      ) : !isDemoMode && (!insights || insights.total_events < 10) ? (
+        <div className="p-12 rounded-card border border-border bg-surface text-center space-y-3 shadow-floating max-w-lg mx-auto">
+          <div className="w-12 h-12 rounded-full bg-orange-500/10 text-orange-text flex items-center justify-center mx-auto">
+            <BarChart2 className="w-6 h-6" />
+          </div>
+          <h2 className="text-base font-bold text-text">
+            Not enough data yet ({insights?.total_events || 0}/10 reviews)
+          </h2>
+          <p className="text-xs text-text-muted leading-relaxed">
+            Insights and rule ambiguity scores are computed strictly from real reviews in your workspace. Run at least 10 reviews to view compliance trends, repeated violations, and ambiguity radar.
+          </p>
+          <div className="pt-2">
+            <Link
+              to="/app/new"
+              className="px-5 py-2.5 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-90 shadow-sm inline-flex items-center space-x-1.5"
+            >
+              <span>Run a review</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       ) : !insights ? (
@@ -213,10 +247,19 @@ export const Insights: React.FC = () => {
                     {item.recommendation}
                   </p>
 
-                  <div className="text-[11px] font-mono text-text-muted flex space-x-4 pt-1 border-t border-border/40">
-                    <span>Violations detected: {item.violation_count}</span>
-                    <span>·</span>
-                    <span>Reviewer overrides: {item.override_count}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] font-mono text-text-muted pt-1 border-t border-border/40">
+                    <div className="flex space-x-4">
+                      <span>Violations detected: {item.violation_count}</span>
+                      <span>·</span>
+                      <span>Reviewer overrides: {item.override_count}</span>
+                    </div>
+                    <Link
+                      to="/app/hub"
+                      className="inline-flex items-center space-x-1 text-orange-text hover:underline font-semibold"
+                    >
+                      <span>Edit in Brand Hub</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
                   </div>
                 </div>
               ))}

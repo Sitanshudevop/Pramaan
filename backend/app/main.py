@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 
-from app.api import audit, brands, health, insights, reviews
+from app.api import audit, auth, brands, health, insights, notifications, reviews, workspaces
 from app.config import settings
 from app.deps import limiter
 from app.models.base import SessionLocal
@@ -67,7 +67,10 @@ app.add_middleware(
 
 # Register routers
 app.include_router(health.router)
-app.include_router(brands.router)
+app.include_router(auth.router, prefix="/api")
+app.include_router(workspaces.router, prefix="/api")
+app.include_router(brands.router, prefix="/api")
+app.include_router(notifications.router, prefix="/api")
 app.include_router(reviews.router)
 app.include_router(audit.router)
 app.include_router(insights.router)

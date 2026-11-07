@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Lock, Cpu, ShieldCheck } from 'lucide-react';
-import { getAuditLogs, getDisclosureLedger } from '../lib/api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Lock, Cpu, ShieldCheck, Download, CheckCircle2 } from 'lucide-react';
+import {
+  getAuditLogs,
+  getDisclosureLedger,
+  exportAuditLogs,
+  verifyAuditIntegrity,
+  setConfidentialModeBackend,
+} from '../lib/api';
 import { useApp } from '../lib/context';
+import { AuditVerifyResult } from '../lib/types';
 import { PillTabs, Chip } from '../components/ui';
 
 export const AuditDisclosure: React.FC = () => {
   const { role, confidentialMode, setConfidentialMode } = useApp();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<string>('audit');
+  const [roleFilter, setRoleFilter] = useState<string>('ALL');
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const [verifyResult, setVerifyResult] = useState<AuditVerifyResult | null>(null);
 
   const { data: auditLogs, isLoading: loadingAudit } = useQuery({
     queryKey: ['auditLogs', role],
@@ -17,6 +29,45 @@ export const AuditDisclosure: React.FC = () => {
   const { data: disclosures, isLoading: loadingDisc } = useQuery({
     queryKey: ['disclosures', role],
     queryFn: () => getDisclosureLedger(role),
+  });
+
+  const handleExport = async (format: 'csv' | 'json') => {
+    setIsExporting(true);
+    try {
+      await exportAuditLogs(format, role);
+    } catch (err) {
+      alert((err as Error).message || 'Export failed');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    setIsVerifying(true);
+    try {
+      const res = await verifyAuditIntegrity(role);
+      setVerifyResult(res);
+    } catch (err) {
+      alert((err as Error).message || 'Verification failed');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleToggleConfidential = async () => {
+    try {
+      const next = !confidentialMode;
+      await setConfidentialModeBackend(next, role);
+      setConfidentialMode(next);
+      queryClient.invalidateQueries({ queryKey: ['auditLogs'] });
+    } catch (err) {
+      alert((err as Error).message || 'Failed to update confidential mode');
+    }
+  };
+
+  const filteredAuditLogs = (auditLogs || []).filter((entry) => {
+    if (roleFilter !== 'ALL' && entry.actor_role !== roleFilter) return false;
+    return true;
   });
 
   const tabs = [
@@ -49,7 +100,7 @@ export const AuditDisclosure: React.FC = () => {
 
         {role === 'Admin' && (
           <button
-            onClick={() => setConfidentialMode(!confidentialMode)}
+            onClick={handleToggleConfidential}
             className="px-5 py-2 rounded-pill text-xs font-semibold bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange hover:opacity-90 transition-opacity shadow-sm self-start sm:self-auto"
           >
             {confidentialMode ? 'Disable Confidential Mode' : 'Enable Confidential Mode'}
@@ -68,56 +119,129 @@ export const AuditDisclosure: React.FC = () => {
         </div>
       </div>
 
-      {/* PillTabs Selector */}
-      <PillTabs
-        tabs={tabs}
-        activeTab={activeTab}
-        onChange={setActiveTab}
-      />
+      {/* Cryptographic Verification Banner if ran */}
+      {verifyResult && (
+        <div className="p-4 rounded-card border border-success/40 bg-success/10 text-xs font-mono space-y-1">
+          <div className="flex items-center space-x-2 font-bold text-success-text font-sans">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Audit Trail Integrity Confirmed</span>
+          </div>
+          <div className="text-text">
+            Status: <span className="font-bold uppercase">{verifyResult.status}</span> · Total Records: {verifyResult.total_records}
+          </div>
+          <div className="text-[11px] text-text-muted break-all">
+            SHA-256 Hash: {verifyResult.latest_hash}
+          </div>
+        </div>
+      )}
+
+      {/* PillTabs Selector & Action Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <PillTabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
+
+        {activeTab === 'audit' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleVerify}
+              disabled={isVerifying}
+              className="px-3.5 py-1.5 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-90 shadow-xs flex items-center space-x-1.5"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>{isVerifying ? 'Verifying...' : 'Verify Trail Integrity'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleExport('csv')}
+              disabled={isExporting}
+              className="px-3 py-1.5 rounded-pill border border-border bg-surface text-text hover:bg-surface-2 text-xs font-medium flex items-center space-x-1"
+            >
+              <Download className="w-3.5 h-3.5 text-text-muted" />
+              <span>CSV</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleExport('json')}
+              disabled={isExporting}
+              className="px-3 py-1.5 rounded-pill border border-border bg-surface text-text hover:bg-surface-2 text-xs font-medium flex items-center space-x-1"
+            >
+              <Download className="w-3.5 h-3.5 text-text-muted" />
+              <span>JSON</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Tab 1: Audit Log Table */}
       {activeTab === 'audit' && (
-        <div className="p-5 rounded-card border border-border bg-surface shadow-floating overflow-x-auto">
-          {loadingAudit ? (
-            <div className="py-12 text-center text-xs text-text-muted font-mono">Loading audit trail...</div>
-          ) : !auditLogs || auditLogs.length === 0 ? (
-            <div className="py-12 text-center text-xs text-text-muted">No audit events recorded yet.</div>
-          ) : (
-            <table className="w-full text-xs text-left">
-              <thead>
-                <tr className="border-b border-border/80 text-text-muted text-[11px] font-semibold uppercase tracking-wider">
-                  <th className="py-3 px-3">Seq</th>
-                  <th className="py-3 px-3">Timestamp (UTC)</th>
-                  <th className="py-3 px-3">Actor Role</th>
-                  <th className="py-3 px-3">Action</th>
-                  <th className="py-3 px-3">Target Entity</th>
-                  <th className="py-3 px-3">Metadata Detail</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50 font-mono">
-                {auditLogs.map((entry) => (
-                  <tr key={entry.seq} className="hover:bg-surface-2/60 transition-colors">
-                    <td className="py-3 px-3 text-orange-text font-bold">#{entry.seq}</td>
-                    <td className="py-3 px-3 text-text-muted text-[11px]">
-                      {new Date(entry.created_at).toISOString().replace('T', ' ').slice(0, 19)}
-                    </td>
-                    <td className="py-3 px-3 font-semibold text-text font-sans">{entry.actor_role}</td>
-                    <td className="py-3 px-3">
-                      <Chip variant="neutral" size="sm">
-                        {entry.action}
-                      </Chip>
-                    </td>
-                    <td className="py-3 px-3 text-text">
-                      {entry.entity}: <span className="text-orange-text">{entry.entity_id}</span>
-                    </td>
-                    <td className="py-3 px-3 text-text-muted text-[11px] max-w-xs truncate">
-                      {JSON.stringify(entry.detail)}
-                    </td>
+        <div className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3">
+          {/* Role Filter Pills */}
+          <div className="flex items-center space-x-1.5 pb-2 border-b border-border/60">
+            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mr-1">
+              Actor Role:
+            </span>
+            {['ALL', 'Creator', 'Reviewer', 'Brand manager', 'Admin'].map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRoleFilter(r)}
+                className={`px-3 py-1 rounded-pill text-xs font-medium transition-colors ${
+                  roleFilter === r
+                    ? 'bg-text text-bg font-bold shadow-xs'
+                    : 'bg-surface-2 text-text-muted hover:text-text'
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+
+          <div className="overflow-x-auto">
+            {loadingAudit ? (
+              <div className="py-12 text-center text-xs text-text-muted font-mono">Loading audit trail...</div>
+            ) : filteredAuditLogs.length === 0 ? (
+              <div className="py-12 text-center text-xs text-text-muted">No audit events match current filter.</div>
+            ) : (
+              <table className="w-full text-xs text-left">
+                <thead>
+                  <tr className="border-b border-border/80 text-text-muted text-[11px] font-semibold uppercase tracking-wider">
+                    <th className="py-3 px-3">Seq</th>
+                    <th className="py-3 px-3">Timestamp (UTC)</th>
+                    <th className="py-3 px-3">Actor Role</th>
+                    <th className="py-3 px-3">Action</th>
+                    <th className="py-3 px-3">Target Entity</th>
+                    <th className="py-3 px-3">Metadata Detail</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody className="divide-y divide-border/50 font-mono">
+                  {filteredAuditLogs.map((entry) => (
+                    <tr key={entry.seq} className="hover:bg-surface-2/60 transition-colors">
+                      <td className="py-3 px-3 text-orange-text font-bold">#{entry.seq}</td>
+                      <td className="py-3 px-3 text-text-muted text-[11px]">
+                        {new Date(entry.created_at).toISOString().replace('T', ' ').slice(0, 19)}
+                      </td>
+                      <td className="py-3 px-3 font-semibold text-text font-sans">{entry.actor_role}</td>
+                      <td className="py-3 px-3">
+                        <Chip variant="neutral" size="sm">
+                          {entry.action}
+                        </Chip>
+                      </td>
+                      <td className="py-3 px-3 text-text">
+                        {entry.entity}: <span className="text-orange-text">{entry.entity_id}</span>
+                      </td>
+                      <td className="py-3 px-3 text-text-muted text-[11px] max-w-xs truncate">
+                        {JSON.stringify(entry.detail)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       )}
 

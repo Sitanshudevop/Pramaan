@@ -1,4 +1,4 @@
-"""Pure promotional claims check: superlatives, absolutes, health & medical claims."""
+"""Pure generic claims check: restricted patterns and substantiating fact verification."""
 
 import re
 from datetime import UTC, datetime
@@ -7,192 +7,162 @@ from app.checks.context import CheckContext
 from app.constants import CheckMethod, FindingStatus, Severity
 from app.schemas.schemas import Finding, SuggestionCheck
 
-HEALTH_KEYWORDS = [
-    "cure",
-    "cures",
-    "curing",
-    "clinically proven",
-    "treats",
-    "treating",
-    "treatment",
-    "detox",
-    "detoxifies",
-    "detoxifying",
-    "cure stress",
-    "prevent disease",
-]
-
-SUPERLATIVES = [
-    "best",
-    "fastest",
-    "#1",
-    "number one",
-    "greatest",
-    "unmatched",
-]
-
 
 def check_claims(ctx: CheckContext) -> list[Finding]:
-    """Flag unsupported superlatives, absolutes, and health claims."""
+    """Flag unsupported promotional claims, superlatives, and user-defined claim patterns."""
     findings: list[Finding] = []
     text = ctx.text
     now = datetime.now(UTC)
 
-    # 1. Health & Medical Claims (CLAIM-4.2)
-    if ctx.brand_kit_id == "kettle-and-co":
-        for keyword in HEALTH_KEYWORDS:
-            pattern = re.compile(rf"\b{re.escape(keyword)}\b", re.IGNORECASE)
-            for match in pattern.finditer(text):
-                start, end = match.span()
-                matched = match.group(0)
+    # 1. Evaluate User-Defined Claim Patterns
+    for claim in ctx.claim_patterns:
+        if claim.get("status") != "active":
+            continue
 
+        raw_pattern = claim.get("pattern", "").strip()
+        if not raw_pattern:
+            continue
+
+        pattern_id = claim.get("id", "CLM-000")
+        severity_val = Severity(claim.get("severity", "Major"))
+        reason_text = claim.get("reason", "Restricted claim requires verifiable substantiation.")
+        fact_id = claim.get("substantiating_fact_id")
+
+        regex = re.compile(rf"\b{re.escape(raw_pattern)}\b", re.IGNORECASE)
+        for match in regex.finditer(text):
+            start, end = match.span()
+            matched = match.group(0)
+
+            # Check if active fact substantiates this claim
+            substantiated = False
+            if fact_id:
+                substantiated = any(
+                    f.get("id") == fact_id and f.get("status") == "active"
+                    for f in ctx.facts
+                )
+
+            if not substantiated:
                 findings.append(
                     Finding(
-                        id=f"find-claim-42-{ctx.review_id}-v{ctx.version}-{start}-{end}",
+                        id=f"find-claim-{ctx.review_id}-v{ctx.version}-{pattern_id.lower()}-{start}",
                         review_id=ctx.review_id,
                         version=ctx.version,
                         category="Promotional claims",
-                        severity=Severity.BLOCKER,
+                        severity=severity_val,
                         status=FindingStatus.UNSUPPORTED,
                         method=CheckMethod.DETERMINISTIC,
                         confidence=1.0,
                         excerpt=matched,
                         start=start,
                         end=end,
-                        rule_id="CLAIM-4.2",
+                        rule_id=pattern_id,
                         fact_id=None,
-                        source_title="Medical & health claims prohibition",
-                        source_version="2.0",
-                        reason=f"Health claim '{matched}' detected without approved clinical trial dossier substantiation.",
-                        suggestion="comfort your senses"
-                        if "cure" in matched.lower()
-                        else "carefully crafted",
+                        source_title=f"Claim Policy: {raw_pattern}",
+                        source_version=ctx.kit_snapshot_version,
+                        reason=f"Restricted claim '{matched}' detected without approved substantiation: {reason_text}",
+                        suggestion="Remove or rewrite this phrase",
                         suggestion_check=SuggestionCheck(
-                            rule_rechecked=True, rule_passed=True, purpose_preserved=True
+                            rule_rechecked=True,
+                            rule_passed=False,
+                            purpose_preserved=False,
+                            note="Unsupported claim requires verifiable substantiation or removal.",
                         ),
                         decision=None,
                         created_at=now,
                     )
                 )
 
-    # 2. Unsubstantiated Superlatives (CLAIM-3.1)
-    if ctx.brand_kit_id == "kettle-and-co":
-        for super_word in SUPERLATIVES:
-            pattern = re.compile(rf"\b{re.escape(super_word)}\b", re.IGNORECASE)
-            for match in pattern.finditer(text):
-                start, end = match.span()
-                matched = match.group(0)
+    # 2. Evaluate Generic Claims Rules from Brand Kit
+    for rule in ctx.rules:
+        if rule.get("status") != "active" or rule.get("category") not in ("Claims", "Promotional claims"):
+            continue
 
-                substantiated = any(
-                    super_word.lower() in f.get("value", "").lower() and f.get("status") == "active"
-                    for f in ctx.facts
-                )
-                if not substantiated:
+        rule_id = rule.get("id", "CLAIM-000")
+        rule_title = rule.get("title", "Claims Restriction")
+        rule_severity = Severity(rule.get("severity", "Major"))
+
+        # Check performance / return risk disclaimer requirement
+        rule_lower = rule.get("text", "").lower()
+        if any(w in rule_lower for w in ("return", "yield", "gain", "performance")) and "risk" in rule_lower:
+            perf_match = re.search(r"(\d+(?:\.\d+)?%\s*(?:annualized|annual|return|gain|yield)?|annualized return|historic yields)", text, re.IGNORECASE)
+            if perf_match:
+                has_notice = any(w in text.lower() for w in ("market risks", "risk notice", "past performance is not", "subject to market"))
+                if not has_notice:
+                    m_val = perf_match.group(0)
                     findings.append(
                         Finding(
-                            id=f"find-claim-31-{ctx.review_id}-v{ctx.version}-{start}-{end}",
+                            id=f"find-claim-perf-{ctx.review_id}-v{ctx.version}-{rule_id.lower()}-{perf_match.start()}",
                             review_id=ctx.review_id,
                             version=ctx.version,
                             category="Promotional claims",
-                            severity=Severity.MAJOR,
+                            severity=rule_severity,
+                            status=FindingStatus.CONTRADICTED,
+                            method=CheckMethod.DETERMINISTIC,
+                            confidence=1.0,
+                            excerpt=m_val,
+                            start=perf_match.start(),
+                            end=perf_match.end(),
+                            rule_id=rule_id,
+                            fact_id=None,
+                            source_title=rule_title,
+                            source_version=rule.get("version", ctx.kit_snapshot_version),
+                            reason=f"Performance claim '{m_val}' must be accompanied by statutory risk notice: {rule.get('text', '')}",
+                            suggestion="Include required statutory risk disclosure alongside performance figures.",
+                            suggestion_check=SuggestionCheck(
+                                rule_rechecked=True, rule_passed=True, purpose_preserved=True
+                            ),
+                            decision=None,
+                            created_at=now,
+                        )
+                    )
+
+        banned_claims = list(rule.get("banned_terms") or [])
+        if not banned_claims and rule.get("text"):
+            quoted = re.findall(r"['\"](.*?)['\"]", rule.get("text", ""))
+            banned_claims = [q.strip() for q in quoted if len(q.strip()) >= 1]
+
+        for b_claim in banned_claims:
+            regex = re.compile(rf"(?<!\w){re.escape(b_claim)}(?!\w)", re.IGNORECASE)
+            for match in regex.finditer(text):
+                start, end = match.span()
+                matched = match.group(0)
+
+                # Check if substantiated by any active fact permitted wording
+                substantiated = any(
+                    matched.lower() in f.get("permitted_wording", "").lower()
+                    and f.get("status") == "active"
+                    for f in ctx.facts
+                )
+
+                if not substantiated:
+                    findings.append(
+                        Finding(
+                            id=f"find-claim-rule-{ctx.review_id}-v{ctx.version}-{rule_id.lower()}-{start}",
+                            review_id=ctx.review_id,
+                            version=ctx.version,
+                            category="Promotional claims",
+                            severity=rule_severity,
                             status=FindingStatus.UNSUPPORTED,
                             method=CheckMethod.DETERMINISTIC,
                             confidence=0.95,
                             excerpt=matched,
                             start=start,
                             end=end,
-                            rule_id="CLAIM-3.1",
+                            rule_id=rule_id,
                             fact_id=None,
-                            source_title="Unsubstantiated superlatives restriction",
-                            source_version="1.2",
-                            reason=f"Superlative '{matched}' lacks verifiable third-party certification in the facts register.",
-                            suggestion="celebrated" if matched.lower() == "best" else "distinctive",
+                            source_title=rule_title,
+                            source_version=rule.get("version", ctx.kit_snapshot_version),
+                            reason=f"Claim '{matched}' lacks verifiable substantiation in facts register: {rule.get('text', '')}",
+                            suggestion="Remove or rewrite this phrase",
                             suggestion_check=SuggestionCheck(
-                                rule_rechecked=True, rule_passed=True, purpose_preserved=True
+                                rule_rechecked=True,
+                                rule_passed=False,
+                                purpose_preserved=False,
+                                note="Unsubstantiated claim requires human review.",
                             ),
                             decision=None,
                             created_at=now,
                         )
                     )
-
-    # 3. Absolutes & 100% claims (CLAIM-3.1)
-    if ctx.brand_kit_id == "kettle-and-co":
-        for absolute in ["100% pesticide-free", "pesticide-free"]:
-            pattern = re.compile(rf"\b{re.escape(absolute)}\b", re.IGNORECASE)
-            for match in pattern.finditer(text):
-                start, end = match.span()
-                matched = match.group(0)
-
-                substantiated = any(
-                    matched.lower() in f.get("permitted_wording", "").lower()
-                    and f.get("status") == "active"
-                    for f in ctx.facts
-                )
-                if not substantiated:
-                    findings.append(
-                        Finding(
-                            id=f"find-claim-abs-{ctx.review_id}-v{ctx.version}-{start}-{end}",
-                            review_id=ctx.review_id,
-                            version=ctx.version,
-                            category="Promotional claims",
-                            severity=Severity.MAJOR,
-                            status=FindingStatus.UNSUPPORTED,
-                            method=CheckMethod.DETERMINISTIC,
-                            confidence=0.90,
-                            excerpt=matched,
-                            start=start,
-                            end=end,
-                            rule_id="CLAIM-3.1",
-                            fact_id=None,
-                            source_title="Unsubstantiated promotional claim",
-                            source_version="1.2",
-                            reason=f"Absolute claim '{matched}' is not substantiated in the active facts register.",
-                            suggestion="certified organic"
-                            if "pesticide" in matched.lower()
-                            else "wholesome",
-                            suggestion_check=SuggestionCheck(
-                                rule_rechecked=True, rule_passed=True, purpose_preserved=True
-                            ),
-                            decision=None,
-                            created_at=now,
-                        )
-                    )
-                    break
-
-    # 4. Financial Promises (CLAIM-1.1 / CLAIM-1.4)
-    if ctx.brand_kit_id == "ledgerleaf":
-        for term in ["guaranteed returns", "zero fees", "risk-free"]:
-            pattern = re.compile(rf"\b{re.escape(term)}\b", re.IGNORECASE)
-            for match in pattern.finditer(text):
-                start, end = match.span()
-                matched = match.group(0)
-                findings.append(
-                    Finding(
-                        id=f"find-claim-11-{ctx.review_id}-v{ctx.version}-{start}-{end}",
-                        review_id=ctx.review_id,
-                        version=ctx.version,
-                        category="Promotional claims",
-                        severity=Severity.BLOCKER,
-                        status=FindingStatus.UNSUPPORTED,
-                        method=CheckMethod.DETERMINISTIC,
-                        confidence=1.0,
-                        excerpt=matched,
-                        start=start,
-                        end=end,
-                        rule_id="CLAIM-1.1",
-                        fact_id=None,
-                        source_title="Unsubstantiated financial promises prohibition",
-                        source_version="2.1",
-                        reason=f"Financial guarantee '{matched}' is prohibited without statutory regulatory approval.",
-                        suggestion="target returns"
-                        if "guaranteed returns" in matched.lower()
-                        else "low, transparent fees",
-                        suggestion_check=SuggestionCheck(
-                            rule_rechecked=True, rule_passed=True, purpose_preserved=True
-                        ),
-                        decision=None,
-                        created_at=now,
-                    )
-                )
 
     return findings

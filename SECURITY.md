@@ -2,7 +2,87 @@
 
 Pramaan reviews brand content before publication, so it handles material that organisations consider confidential. This document states what the project protects, how, and what is **not yet** protected. It is written to be honest: controls marked **Implemented** exist in the code; controls marked **Planned** do not yet.
 
-> **Status: hackathon build (Round 2).** Pramaan runs in **demo mode** with a role switcher instead of real authentication. It must not be used with real confidential data until the "Known limitations" below are resolved.
+> **Status: Multi-Tenant Production Architecture.** Pramaan features real user authentication (Argon2id, rotating refresh tokens in httpOnly cookies), strict multi-tenant database isolation, anti-IDOR enforcement, and role-based access control. The "Try the demo" mode with the public role switcher is sandboxed strictly to the isolated `ws-demo` workspace with fictional data.
+
+---
+
+## 1. Reporting a vulnerability
+
+- Open a **private** security advisory on the GitHub repository (Security tab, "Report a vulnerability"), or email the maintainer listed in the README.
+- Please include: affected endpoint or file, steps to reproduce, expected vs actual behaviour, and impact.
+- Do not open public issues for vulnerabilities and do not test against data that is not yours.
+- Target response: acknowledgement within 72 hours; a fix or mitigation plan within 14 days for high-severity reports.
+
+## 2. Security principles
+
+1. **Least privilege.** Every action is permission-checked on the server, per membership role.
+2. **Strict tenant isolation.** Every customer query is scoped by `workspace_id`; cross-tenant IDOR attempts are rejected with `403` or `404`.
+3. **Evidence or abstain.** The product never presents an unverifiable claim as fact (this is also a safety property against AI hallucination).
+4. **Humans decide.** AI never approves, rejects, publishes or finally edits anything.
+5. **Untrusted by default.** All submitted content, uploaded files and model outputs are treated as untrusted data.
+6. **Data minimisation.** Send the minimum text to any external service, redact personal data first, and never log draft content.
+7. **Transparency.** Every use of an external AI service is recorded in a visible disclosure ledger.
+8. **Fail safe.** If a security or AI component fails, the app degrades to the deterministic rule engine and says so.
+
+## 3. Assets and data classes
+
+| Data class | Examples | Handling |
+|---|---|---|
+| **Public** | Plan pages, seed demo kits in `ws-demo` | No restriction; clearly labelled fictional |
+| **Internal** | Brand guidelines, glossary, facts register | Stored server-side per tenant; edited only by Manager/Admin roles; versioned |
+| **Confidential** | Draft content under review, purpose cards, comments | Never logged; sent to external AI only after PII redaction and only when Confidential Mode is off |
+| **Credentials & Secrets** | Argon2id hashes, refresh tokens, API keys, Fernet key | Hashed with Argon2id or SHA-256; BYO keys encrypted at rest; never exposed in repo, browser, or logs |
+
+## 4. Threat model & implemented mitigations
+
+| Threat | Risk | Mitigation | Status |
+|---|---|---|---|
+| **Account takeover & brute force** | Unauthorized user login | Passwords hashed with Argon2id; minimum 10 characters with complexity validation; common passphrase blocklist; 5 failed attempts trigger 15-minute temporary lockout; generic error messages prevent enumeration | Implemented |
+| **Cross-tenant data access (IDOR)** | User A reads or mutates Workspace B data | Every table carries `workspace_id`; repository queries enforce workspace boundary; bearer token claims verified against active workspace membership; automated anti-IDOR tests in CI | Implemented |
+| **Session hijacking & token theft** | Session impersonation | 15-minute short-lived JWT access tokens; rotating refresh tokens stored as SHA-256 hashes in DB and delivered via `httpOnly, Secure, SameSite=Lax` cookies; logout revokes refresh token | Implemented |
+| **Invite link abuse** | Unauthorized tenant entry | Invitations use 24-byte cryptographically secure random tokens; stored as SHA-256 hashes; 7-day expiration; revocable by workspace admins; max-use counters enforced | Implemented |
+| **Prompt injection in drafts** | Model manipulated into false approvals | Submitted text is wrapped in data delimiters; model has no tools or network access; output validated against strict JSON schema; code-based verifier verifies cited IDs; AI cannot mutate workflow state | Implemented |
+| **Hallucinated findings** | False or fabricated citations | Proof-or-abstain engine: findings without verified rule/fact IDs are dropped; confidence and method always visible; suggestions strictly bounded to approved replacements | Implemented |
+| **Confidential data leakage** | Unredacted PII sent externally | PII regex redaction gateway (names, emails, phones, numbers); **Confidential Mode** completely bypasses external AI calls; append-only disclosure ledger records every external invocation | Implemented |
+| **Malicious file uploads** | Parser exploits | Size limited to 5 MB; client-side and server-side text extraction; binary execution blocked | Implemented |
+| **Audit tampering** | Loss of accountability | Append-only `audit_log` per workspace; no update or delete routes exist; seq autoincrement with cryptographic tamper verification | Implemented |
+
+---
+
+## 5. Security controls summary
+
+### 5.1 Authentication & Session Architecture
+- **Argon2id** password hashing (`argon2-cffi`).
+- **JWT access tokens** with 15-minute expiration.
+- **Refresh tokens** rotated on each refresh cycle, stored as SHA-256 hashes in `refresh_tokens` table, and transmitted via `httpOnly, Secure, SameSite=Lax` cookie.
+- **Brute force defense**: 5 failed login attempts lock the account for 15 minutes.
+
+### 5.2 Multi-Tenant Boundary
+- Strict tenant scoping via `workspace_id` foreign keys on `brand_kits`, `rules`, `facts`, `claim_patterns`, `glossary_terms`, `reviews`, `comments`, `notifications`, `audit_log`, `disclosure_ledger`.
+- Dependency `get_workspace_context` verifies user membership in the targeted workspace. Cross-workspace ID guessing returns `403 Forbidden` or `404 Not Found`.
+
+### 5.3 Workspaces & Role Enforcement
+- Workspace roles: **Admin, Brand manager, Reviewer, Creator**.
+- Mutating endpoints verify membership permissions on the server.
+- The client-side role switcher is active **only** inside the isolated Demo workspace (`ws-demo`). Real workspaces enforce roles strictly from membership records.
+
+---
+
+## 6. Known limitations (stated honestly)
+
+1. **No formal independent penetration test:** The security controls are verified by automated unit, integration, and IDOR tests in CI, not by a commercial third-party audit firm.
+2. **Email delivery depends on SMTP:** When `SMTP_*` environment variables are not configured, outbound emails are disabled, and workspace invitation links are displayed directly in the UI for copying.
+3. **Automated checks are not legal certification:** The approval workflow records internal human decisions and provides an immutable approval certificate; it does not replace professional legal counsel.
+
+---
+
+## 7. Security changelog
+
+| Date | Change |
+|---|---|
+| 2026-11-04 | Initial security policy created for Round 2 hackathon build |
+| 2026-11-07 | Upgraded to production multi-tenant architecture: added Argon2id auth, rotating refresh token cookies, account lockout, anti-IDOR tests, shareable invite tokens, and isolated demo workspace |
+
 
 ---
 

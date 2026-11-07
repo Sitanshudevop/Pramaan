@@ -21,8 +21,9 @@ from sqlalchemy.orm import Session
 class ReviewRepository:
     """Manages database interactions for reviews, versions, findings, comments and decisions."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, workspace_id: str | None = None):
         self.db = db
+        self.workspace_id = workspace_id
 
     def create_review(
         self,
@@ -32,11 +33,17 @@ class ReviewRepository:
         purpose_card: PurposeCard,
         ai_declared: bool,
         created_by_role: Role,
+        workspace_id: str | None = None,
+        author_id: str | None = None,
+        assignee_id: str | None = None,
     ) -> ReviewModel:
         """Create a new review submission and its initial version snapshot."""
         review_id = f"rev-{uuid.uuid4().hex[:12]}"
         review = ReviewModel(
             id=review_id,
+            workspace_id=workspace_id or self.workspace_id,
+            creator_id=author_id,
+            assignee_id=assignee_id or author_id,
             kit_id=kit_id,
             status=ReviewStatus.SUBMITTED.value,
             content_type=content_type,
@@ -63,16 +70,20 @@ class ReviewRepository:
         return review
 
     def get_review(self, review_id: str) -> ReviewModel | None:
-        """Fetch review with relationships."""
-        return self.db.query(ReviewModel).filter(ReviewModel.id == review_id).first()
+        """Fetch review with relationships scoped by tenant."""
+        query = self.db.query(ReviewModel).filter(ReviewModel.id == review_id)
+        if self.workspace_id:
+            query = query.filter(ReviewModel.workspace_id == self.workspace_id)
+        return query.first()
 
     def list_reviews(self, role: Role, kit_id: str | None = None) -> list[ReviewModel]:
-        """List reviews scoped by role and optional kit filter."""
+        """List reviews scoped by workspace and optional kit filter."""
         query = self.db.query(ReviewModel)
+        if self.workspace_id:
+            query = query.filter(ReviewModel.workspace_id == self.workspace_id)
         if kit_id:
             query = query.filter(ReviewModel.kit_id == kit_id)
 
-        # Creators see their own in production; for demo convenience, we return all or own
         return query.order_by(ReviewModel.updated_at.desc()).all()
 
     def save_findings(self, findings: list[Finding]) -> None:

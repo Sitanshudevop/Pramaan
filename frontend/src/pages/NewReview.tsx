@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
@@ -6,31 +6,41 @@ import {
   AlertCircle,
   Loader2,
   Sparkles,
+  Upload,
+  RotateCcw,
 } from 'lucide-react';
-import { getBrandKits, getSampleDrafts, createReview } from '../lib/api';
+import { getBrandKits, getSampleDrafts, createReview, listWorkspaceMembers } from '../lib/api';
 import { useApp } from '../lib/context';
 import { SampleDraft } from '../lib/types';
 import { PillSelect, Chip } from '../components/ui';
 
 export const NewReview: React.FC = () => {
   const navigate = useNavigate();
-  const { role, confidentialMode } = useApp();
+  const { role, confidentialMode, isDemoMode, currentWorkspace } = useApp();
 
   // Queries
   const { data: brandKits, isLoading: loadingKits } = useQuery({
-    queryKey: ['brandKits', role],
+    queryKey: ['brandKits', role, currentWorkspace?.id],
     queryFn: () => getBrandKits(role),
+  });
+
+  const { data: members } = useQuery({
+    queryKey: ['members', currentWorkspace?.id],
+    queryFn: () => (currentWorkspace && !currentWorkspace.is_demo ? listWorkspaceMembers(currentWorkspace.id) : Promise.resolve([])),
+    enabled: !!currentWorkspace && !currentWorkspace.is_demo,
   });
 
   const { data: samples } = useQuery({
     queryKey: ['sampleDrafts'],
     queryFn: () => getSampleDrafts(),
+    enabled: isDemoMode,
   });
 
   // Form State
-  const [selectedKit, setSelectedKit] = useState<string>('kettle-and-co');
+  const [selectedKit, setSelectedKit] = useState<string>('');
   const [content, setContent] = useState<string>('');
   const [contentType, setContentType] = useState<string>('Promotional Email');
+  const [selectedAssignee, setSelectedAssignee] = useState<string>('');
   const [aiDeclared, setAiDeclared] = useState<boolean>(false);
 
   // Purpose Card State
@@ -38,9 +48,35 @@ export const NewReview: React.FC = () => {
   const [audience, setAudience] = useState<string>('');
   const [keyMessage, setKeyMessage] = useState<string>('');
   const [cta, setCta] = useState<string>('');
-  const [lockedPhrasesStr, setLockedPhrasesStr] = useState<string>('Masala Chai');
+  const [lockedPhrasesStr, setLockedPhrasesStr] = useState<string>('');
 
   const [formError, setFormError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result;
+      if (typeof text === 'string') {
+        setContent(text);
+        setFormError(null);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleClearForm = () => {
+    setContent('');
+    setGoal('');
+    setAudience('');
+    setKeyMessage('');
+    setCta('');
+    setLockedPhrasesStr('');
+    setFormError(null);
+  };
 
   // Auto-select first kit
   useEffect(() => {
@@ -89,6 +125,7 @@ export const NewReview: React.FC = () => {
             ai_declared: aiDeclared,
           },
           ai_declared: aiDeclared,
+          assignee_id: selectedAssignee || undefined,
         },
         role,
         confidentialMode
@@ -139,8 +176,8 @@ export const NewReview: React.FC = () => {
         </p>
       </div>
 
-      {/* Quick Judge Sample Text Buttons */}
-      {samples && samples.length > 0 && (
+      {/* Quick Judge Sample Text Buttons (Demo workspace only) */}
+      {isDemoMode && samples && samples.length > 0 && (
         <div className="flex flex-wrap items-center justify-center gap-2 pt-1 pb-2">
           <span className="text-[11px] font-semibold text-text-muted mr-1">Try Sample:</span>
           {samples.map((s, idx) => (
@@ -157,6 +194,25 @@ export const NewReview: React.FC = () => {
         </div>
       )}
 
+      {/* Warning / empty state if no brand kits exist */}
+      {brandKits && brandKits.length === 0 && (
+        <div className="p-4 rounded-card border border-border bg-surface shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="text-xs font-bold text-text">No Brand Kit Configured</div>
+            <div className="text-[11px] text-text-muted">
+              Add your brand kit in Brand Knowledge Hub to configure guidelines and begin reviewing drafts.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/app/hub')}
+            className="px-4 py-1.5 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-90 transition-all shrink-0"
+          >
+            + Add Brand Kit
+          </button>
+        </div>
+      )}
+
       {/* Single Centered Main Card */}
       <div className="p-6 sm:p-8 rounded-card border border-border bg-surface shadow-floating">
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -168,18 +224,23 @@ export const NewReview: React.FC = () => {
           )}
 
           {/* Section: Configuration Controls (Pill Selects) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-border/80">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4 border-b border-border/80">
             <div>
-              <label className="block text-xs font-semibold text-text mb-1.5">
-                Target Brand Kit
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-text">
+                  Target Brand Kit
+                </label>
+                <button
+                  type="button"
+                  onClick={() => navigate('/app/hub')}
+                  className="text-[11px] text-orange-text hover:underline font-medium"
+                >
+                  + Add Kit
+                </button>
+              </div>
               <PillSelect
                 value={selectedKit}
-                onChange={(val) => {
-                  setSelectedKit(val);
-                  if (val === 'kettle-and-co') setLockedPhrasesStr('Masala Chai');
-                  else setLockedPhrasesStr('LedgerLeaf Plus');
-                }}
+                onChange={(val) => setSelectedKit(val)}
                 options={kitOptions}
                 ariaLabel="Brand Kit selection"
                 className="w-full"
@@ -198,6 +259,24 @@ export const NewReview: React.FC = () => {
                 className="w-full"
               />
             </div>
+
+            {members && members.length > 0 && (
+              <div>
+                <label className="block text-xs font-semibold text-text mb-1.5">
+                  Assign Reviewer (Optional)
+                </label>
+                <PillSelect
+                  value={selectedAssignee}
+                  onChange={setSelectedAssignee}
+                  options={[
+                    { value: '', label: 'Leave in Queue' },
+                    ...members.map((m) => ({ value: m.user_id, label: `${m.full_name} (${m.role})` })),
+                  ]}
+                  ariaLabel="Assign reviewer"
+                  className="w-full"
+                />
+              </div>
+            )}
           </div>
 
           {/* Section: Draft Copy Input */}
@@ -206,9 +285,34 @@ export const NewReview: React.FC = () => {
               <label htmlFor="content-input" className="text-xs font-semibold text-text">
                 Draft Content (Text)
               </label>
-              <span className="text-[11px] font-mono text-text-muted">
-                {content.length} / 20,000 chars
-              </span>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept=".txt,.md"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-2.5 py-1 rounded-pill text-[11px] font-medium border border-border bg-surface text-text hover:bg-surface-2 transition-colors flex items-center space-x-1"
+                >
+                  <Upload className="w-3 h-3 text-text-muted" />
+                  <span>Upload File</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearForm}
+                  className="px-2.5 py-1 rounded-pill text-[11px] font-medium border border-border bg-surface text-text hover:bg-surface-2 transition-colors flex items-center space-x-1"
+                >
+                  <RotateCcw className="w-3 h-3 text-text-muted" />
+                  <span>Clear</span>
+                </button>
+                <span className="text-[11px] font-mono text-text-muted">
+                  {content.length} / 20,000 chars
+                </span>
+              </div>
             </div>
             <textarea
               id="content-input"

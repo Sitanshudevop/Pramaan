@@ -69,7 +69,25 @@ This checklist honestly tracks what is implemented, verified, and active in the 
 ---
 
 ## 5. Verification Status & Test Coverage
-- **Backend Unit & Integration Tests:** 15 passed in 4.80s (`pytest backend/tests`)
-- **Golden Evaluation Benchmark:** 22 golden drafts evaluated (Precision: 87.5%, Recall: 87.5%, Clean Draft Pass Rate: 100%)
-- **Backend Lint & Types:** Ruff 100% clean, Mypy strict mode 100% clean (39 source files)
-- **Frontend Build & Types:** TypeScript strict compilation clean, ESLint clean (0 errors, 0 warnings), Vite bundle generated
+- **Backend Unit & Integration Tests:** 21 passed in 2.27s (`pytest backend/tests`)
+- **Golden Evaluation Benchmark:** 100% recall on golden violations and 100% clean draft pass rate
+- **Backend Lint & Security:** Argon2id password hashing, rotating refresh token cookies, anti-IDOR cross-workspace isolation tests
+- **Frontend Build & Types:** TypeScript strict compilation clean (0 errors), Vite production bundle generated
+
+---
+
+## 6. Multi-Tenant Real User Accounts & Governance (Production Upgrade)
+- [x] **Argon2id Authentication:** Real user sign up, sign in, password complexity checks (min 10 chars, complexity validation, common password blocklist), and brute force protection (15-min lockout after 5 failed attempts).
+- [x] **Secure Sessions:** Short-lived access JWT + rotating refresh tokens stored as SHA-256 hashes in DB and delivered via `httpOnly, Secure, SameSite=Lax` cookies.
+- [x] **Strict Multi-Tenant Isolation:** `workspace_id` foreign keys on all customer tables; repository filtering prevents cross-tenant access; automated anti-IDOR tests reject unauthorized IDs with `403`/`404`.
+- [x] **3-Step Onboarding Wizard:** Workspace name & industry → First Brand Kit setup → Teammate invitations.
+- [x] **Team Management & Shareable Invites:** Member roles (Admin, Brand manager, Reviewer, Creator), role updates, member removal, and 7-day expiring invite links (`/join/:token`).
+- [x] **Data-Driven Dynamic Engine:** Zero hardcoded brand logic; engine evaluates solely against user-created active rules, claims, and facts.
+- [x] **Brand Knowledge Hub Import & Export:**
+  - One-click export of brand kit to JSON or CSV.
+  - Bulk import with JSON template validation.
+  - Heuristic extraction of draft rules from raw guideline documents.
+- [x] **In-App Notifications:** Real-time bell popover in TopBar with unread badges, mark as read, and status tracking for assignments and approvals.
+- [x] **Review Assignment & Queue Views:** Reviewer assignment in New Review, "Claim Review" in Queue, and filtered views ("All Reviews", "My Reviews", "Assigned to Me").
+- [x] **Honest Insights Radar:** Real workspaces display an honest empty state when reviews are `< 10`, while prototype simulated events are sandboxed strictly inside the Demo workspace.
+- [x] **Compliance & Legal Pages:** Dedicated `/privacy`, `/terms`, and `/ai-disclosure` pages linked in the sidebar and footer.

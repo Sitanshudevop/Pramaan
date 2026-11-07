@@ -78,3 +78,4 @@ const { chromium } = require(path.resolve('./frontend/node_modules/playwright'))
 
   await browser.close();
 })();
+

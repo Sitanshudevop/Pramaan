@@ -1,22 +1,66 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Inbox, ArrowRight, Plus } from 'lucide-react';
-import { listReviews } from '../lib/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Inbox, ArrowRight, Plus, CheckCircle2, Download, Trash2 } from 'lucide-react';
+import { listReviews, submitApproval, deleteReview, getBrandKits, assignReview, listWorkspaceMembers } from '../lib/api';
 import { useApp } from '../lib/context';
 import { SearchPill, PillSelect, Chip } from '../components/ui';
 
 export const ReviewQueue: React.FC = () => {
   const navigate = useNavigate();
-  const { role } = useApp();
+  const { role, user, currentWorkspace } = useApp();
+  const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [severityFilter, setSeverityFilter] = useState('ALL');
+  const [kitFilter, setKitFilter] = useState('ALL');
+  const [viewTab, setViewTab] = useState<'all' | 'mine' | 'assigned'>('all');
 
   const { data: reviews, isLoading } = useQuery({
-    queryKey: ['reviews', role],
+    queryKey: ['reviews', role, currentWorkspace?.id],
     queryFn: () => listReviews(role),
+  });
+
+  const { data: brandKits } = useQuery({
+    queryKey: ['brandKits', role, currentWorkspace?.id],
+    queryFn: () => getBrandKits(role),
+  });
+
+  const { data: members } = useQuery({
+    queryKey: ['members', currentWorkspace?.id],
+    queryFn: () => (currentWorkspace && !currentWorkspace.is_demo ? listWorkspaceMembers(currentWorkspace.id) : Promise.resolve([])),
+    enabled: !!currentWorkspace && !currentWorkspace.is_demo,
+  });
+
+  const quickApproveMutation = useMutation({
+    mutationFn: (reviewId: string) => submitApproval(reviewId, 'Approved', role),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+    },
+    onError: (err: Error) => {
+      alert(err.message || 'Failed to approve review');
+    },
+  });
+
+  const deleteReviewMutation = useMutation({
+    mutationFn: (reviewId: string) => deleteReview(reviewId, role),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+    },
+    onError: (err: Error) => {
+      alert(err.message || 'Failed to delete review');
+    },
+  });
+
+  const claimMutation = useMutation({
+    mutationFn: (reviewId: string) => assignReview(reviewId, user?.id, role),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+    },
+    onError: (err: Error) => {
+      alert(err.message || 'Failed to assign review');
+    },
   });
 
   const statusOptions = [
@@ -33,9 +77,20 @@ export const ReviewQueue: React.FC = () => {
     { value: 'CLEAN', label: 'Clean Only' },
   ];
 
+  const kitOptions = [
+    { value: 'ALL', label: 'All Brand Kits' },
+    ...(brandKits?.map((k) => ({ value: k.id, label: k.name })) || []),
+  ];
+
+  const myReviewsCount = (reviews || []).filter((r) => r.creator_id === user?.id).length;
+  const assignedCount = (reviews || []).filter((r) => r.assignee_id === user?.id).length;
+
   // Filtering
   const filteredReviews = (reviews || []).filter((r) => {
+    if (viewTab === 'mine' && r.creator_id !== user?.id) return false;
+    if (viewTab === 'assigned' && r.assignee_id !== user?.id) return false;
     if (statusFilter !== 'ALL' && r.status !== statusFilter) return false;
+    if (kitFilter !== 'ALL' && r.kit_id !== kitFilter) return false;
 
     const blockerCount = r.findings.filter((f) => f.severity === 'Blocker').length;
     if (severityFilter === 'BLOCKERS' && blockerCount === 0) return false;
@@ -71,6 +126,56 @@ export const ReviewQueue: React.FC = () => {
           <Plus className="w-4 h-4" />
           <span>New Review</span>
         </button>
+      </div>
+
+      {/* View Tabs & Kit Filter */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+        <div className="inline-flex items-center p-1 rounded-pill bg-surface-2 border border-border text-xs">
+          <button
+            type="button"
+            onClick={() => setViewTab('all')}
+            className={`px-3 py-1 rounded-pill font-semibold transition-colors ${
+              viewTab === 'all'
+                ? 'bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange shadow-xs'
+                : 'text-text-muted hover:text-text'
+            }`}
+          >
+            All Reviews ({reviews?.length || 0})
+          </button>
+          {user && (
+            <>
+              <button
+                type="button"
+                onClick={() => setViewTab('mine')}
+                className={`px-3 py-1 rounded-pill font-semibold transition-colors ${
+                  viewTab === 'mine'
+                    ? 'bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange shadow-xs'
+                    : 'text-text-muted hover:text-text'
+                }`}
+              >
+                My Reviews ({myReviewsCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewTab('assigned')}
+                className={`px-3 py-1 rounded-pill font-semibold transition-colors ${
+                  viewTab === 'assigned'
+                    ? 'bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange shadow-xs'
+                    : 'text-text-muted hover:text-text'
+                }`}
+              >
+                Assigned to Me ({assignedCount})
+              </button>
+            </>
+          )}
+        </div>
+
+        <PillSelect
+          value={kitFilter}
+          onChange={setKitFilter}
+          options={kitOptions}
+          ariaLabel="Filter by brand kit"
+        />
       </div>
 
       {/* Filter Row: SearchPill and PillSelects */}
@@ -129,7 +234,7 @@ export const ReviewQueue: React.FC = () => {
                   <th className="py-3 px-4">Severity Signal</th>
                   <th className="py-3 px-4">Assignee / Creator</th>
                   <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Action</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
@@ -181,6 +286,24 @@ export const ReviewQueue: React.FC = () => {
                       </td>
                       <td className="py-3.5 px-4 text-text-muted">
                         <span className="font-medium text-text">{r.created_by_role}</span>
+                        {r.assignee_id ? (
+                          <span className="text-[10px] block text-orange-text font-medium truncate max-w-[120px]">
+                            Assigned: {members?.find((m) => m.user_id === r.assignee_id)?.full_name || 'Teammate'}
+                          </span>
+                        ) : (
+                          user && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                claimMutation.mutate(r.id);
+                              }}
+                              className="text-[10px] block text-orange-text hover:underline font-semibold"
+                            >
+                              + Claim review
+                            </button>
+                          )
+                        )}
                         <span className="text-[10px] block opacity-70">
                           {new Date(r.created_at).toLocaleDateString()}
                         </span>
@@ -191,8 +314,8 @@ export const ReviewQueue: React.FC = () => {
                             r.status === 'Approved'
                               ? 'success'
                               : r.status === 'Changes requested'
-                              ? 'accent'
-                              : 'neutral'
+                                ? 'accent'
+                                : 'neutral'
                           }
                           size="sm"
                         >
@@ -200,9 +323,60 @@ export const ReviewQueue: React.FC = () => {
                         </Chip>
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-pill bg-surface-2 text-text-muted group-hover:bg-text group-hover:text-bg transition-colors">
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </span>
+                        <div className="flex items-center justify-end space-x-1.5" onClick={(e) => e.stopPropagation()}>
+                          {/* Quick Approve for clean drafts */}
+                          {r.status !== 'Approved' && blockerCount === 0 && (role === 'Reviewer' || role === 'Brand manager' || role === 'Admin') && (
+                            <button
+                              type="button"
+                              onClick={() => quickApproveMutation.mutate(r.id)}
+                              disabled={quickApproveMutation.isPending}
+                              title="Quick approve clean draft"
+                              className="px-2.5 py-1 rounded-pill bg-success/10 text-success-text hover:bg-success/20 text-[11px] font-semibold transition-colors flex items-center space-x-1"
+                            >
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>Approve</span>
+                            </button>
+                          )}
+
+                          {/* Certificate link for approved drafts */}
+                          {r.status === 'Approved' && (
+                            <a
+                              href={`/api/reviews/${r.id}/certificate`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="View and download proof certificate"
+                              className="p-1.5 rounded-pill text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
+                            >
+                              <Download className="w-3.5 h-3.5 text-orange-text" />
+                            </a>
+                          )}
+
+                          {/* Delete review for Admin or Brand manager */}
+                          {(role === 'Brand manager' || role === 'Admin') && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(`Delete review ${r.id}?`)) {
+                                  deleteReviewMutation.mutate(r.id);
+                                }
+                              }}
+                              disabled={deleteReviewMutation.isPending}
+                              title="Delete review from queue"
+                              className="p-1.5 rounded-pill text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
+                          {/* Details inspect arrow */}
+                          <span
+                            onClick={() => navigate(`/app/review/${r.id}`)}
+                            title="Open review workspace"
+                            className="inline-flex items-center justify-center w-7 h-7 rounded-pill bg-surface-2 text-text-muted group-hover:bg-text group-hover:text-bg transition-colors"
+                          >
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -228,7 +402,7 @@ export const ReviewQueue: React.FC = () => {
                       navigate(`/app/review/${r.id}`);
                     }
                   }}
-                  className="p-4 rounded-inner bg-surface-2 border border-border/80 space-y-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                  className="p-4 rounded-inner bg-surface-2 border border-border/80 space-y-2.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-bold text-xs text-orange-text">{r.id}</span>
@@ -245,6 +419,40 @@ export const ReviewQueue: React.FC = () => {
                       <span className="text-danger font-semibold">{blockerCount} Blocker</span>
                     ) : (
                       <span className="text-success-text">Clean Draft</span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-end space-x-2 pt-2 border-t border-border/50" onClick={(e) => e.stopPropagation()}>
+                    {r.status !== 'Approved' && blockerCount === 0 && (role === 'Reviewer' || role === 'Brand manager' || role === 'Admin') && (
+                      <button
+                        type="button"
+                        onClick={() => quickApproveMutation.mutate(r.id)}
+                        className="px-2.5 py-1 rounded-pill bg-success/10 text-success-text text-[11px] font-semibold"
+                      >
+                        Quick Approve
+                      </button>
+                    )}
+                    {r.status === 'Approved' && (
+                      <a
+                        href={`/api/reviews/${r.id}/certificate`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] font-mono text-orange-text"
+                      >
+                        Certificate
+                      </a>
+                    )}
+                    {(role === 'Brand manager' || role === 'Admin') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`Delete review ${r.id}?`)) {
+                            deleteReviewMutation.mutate(r.id);
+                          }
+                        }}
+                        className="text-[11px] text-danger"
+                      >
+                        Delete
+                      </button>
                     )}
                   </div>
                 </div>

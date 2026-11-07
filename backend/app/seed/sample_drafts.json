@@ -7,10 +7,10 @@
     "content_type": "Promotional Email",
     "ai_declared": false,
     "purpose_card": {
-      "goal": "Announce our new premium spiced blend to retail customers",
+      "goal": "Launch ChaiCraft's signature brew with authentic origin story",
       "audience": "Tea enthusiasts and everyday chai drinkers across urban India",
       "key_message": "Authentic, pure artisanal Masala Chai made with certified organic tea leaves",
-      "call_to_action": "Order today on our official website",
+      "call_to_action": "Order today at chaicraft.in",
       "locked_phrases": ["Masala Chai"],
       "content_type": "Promotional Email",
       "ai_declared": false
@@ -43,11 +43,11 @@
     "content_type": "In-App Announcement",
     "ai_declared": false,
     "purpose_card": {
-      "goal": "Rebrand communication and feature update",
+      "goal": "Transition LeafSave users to LedgerLeaf Plus without churn",
       "audience": "Individual investors and personal budgeting app users",
       "key_message": "Transition from LeafSave to LedgerLeaf Plus with higher account syncing limits",
       "call_to_action": "Upgrade to LedgerLeaf Plus",
-      "locked_phrases": ["LedgerLeaf Plus"],
+      "locked_phrases": ["Link up to"],
       "content_type": "In-App Announcement",
       "ai_declared": false
     },

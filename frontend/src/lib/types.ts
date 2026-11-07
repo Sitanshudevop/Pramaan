@@ -111,6 +111,8 @@ export interface ReviewResponse {
   ai_declared: boolean;
   current_version: number;
   created_by_role: Role;
+  creator_id?: string;
+  assignee_id?: string;
   created_at: string;
   updated_at: string;
   versions: ReviewVersionSummary[];
@@ -230,3 +232,158 @@ export interface InsightsResponse {
   unclear_rules: AmbiguousRuleStat[];
   simulated_notice: string;
 }
+
+export interface CreateRulePayload {
+  id?: string;
+  category?: string;
+  title: string;
+  text: string;
+  severity?: Severity;
+  banned_terms?: string[];
+  preferred_replacement?: string;
+  allow_in_quotes?: boolean;
+  placement_hint?: string;
+  reason?: string;
+}
+
+export interface CreateFactPayload {
+  id?: string;
+  subject: string;
+  value: string;
+  unit?: string;
+  permitted_wording: string;
+  valid_from?: string;
+  valid_to?: string;
+  source?: string;
+}
+
+export interface UpdateFactPayload {
+  subject?: string;
+  value?: string;
+  unit?: string;
+  permitted_wording?: string;
+  valid_from?: string;
+  valid_to?: string;
+  status?: string;
+}
+
+export interface AuditVerifyResult {
+  status: string;
+  total_records: number;
+  latest_hash: string;
+  tamper_evident: boolean;
+  message: string;
+}
+
+// ---------------------------------------------------------------------------
+// Multi-Tenant Real User Accounts & Workspaces Types
+// ---------------------------------------------------------------------------
+
+export interface User {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url?: string | null;
+  created_at: string;
+}
+
+export interface Workspace {
+  id: string;
+  name: string;
+  slug: string;
+  industry: string;
+  is_demo: boolean;
+  retention_days: number;
+  ai_enabled: boolean;
+  role: Role;
+}
+
+export interface AuthSession {
+  access_token: string;
+  token_type: string;
+  user: User;
+  current_workspace: Workspace;
+  workspaces: Workspace[];
+}
+
+export interface OnboardingWizardPayload {
+  workspace_name: string;
+  industry: string;
+  brand_name: string;
+  primary_language?: string;
+  voice_tone?: string;
+  target_reading_level?: number;
+  brand_colors?: string[];
+  invite_emails?: string[];
+}
+
+export interface CreateBrandKitPayload {
+  name: string;
+  tagline?: string;
+  industry?: string;
+  description?: string;
+  voice_tone?: string;
+  primary_language?: string;
+  target_reading_level?: number;
+  primary_color?: string;
+  brand_colors?: string[];
+  default_disclosure?: string;
+}
+
+export interface CreateClaimPayload {
+  pattern: string;
+  category?: string;
+  severity?: Severity;
+  substantiating_fact_id?: string;
+  reason: string;
+}
+
+export interface CreateGlossaryPayload {
+  term: string;
+  preferred_casing: string;
+  definition?: string;
+}
+
+export interface WorkspaceMember {
+  membership_id: string;
+  user_id: string;
+  email: string;
+  full_name: string;
+  role: Role;
+  created_at: string;
+}
+
+export interface Invitation {
+  id: string;
+  token: string;
+  invite_url: string;
+  role: Role;
+  email?: string | null;
+  expires_at: string;
+  used_count: number;
+  max_uses: number;
+}
+
+export interface NotificationItem {
+  id: string;
+  workspace_id: string;
+  type: string;
+  title: string;
+  body: string;
+  link?: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface BulkImportItem {
+  type: string;
+  category: string;
+  title: string;
+  text: string;
+  severity: Severity;
+  banned_terms?: string[];
+  preferred_replacement?: string;
+}
+
+
+

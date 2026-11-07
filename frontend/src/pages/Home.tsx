@@ -1,10 +1,29 @@
-import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, ShieldCheck, Sparkles, UserCheck, BookOpen, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRight, ShieldCheck, Sparkles, UserCheck, Play, PlusCircle } from 'lucide-react';
 import { Chip, GlowBackdrop, FloatingCards } from '../components/ui';
+import { useApp } from '../lib/context';
+import { AuthModal } from '../components/AuthModal';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
+  const { user, currentWorkspace, enterDemoWorkspace } = useApp();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
+
+  const handleCreateWorkspace = () => {
+    if (user) {
+      navigate('/app/onboarding');
+    } else {
+      setAuthMode('signup');
+      setAuthModalOpen(true);
+    }
+  };
+
+  const handleTryDemo = () => {
+    enterDemoWorkspace();
+    navigate('/app/new');
+  };
 
   return (
     <div className="relative max-w-app mx-auto py-6 sm:py-10 space-y-16">
@@ -15,10 +34,15 @@ export const Home: React.FC = () => {
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pt-2 sm:pt-6">
         {/* Left Column (7 cols) */}
         <div className="lg:col-span-7 space-y-6 text-left">
-          <div>
+          <div className="flex items-center space-x-2">
             <Chip variant="accent" size="sm" dot>
-              CodeNexus India 2026 · Round 2 Solo Build
+              Multi-Tenant Brand Governance Platform
             </Chip>
+            {user && (
+              <Chip variant="neutral" size="sm">
+                Signed in as {user.email}
+              </Chip>
+            )}
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-text leading-[1.08]">
@@ -29,22 +53,41 @@ export const Home: React.FC = () => {
             &ldquo;Every finding has evidence. Every correction preserves the creator’s purpose. Every final decision remains human.&rdquo;
           </p>
 
-          {/* Action Buttons */}
+          {/* Action Buttons: Primary (Real Workspace) & Secondary (Demo) */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
+            {user ? (
+              <button
+                onClick={() => navigate('/app/hub')}
+                className="inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange font-semibold text-sm hover:opacity-95 shadow-md transition-all active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <span>Go to {currentWorkspace?.name || 'Workspace'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={handleCreateWorkspace}
+                className="inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange font-semibold text-sm hover:opacity-95 shadow-md transition-all active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Create your workspace</span>
+              </button>
+            )}
+
             <button
-              onClick={() => navigate('/app/new')}
-              className="inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange font-semibold text-sm hover:opacity-95 shadow-md transition-all active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
-              <span>Try a sample review</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => navigate('/app/hub')}
+              onClick={handleTryDemo}
               className="inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-pill border border-border bg-surface text-text font-medium text-sm hover:bg-surface-2 transition-colors shadow-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
-              <BookOpen className="w-4 h-4 text-text-muted" />
-              <span>Open Brand Hub</span>
+              <Play className="w-3.5 h-3.5 text-orange-text fill-orange-text" />
+              <span>Try the demo (instant)</span>
             </button>
+          </div>
+
+          <div className="flex items-center space-x-4 text-xs text-text-muted pt-1">
+            <span>✓ Complete tenant isolation</span>
+            <span>·</span>
+            <span>✓ Proof-or-abstain engine</span>
+            <span>·</span>
+            <span>✓ Human decision authority</span>
           </div>
         </div>
 
@@ -103,28 +146,13 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Mandatory Pass Sentence & Honesty Notice */}
-      <section className="p-5 rounded-card border border-border bg-surface-2 flex items-start space-x-3.5 text-xs text-text-muted">
-        <AlertCircle className="w-4 h-4 text-orange-text mt-0.5 shrink-0" />
-        <div className="space-y-1">
-          <span className="font-semibold text-text">Verification Boundary Notice</span>
-          <p className="leading-relaxed">
-            A pass means only that no issue was detected by the checks performed. Pramaan provides editorial and brand risk mitigation; it does not claim legal compliance certification or guaranteed regulatory immunity.
-          </p>
-        </div>
-      </section>
-
-      {/* Footer Disclosures */}
-      <footer className="pt-6 border-t border-border/80 flex flex-col sm:flex-row justify-between items-center text-xs text-text-muted gap-2">
-        <div className="flex items-center space-x-3">
-          <span>Demo brand kits and drafts are fictional and authored for CodeNexus India 2026.</span>
-          <span>·</span>
-          <Link to="/about" className="text-orange-text hover:underline font-medium">
-            About Pramaan
-          </Link>
-        </div>
-        <div className="font-mono text-[11px]">Runtime AI: Google Gemini with PII sanitization gateway.</div>
-      </footer>
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authMode}
+        onSuccess={() => navigate('/app/onboarding')}
+      />
     </div>
   );
 };

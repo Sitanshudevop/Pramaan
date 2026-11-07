@@ -8,6 +8,8 @@ import {
   ShieldCheck,
   BarChart3,
   Info,
+  Users,
+  Settings,
 } from 'lucide-react';
 import { Logo } from './Logo';
 
@@ -21,8 +23,10 @@ const NAV_ITEMS = [
   { name: 'New review', path: '/app/new', icon: FilePlus },
   { name: 'Review queue', path: '/app/queue', icon: Inbox },
   { name: 'Brand Hub', path: '/app/hub', icon: BookOpen },
+  { name: 'Team', path: '/app/team', icon: Users },
   { name: 'Audit & disclosure', path: '/app/audit', icon: ShieldCheck },
   { name: 'Insights', path: '/app/insights', icon: BarChart3 },
+  { name: 'Settings', path: '/app/settings', icon: Settings },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
@@ -72,22 +76,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </nav>
         </div>
 
-        {/* Bottom Footer: Calm About Link only */}
-        <div className="p-3 border-t border-border/60">
+        {/* Bottom Footer: Calm About & Legal Links */}
+        <div className="p-3 border-t border-border/60 space-y-1">
           <NavLink
             to="/about"
             onClick={onClose}
             className={({ isActive }) =>
-              `flex items-center gap-2 px-3 h-10 rounded-[12px] text-sm transition-colors ${
+              `flex items-center gap-2 px-3 h-8 rounded-[10px] text-xs transition-colors ${
                 isActive
                   ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
                   : 'text-text-muted hover:text-text hover:bg-surface-2 font-medium'
               }`
             }
           >
-            <Info className="w-5 h-5 shrink-0" />
+            <Info className="w-4 h-4 shrink-0" />
             <span>About Pramaan</span>
           </NavLink>
+          <div className="flex items-center justify-between px-3 pt-1 text-[10px] text-text-muted">
+            <NavLink to="/privacy" onClick={onClose} className="hover:underline">Privacy</NavLink>
+            <span>·</span>
+            <NavLink to="/terms" onClick={onClose} className="hover:underline">Terms</NavLink>
+            <span>·</span>
+            <NavLink to="/ai-disclosure" onClick={onClose} className="hover:underline">AI Ethics</NavLink>
+          </div>
         </div>
       </aside>
     </>

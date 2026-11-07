@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Sparkles,
@@ -10,6 +10,11 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Edit3,
+  XCircle,
+  AlertCircle,
+  Copy,
+  Check,
 } from 'lucide-react';
 import {
   getReview,
@@ -17,6 +22,7 @@ import {
   overrideFinding,
   addComment,
   submitApproval,
+  submitDraftRevision,
 } from '../lib/api';
 import { useApp } from '../lib/context';
 import { DecisionAction, Finding, ReviewResponse } from '../lib/types';
@@ -40,7 +46,21 @@ export const ReviewFindings: React.FC = () => {
 
   // Reviewer comment input state
   const [commentInput, setCommentInput] = useState<string>('');
-  const [approvalReason, setApprovalReason] = useState<string>('');
+
+  // Workflow Approval Modal State
+  const [approvalModalType, setApprovalModalType] = useState<'Approved' | 'Changes requested' | 'Rejected' | null>(null);
+  const [approvalModalReason, setApprovalModalReason] = useState<string>('');
+
+  // Inline Draft Editing State
+  const [isEditingDraft, setIsEditingDraft] = useState<boolean>(false);
+  const [draftContentInput, setDraftContentInput] = useState<string>('');
+  const [copied, setCopied] = useState<boolean>(false);
+
+  const handleCopyCleanedText = () => {
+    navigator.clipboard.writeText(currentVersionContent);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   // Fetch Review Data
   const {
@@ -92,14 +112,34 @@ export const ReviewFindings: React.FC = () => {
 
   // Approval Mutation
   const approvalMutation = useMutation({
-    mutationFn: (outcome: 'Approved' | 'Rejected' | 'Changes requested') =>
-      submitApproval(id!, outcome, role, approvalReason || undefined),
+    mutationFn: ({
+      outcome,
+      reason,
+    }: {
+      outcome: 'Approved' | 'Rejected' | 'Changes requested';
+      reason?: string;
+    }) => submitApproval(id!, outcome, role, reason),
     onSuccess: () => {
-      setApprovalReason('');
+      setApprovalModalType(null);
+      setApprovalModalReason('');
       queryClient.invalidateQueries({ queryKey: ['review', id] });
     },
     onError: (err: Error) => {
       alert(err.message || 'Approval action failed');
+    },
+  });
+
+  // Draft Revision Mutation
+  const reviseMutation = useMutation({
+    mutationFn: (newContent: string) =>
+      submitDraftRevision(id!, newContent, 'Draft revised in workspace', role),
+    onSuccess: (updatedReview) => {
+      setIsEditingDraft(false);
+      setActiveVersion(updatedReview.current_version);
+      queryClient.invalidateQueries({ queryKey: ['review', id] });
+    },
+    onError: (err: Error) => {
+      alert(err.message || 'Failed to submit draft revision');
     },
   });
 
@@ -163,17 +203,94 @@ export const ReviewFindings: React.FC = () => {
   const groundedFindings = currentVersionFindings.filter((f) => f.rule_id || f.fact_id).length;
   const coverageRate = totalFindings > 0 ? (groundedFindings / totalFindings) * 100 : 100;
 
-  // Progress percentage based on review status
-  const progressMap: Record<string, number> = {
-    Draft: 15,
-    Submitted: 35,
-    'AI-reviewed': 55,
-    'Changes requested': 70,
-    'In human review': 85,
-    Approved: 100,
-    Rejected: 100,
+  // Progress step based on review status
+  const stepMap: Record<string, number> = {
+    Draft: 1,
+    Submitted: 2,
+    'AI-reviewed': 3,
+    'Changes requested': 4,
+    Revised: 4,
+    'In human review': 5,
+    Approved: 6,
+    Rejected: 6,
+    Exported: 7,
   };
-  const workflowPercent = progressMap[review.status] || 50;
+  const currentStep = stepMap[review.status] || 2;
+
+  const getSeverityVariant = (sev: string): 'blocker' | 'major' | 'minor' | 'info' => {
+    const lower = (sev || '').toLowerCase();
+    if (lower === 'blocker') return 'blocker';
+    if (lower === 'major') return 'major';
+    if (lower === 'minor') return 'minor';
+    return 'info';
+  };
+
+  const scrollToFinding = (findingId: string) => {
+    setActiveTab('findings');
+    setTimeout(() => {
+      const el = document.getElementById(`finding-${findingId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus();
+      }
+    }, 50);
+  };
+
+  const renderDraftContentWithHighlights = (content: string, findings: Finding[]) => {
+    if (!content) return null;
+    const activeExcerpts = findings
+      .filter((f) => f.excerpt && content.includes(f.excerpt))
+      .sort((a, b) => {
+        const idxA = content.indexOf(a.excerpt);
+        const idxB = content.indexOf(b.excerpt);
+        return idxA - idxB;
+      });
+
+    if (activeExcerpts.length === 0) {
+      return <span>{content}</span>;
+    }
+
+    // Build segments
+    const segments: React.ReactNode[] = [];
+    let lastIndex = 0;
+
+    activeExcerpts.forEach((f, idx) => {
+      const startIdx = content.indexOf(f.excerpt, lastIndex);
+      if (startIdx === -1) return;
+
+      if (startIdx > lastIndex) {
+        segments.push(content.substring(lastIndex, startIdx));
+      }
+
+      const matchText = content.substring(startIdx, startIdx + f.excerpt.length);
+      segments.push(
+        <span
+          key={`highlight-${f.id}-${idx}`}
+          onClick={() => scrollToFinding(f.id)}
+          title={`Flagged by ${f.category} (${f.severity}): "${f.excerpt}". Click to jump to finding.`}
+          className="flagged-span cursor-pointer transition-opacity hover:opacity-80 px-0.5 rounded"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              scrollToFinding(f.id);
+            }
+          }}
+        >
+          {matchText}
+        </span>
+      );
+
+      lastIndex = startIdx + f.excerpt.length;
+    });
+
+    if (lastIndex < content.length) {
+      segments.push(content.substring(lastIndex));
+    }
+
+    return segments;
+  };
 
   const tabs = [
     { id: 'findings', label: 'Findings', count: currentVersionFindings.length },
@@ -216,7 +333,7 @@ export const ReviewFindings: React.FC = () => {
         </div>
 
         {/* Action Controls & Export Certificate */}
-        <div className="flex items-center space-x-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           <a
             href={`/api/reviews/${review.id}/certificate`}
             target="_blank"
@@ -227,13 +344,65 @@ export const ReviewFindings: React.FC = () => {
             <span>Certificate (HTML/PDF)</span>
           </a>
 
+          {/* Reviewer / Brand Manager: Request Changes */}
+          {review.status !== 'Approved' && review.status !== 'Rejected' && (
+            role === 'Reviewer' || role === 'Brand manager' || role === 'Admin' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setApprovalModalType('Changes requested');
+                  setApprovalModalReason('');
+                }}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-pill border border-border bg-surface text-text hover:bg-surface-2 text-xs font-medium transition-colors"
+              >
+                <AlertCircle className="w-3.5 h-3.5 text-orange-text" />
+                <span>Request Changes</span>
+              </button>
+            ) : null
+          )}
+
+          {/* Brand Manager / Admin: Reject Review */}
+          {review.status !== 'Approved' && review.status !== 'Rejected' && (
+            role === 'Brand manager' || role === 'Admin' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setApprovalModalType('Rejected');
+                  setApprovalModalReason('');
+                }}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-pill border border-danger/30 text-danger hover:bg-danger/10 text-xs font-medium transition-colors"
+              >
+                <XCircle className="w-3.5 h-3.5" />
+                <span>Reject</span>
+              </button>
+            ) : null
+          )}
+
+          {/* Creator: Ask Reviewer quick button */}
+          {role === 'Creator' && review.status !== 'Approved' && currentVersionFindings[0] && (
+            <button
+              type="button"
+              onClick={() => {
+                const target = currentVersionFindings[0];
+                if (target) openActionModal(target, 'ask_reviewer');
+              }}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-pill border border-border bg-surface text-text hover:bg-surface-2 text-xs font-medium transition-colors"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-orange-text" />
+              <span>Ask Reviewer</span>
+            </button>
+          )}
+
           {review.status !== 'Approved' && (
             role === 'Brand manager' || role === 'Admin' ? (
               <button
                 type="button"
-                onClick={() => approvalMutation.mutate('Approved')}
-                disabled={approvalMutation.isPending || (blockerCount > 0 && role !== 'Brand manager')}
-                className="inline-flex items-center space-x-1.5 px-5 py-2 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-95 shadow-sm transition-all"
+                onClick={() => {
+                  setApprovalModalType('Approved');
+                  setApprovalModalReason('');
+                }}
+                disabled={approvalMutation.isPending || (blockerCount > 0 && role !== 'Brand manager' && role !== 'Admin')}
+                className="inline-flex items-center space-x-1.5 px-5 py-2 rounded-pill bg-surface-dark text-white dark:bg-gradient-to-r dark:from-orange-400 dark:to-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-95 shadow-sm transition-all disabled:opacity-50"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Approve Review</span>
@@ -273,11 +442,11 @@ export const ReviewFindings: React.FC = () => {
         />
 
         <GaugeCard
-          value={coverageRate}
+          value={Math.round(coverageRate)}
           max={100}
           unit="%"
           label="Evidence Coverage"
-          caption="100% of shown findings link to active approved rules or facts."
+          caption={`${Math.round(coverageRate)}% of shown findings link to active approved rules, facts, or purpose constraints.`}
         />
       </div>
 
@@ -287,7 +456,7 @@ export const ReviewFindings: React.FC = () => {
           <span className="text-xs font-semibold text-text uppercase tracking-wider">
             Review Lifecycle:
           </span>
-          <ProgressPill value={workflowPercent} label={review.status} />
+          <ProgressPill step={currentStep} totalSteps={7} label={review.status} />
         </div>
 
         {/* Version Switcher Pills */}
@@ -337,19 +506,15 @@ export const ReviewFindings: React.FC = () => {
                   return (
                     <div
                       key={f.id}
-                      className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3 transition-all hover:border-text-muted/40"
+                      id={`finding-${f.id}`}
+                      tabIndex={-1}
+                      className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3 transition-all hover:border-text-muted/40 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
                     >
                       {/* Top finding meta row */}
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center space-x-2">
                           <Chip
-                            variant={
-                              f.severity === 'Blocker'
-                                ? 'danger'
-                                : f.severity === 'Major'
-                                ? 'accent'
-                                : 'neutral'
-                            }
+                            variant={getSeverityVariant(f.severity)}
                             size="sm"
                           >
                             {f.severity}
@@ -367,12 +532,12 @@ export const ReviewFindings: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Flagged Excerpt with warm orange highlight AND underline */}
+                      {/* Flagged Excerpt with soft orange highlight and 2px underline */}
                       <div className="p-3 rounded-inner bg-surface-2 text-xs text-text font-sans">
                         <span className="text-text-muted mr-1.5 font-medium">Flagged text:</span>
-                        <mark className="bg-orange-500/15 text-text border-b-2 border-orange-500 px-1.5 py-0.5 rounded-xs font-semibold not-italic">
+                        <span className="flagged-span font-mono text-[13px] px-1 py-0.5 not-italic">
                           &ldquo;{f.excerpt}&rdquo;
-                        </mark>
+                        </span>
                       </div>
 
                       {/* Explanation */}
@@ -424,14 +589,14 @@ export const ReviewFindings: React.FC = () => {
                             )}
                           </div>
 
-                          {/* Soft Diff Display */}
-                          <div className="text-xs font-mono space-y-1 bg-surface p-2.5 rounded-inner border border-border">
-                            <div className="text-danger flex items-center space-x-1">
-                              <span className="font-bold select-none">-</span>
+                          {/* Soft Diff Display with High Contrast Background Tints */}
+                          <div className="text-xs font-mono space-y-1.5 bg-surface p-2.5 rounded-inner border border-border">
+                            <div className="bg-danger/10 text-text border border-danger/20 px-2 py-1 rounded flex items-center space-x-1.5">
+                              <span className="font-bold text-danger select-none">-</span>
                               <span className="line-through">{f.excerpt}</span>
                             </div>
-                            <div className="text-success-text flex items-center space-x-1">
-                              <span className="font-bold select-none">+</span>
+                            <div className="bg-success/10 text-text border border-success/20 px-2 py-1 rounded flex items-center space-x-1.5">
+                              <span className="font-bold text-success-text select-none">+</span>
                               <span className="font-semibold">{f.suggestion}</span>
                             </div>
                           </div>
@@ -505,19 +670,65 @@ export const ReviewFindings: React.FC = () => {
           {/* TAB 2: SUGGESTIONS VIEW */}
           {activeTab === 'suggestions' && (
             <div className="space-y-4">
-              {currentVersionFindings.filter((f) => f.suggestion).map((f) => (
-                <div key={f.id} className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-text">{f.category}</span>
-                    <span className="text-[11px] font-mono text-orange-text">{f.rule_id || f.fact_id}</span>
-                  </div>
-                  <div className="text-xs font-mono space-y-1 bg-surface-2 p-3 rounded-inner border border-border">
-                    <div className="text-danger line-through">- {f.excerpt}</div>
-                    <div className="text-success-text font-bold">+ {f.suggestion}</div>
-                  </div>
-                  <p className="text-xs text-text-muted">{f.reason}</p>
+              {currentVersionFindings.filter((f) => f.suggestion).length === 0 ? (
+                <div className="p-8 rounded-card border border-border bg-surface text-center space-y-2 shadow-floating">
+                  <Sparkles className="w-7 h-7 text-text-muted mx-auto" />
+                  <h3 className="text-sm font-bold text-text">No pending suggestions</h3>
+                  <p className="text-xs text-text-muted">All active findings are resolved or have no automated suggestions.</p>
                 </div>
-              ))}
+              ) : (
+                currentVersionFindings.filter((f) => f.suggestion).map((f) => (
+                  <div key={f.id} className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Chip
+                          variant={getSeverityVariant(f.severity)}
+                          size="sm"
+                        >
+                          {f.severity}
+                        </Chip>
+                        <span className="text-xs font-bold text-text">{f.category}</span>
+                      </div>
+                      <span className="text-[11px] font-mono text-orange-text">{f.rule_id || f.fact_id}</span>
+                    </div>
+
+                    <div className="text-xs font-mono space-y-1.5 bg-surface-2 p-3 rounded-inner border border-border">
+                      <div className="bg-danger/10 text-text border border-danger/20 px-2 py-1 rounded flex items-center space-x-1.5">
+                        <span className="font-bold text-danger select-none">-</span>
+                        <span className="line-through">{f.excerpt}</span>
+                      </div>
+                      <div className="bg-success/10 text-text border border-success/20 px-2 py-1 rounded flex items-center space-x-1.5">
+                        <span className="font-bold text-success-text select-none">+</span>
+                        <span className="font-semibold">{f.suggestion}</span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-text-muted">{f.reason}</p>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-border">
+                      <span className="text-[11px] text-text-muted font-mono">
+                        {f.suggestion_check.purpose_preserved ? '✓ Purpose Preserved' : '⚠ Manual Check Recommended'}
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => openActionModal(f, 'edit')}
+                          className="px-3 py-1.5 rounded-pill border border-border bg-surface text-text hover:bg-surface-2 text-xs font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openActionModal(f, 'accept')}
+                          className="px-3.5 py-1.5 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-90 shadow-xs"
+                        >
+                          Accept Suggestion
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
 
@@ -525,16 +736,43 @@ export const ReviewFindings: React.FC = () => {
           {activeTab === 'history' && (
             <div className="space-y-4">
               {review.versions.map((v) => (
-                <div key={v.version} className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-2">
+                <div key={v.version} className="p-5 rounded-card border border-border bg-surface shadow-floating space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-text">Draft Version {v.version}</span>
-                    <span className="text-[11px] font-mono text-text-muted">
-                      {new Date(v.created_at).toLocaleString()}
-                    </span>
+                    <div>
+                      <span className="text-sm font-bold text-text">Draft Version {v.version}</span>
+                      {(activeVersion || review.current_version) === v.version && (
+                        <span className="ml-2 text-[10px] px-2 py-0.5 rounded-pill bg-orange-500/10 text-orange-text font-semibold">
+                          Viewing Active
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[11px] font-mono text-text-muted">
+                        {new Date(v.created_at).toLocaleString()}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveVersion(v.version);
+                          setActiveTab('findings');
+                        }}
+                        className="px-3 py-1 rounded-pill border border-border bg-surface hover:bg-surface-2 text-xs text-text font-medium transition-colors"
+                      >
+                        Inspect v{v.version} Findings →
+                      </button>
+                    </div>
                   </div>
                   <pre className="p-3 rounded-inner bg-surface-2 font-mono text-xs text-text overflow-x-auto whitespace-pre-wrap">
                     {v.content}
                   </pre>
+                  {v.diff_from_previous && (
+                    <div className="pt-2 border-t border-border">
+                      <span className="text-[11px] font-semibold text-text-muted">Diff:</span>
+                      <pre className="mt-1 p-2.5 rounded-inner bg-surface border border-border font-mono text-[11px] text-text overflow-x-auto">
+                        {v.diff_from_previous}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -544,12 +782,33 @@ export const ReviewFindings: React.FC = () => {
           {activeTab === 'sources' && (
             <div className="space-y-3">
               {currentVersionFindings.map((f, i) => (
-                <div key={i} className="p-4 rounded-card border border-border bg-surface text-xs space-y-1">
+                <div key={i} className="p-4 rounded-card border border-border bg-surface text-xs space-y-2 shadow-floating">
                   <div className="font-bold text-text flex items-center justify-between">
-                    <span>{f.source_title}</span>
+                    <div className="flex items-center space-x-2">
+                      <span>{f.source_title}</span>
+                      <span className="text-text-muted text-[11px]">v{f.source_version}</span>
+                    </div>
                     <span className="font-mono text-orange-text">{f.rule_id || f.fact_id}</span>
                   </div>
                   <p className="text-text-muted">{f.reason}</p>
+                  <div className="flex items-center justify-between pt-1 border-t border-border/60">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('findings');
+                        toggleSourceExpand(f.id);
+                      }}
+                      className="text-[11px] font-medium text-text hover:text-orange-text underline"
+                    >
+                      Show in Findings tab
+                    </button>
+                    <Link
+                      to="/app/hub"
+                      className="text-[11px] font-mono text-orange-text hover:underline flex items-center space-x-1"
+                    >
+                      <span>View in Brand Hub →</span>
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
@@ -564,17 +823,83 @@ export const ReviewFindings: React.FC = () => {
               <h2 className="text-xs font-bold text-text uppercase tracking-wider">
                 Draft Content
               </h2>
-              <span className="text-[11px] font-mono text-text-muted">
-                Version {activeVersion || review.current_version}
-              </span>
+              <div className="flex items-center space-x-2">
+                <span className="text-[11px] font-mono text-text-muted">
+                  Version {activeVersion || review.current_version}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyCleanedText}
+                  title="Copy cleaned draft to clipboard"
+                  className="px-2.5 py-1 rounded-pill text-[11px] font-medium border border-border bg-surface text-text hover:bg-surface-2 transition-colors flex items-center space-x-1"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3 h-3 text-success-text" />
+                      <span className="text-success-text font-semibold">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3 text-text-muted" />
+                      <span>Copy Cleaned Text</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isEditingDraft) {
+                      setDraftContentInput(currentVersionContent);
+                    }
+                    setIsEditingDraft(!isEditingDraft);
+                  }}
+                  className="px-2.5 py-1 rounded-pill text-[11px] font-medium border border-border bg-surface text-text hover:bg-surface-2 transition-colors flex items-center space-x-1"
+                >
+                  <Edit3 className="w-3 h-3" />
+                  <span>{isEditingDraft ? 'Cancel' : 'Edit Draft'}</span>
+                </button>
+              </div>
             </div>
 
-            <div className="p-4 rounded-inner border border-border bg-surface-2 text-xs leading-relaxed whitespace-pre-wrap font-sans text-text max-h-96 overflow-y-auto">
-              {currentVersionContent}
-            </div>
+            {isEditingDraft ? (
+              <div className="space-y-3">
+                <textarea
+                  rows={10}
+                  value={draftContentInput}
+                  onChange={(e) => setDraftContentInput(e.target.value)}
+                  className="w-full p-3.5 rounded-inner border border-border bg-surface-2 text-xs font-sans text-text leading-relaxed focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-text-muted font-mono">
+                    {draftContentInput.length} chars
+                  </span>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingDraft(false)}
+                      className="px-3 py-1.5 rounded-pill border border-border text-xs text-text hover:bg-surface-2"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => reviseMutation.mutate(draftContentInput)}
+                      disabled={reviseMutation.isPending || !draftContentInput.trim()}
+                      className="px-4 py-1.5 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-90 disabled:opacity-50 shadow-sm"
+                    >
+                      {reviseMutation.isPending ? 'Re-evaluating...' : 'Save & Re-run Checks'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-inner border border-border bg-surface-2 text-xs leading-relaxed whitespace-pre-wrap font-sans text-text max-h-96 overflow-y-auto">
+                {renderDraftContentWithHighlights(currentVersionContent, currentVersionFindings)}
+              </div>
+            )}
 
             {/* Version Diff View if available */}
-            {activeDiff && (
+            {!isEditingDraft && activeDiff && (
               <div className="space-y-1.5 pt-2 border-t border-border">
                 <span className="text-[11px] font-semibold text-text-muted">
                   Diff from previous version:
@@ -733,6 +1058,76 @@ export const ReviewFindings: React.FC = () => {
                   className="px-5 py-2 rounded-pill bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange text-xs font-semibold hover:opacity-95 disabled:opacity-50 shadow-sm"
                 >
                   {actMutation.isPending ? 'Applying...' : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Workflow Approval / Change Request / Reject Modal */}
+      {approvalModalType && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="w-full max-w-md p-6 rounded-card bg-surface border border-border shadow-2xl space-y-4">
+            <h3 className="text-base font-bold text-text">
+              {approvalModalType === 'Approved'
+                ? 'Approve Review'
+                : approvalModalType === 'Changes requested'
+                ? 'Request Changes'
+                : 'Reject Review'}
+            </h3>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-text">
+                {approvalModalType === 'Approved'
+                  ? 'Approval Sign-off Note (Optional)'
+                  : 'Specific Feedback / Required Changes (Mandatory)'}
+              </label>
+              <textarea
+                rows={3}
+                placeholder={
+                  approvalModalType === 'Approved'
+                    ? 'Add optional verification comments...'
+                    : 'Describe required edits or reasons for rejection...'
+                }
+                value={approvalModalReason}
+                onChange={(e) => setApprovalModalReason(e.target.value)}
+                className="w-full p-3 rounded-inner border border-border bg-surface-2 text-xs text-text focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              {approvalModalType !== 'Approved' && !approvalModalReason.trim() ? (
+                <span className="text-[11px] text-orange-text font-medium">Feedback required</span>
+              ) : <span />}
+
+              <div className="flex items-center space-x-2.5">
+                <button
+                  type="button"
+                  onClick={() => setApprovalModalType(null)}
+                  className="px-4 py-2 rounded-pill border border-border text-xs text-text hover:bg-surface-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    approvalMutation.mutate({
+                      outcome: approvalModalType,
+                      reason: approvalModalReason || undefined,
+                    })
+                  }
+                  disabled={
+                    approvalMutation.isPending ||
+                    (approvalModalType !== 'Approved' && !approvalModalReason.trim())
+                  }
+                  className={`px-5 py-2 rounded-pill text-xs font-semibold shadow-sm transition-all ${
+                    approvalModalType === 'Rejected'
+                      ? 'bg-danger text-white hover:opacity-90'
+                      : 'bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange hover:opacity-95'
+                  }`}
+                >
+                  {approvalMutation.isPending ? 'Submitting...' : 'Confirm'}
                 </button>
               </div>
             </div>

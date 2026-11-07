@@ -73,6 +73,31 @@
   border-color: var(--border);
 }
 
+/* Reset browser default mark styles to avoid ugly bright yellow boxes */
+mark {
+  background-color: transparent;
+  color: inherit;
+}
+
+/* Reusable readable flagged excerpt span */
+.flagged-span {
+  background-color: rgba(242, 107, 42, 0.14);
+  color: var(--text);
+  border-bottom: 2px solid var(--orange-600);
+  border-radius: 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 1px 4px;
+  font-weight: 600;
+  display: inline;
+}
+
+.dark .flagged-span {
+  background-color: rgba(255, 138, 76, 0.22);
+  color: var(--text);
+  border-bottom: 2px solid var(--orange-500);
+}
+
 body {
   font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   line-height: 1.6;
@@ -87,9 +112,21 @@ body {
 }
 
 /* Accessible focus ring */
-*:focus-visible {
+*:focus-visible:not(.no-orange-outline):not(.no-orange-outline *) {
   outline: 2px solid var(--orange-500);
   outline-offset: 2px;
+}
+
+.no-orange-outline,
+.no-orange-outline:focus,
+.no-orange-outline:focus-visible,
+.no-orange-outline:active,
+.no-orange-outline *,
+.no-orange-outline *:focus,
+.no-orange-outline *:focus-visible {
+  outline: none !important;
+  outline-color: transparent !important;
+  box-shadow: none !important;
 }
 
 /* Reduced motion preference */

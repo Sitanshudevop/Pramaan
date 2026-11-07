@@ -20,10 +20,11 @@ from sqlalchemy.orm import Session
 class ReviewService:
     """Core review orchestration executing the complete pre-publication compliance loop."""
 
-    def __init__(self, db: Session, ai_provider: AIProvider | None = None):
+    def __init__(self, db: Session, workspace_id: str | None = None, ai_provider: AIProvider | None = None):
         self.db = db
-        self.brand_repo = BrandRepository(db)
-        self.review_repo = ReviewRepository(db)
+        self.workspace_id = workspace_id
+        self.brand_repo = BrandRepository(db, workspace_id)
+        self.review_repo = ReviewRepository(db, workspace_id)
         self.audit_repo = AuditRepository(db)
 
         # Configure AI provider or fallback
@@ -88,6 +89,8 @@ class ReviewService:
             purpose_card=request.purpose_card,
             ai_declared=request.ai_declared,
             created_by_role=actor_role,
+            workspace_id=self.workspace_id,
+            assignee_id=request.assignee_id,
         )
 
         # 3. Deterministic check layer (pure, reproducible)

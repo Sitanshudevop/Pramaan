@@ -1,6 +1,16 @@
 import React from 'react';
 
-export type ChipVariant = 'neutral' | 'accent' | 'success' | 'outline' | 'dark' | 'danger';
+export type ChipVariant =
+  | 'neutral'
+  | 'accent'
+  | 'success'
+  | 'outline'
+  | 'dark'
+  | 'danger'
+  | 'blocker'
+  | 'major'
+  | 'minor'
+  | 'info';
 
 export interface ChipProps extends React.HTMLAttributes<HTMLSpanElement> {
   children: React.ReactNode;
@@ -13,6 +23,7 @@ export interface ChipProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 /**
  * Clean rounded pill chip for metadata, tags, and status badges.
+ * Meets WCAG 2.2 AA contrast standards in both light and dark themes.
  */
 export const Chip: React.FC<ChipProps> = ({
   children,
@@ -24,16 +35,23 @@ export const Chip: React.FC<ChipProps> = ({
   onClick,
   ...rest
 }) => {
-  const sizeClasses = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs';
+  // A3 requirement: Minimum 12px font size, semibold
+  const sizeClasses = size === 'sm' ? 'px-2.5 py-0.5 text-xs' : 'px-3 py-1 text-xs';
 
-  const variantClasses = {
-    neutral: 'bg-surface-2 text-text-muted font-medium',
-    accent: 'bg-orange-500/12 text-orange-text font-medium',
-    success: 'bg-lime text-on-lime font-semibold',
-    outline: 'bg-surface-2 text-text font-medium',
-    dark: 'bg-surface-dark text-text font-medium',
-    danger: 'bg-danger/10 text-danger font-medium',
-  }[variant];
+  const variantClasses: Record<ChipVariant, string> = {
+    neutral: 'bg-surface-2 text-text font-semibold',
+    accent: 'bg-orange-500/16 text-orange-text dark:bg-orange-500/25 dark:text-orange-300 font-semibold',
+    success: 'bg-lime text-on-lime font-bold shadow-xs',
+    outline: 'bg-surface-2 text-text font-semibold',
+    dark: 'bg-surface-dark text-white font-semibold',
+    danger: 'bg-surface-dark text-white dark:bg-[#251A18] dark:text-[#FF8F80] border border-danger/30 font-semibold',
+    blocker: 'bg-surface-dark text-white dark:bg-[#251A18] dark:text-white border border-danger/50 font-semibold shadow-xs',
+    major: 'bg-orange-500/16 text-orange-text dark:bg-orange-500/25 dark:text-orange-300 font-semibold',
+    minor: 'bg-surface-2 text-text font-semibold',
+    info: 'bg-surface-2 text-text-muted font-semibold',
+  };
+
+  const isBlocker = variant === 'blocker';
 
   const clickableClasses = onClick
     ? 'cursor-pointer hover:opacity-90 active:scale-[0.98] select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500'
@@ -54,26 +72,19 @@ export const Chip: React.FC<ChipProps> = ({
             }
           : undefined
       }
-      className={`inline-flex items-center space-x-1.5 rounded-pill tracking-tight transition-colors ${sizeClasses} ${variantClasses} ${clickableClasses} ${className}`}
+      className={`inline-flex items-center space-x-1.5 rounded-pill tracking-tight transition-colors ${sizeClasses} ${variantClasses[variant]} ${clickableClasses} ${className}`}
       {...rest}
     >
-      {dot && (
-        <span
-          className={`w-1.5 h-1.5 rounded-full ${
-            variant === 'success'
-              ? 'bg-on-lime'
-              : variant === 'accent'
-              ? 'bg-orange-500'
-              : variant === 'danger'
-              ? 'bg-danger'
-              : 'bg-current opacity-70'
-          }`}
-          aria-hidden="true"
-        />
+      {isBlocker && (
+        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0 inline-block" aria-hidden="true" />
+      )}
+      {dot && !isBlocker && (
+        <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80 shrink-0" aria-hidden="true" />
       )}
       {icon && <span className="shrink-0">{icon}</span>}
       <span>{children}</span>
     </span>
   );
 };
+
 

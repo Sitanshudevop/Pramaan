@@ -8,3 +8,4 @@ export const siteConfig = {
   competition: 'CodeNexus India 2026 Round 2',
   version: '1.0.0',
 };
+

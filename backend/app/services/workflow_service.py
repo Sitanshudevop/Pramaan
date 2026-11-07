@@ -14,10 +14,11 @@ from sqlalchemy.orm import Session
 class WorkflowService:
     """Manages human-in-the-loop review actions, version progression, and approval gates."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, workspace_id: str | None = None):
         self.db = db
-        self.review_repo = ReviewRepository(db)
-        self.brand_repo = BrandRepository(db)
+        self.workspace_id = workspace_id
+        self.review_repo = ReviewRepository(db, workspace_id)
+        self.brand_repo = BrandRepository(db, workspace_id)
         self.audit_repo = AuditRepository(db)
 
     def act_on_finding(
