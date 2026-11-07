@@ -26,17 +26,16 @@ export const Truncate: React.FC<TruncateProps> = ({
   return (
     <div className={className}>
       <p
-        className={`transition-all duration-200 ${
-          expanded ? '' : `line-clamp-${lines} overflow-hidden`
-        }`}
+        className={`transition-all duration-200 ${expanded ? '' : `line-clamp-${lines} overflow-hidden`
+          }`}
         style={
           !expanded
             ? {
-                display: '-webkit-box',
-                WebkitLineClamp: lines,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-              }
+              display: '-webkit-box',
+              WebkitLineClamp: lines,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }
             : undefined
         }
       >
