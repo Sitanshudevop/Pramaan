@@ -1,24 +1,27 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Home,
   FilePlus,
   Inbox,
   BookOpen,
+  Users,
   ShieldCheck,
   BarChart3,
-  Info,
-  Users,
   Settings,
+  Info,
+  X,
 } from 'lucide-react';
 import { Logo } from './Logo';
 
-interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
+export interface SidebarProps {
+  drawerOpen: boolean;
+  onCloseDrawer: () => void;
+  desktopMode: 'expanded' | 'rail';
+  hamburgerRef?: React.RefObject<HTMLButtonElement>;
 }
 
-const NAV_ITEMS = [
+export const NAV_ITEMS = [
   { name: 'Home', path: '/', icon: Home },
   { name: 'New review', path: '/app/new', icon: FilePlus },
   { name: 'Review queue', path: '/app/queue', icon: Inbox },
@@ -29,40 +32,148 @@ const NAV_ITEMS = [
   { name: 'Settings', path: '/app/settings', icon: Settings },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  drawerOpen,
+  onCloseDrawer,
+  desktopMode,
+  hamburgerRef,
+}) => {
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const touchStartXRef = useRef<number>(0);
+  const touchStartYRef = useRef<number>(0);
+
+  // Focus trap, Escape key handling, and body scroll lock for mobile drawer (<1024px)
+  useEffect(() => {
+    if (!drawerOpen) return;
+
+    // Lock body scroll
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    // Focus first focusable element inside drawer
+    const focusableSelector =
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const focusableElements = drawerRef.current?.querySelectorAll<HTMLElement>(focusableSelector);
+
+    if (focusableElements && focusableElements.length > 0 && focusableElements[0]) {
+      focusableElements[0].focus();
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCloseDrawer();
+        hamburgerRef?.current?.focus();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        if (!focusableElements || focusableElements.length === 0) return;
+        const first = focusableElements[0];
+        const last = focusableElements[focusableElements.length - 1];
+        if (!first || !last) return;
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [drawerOpen, onCloseDrawer, hamburgerRef]);
+
+  // Handle swipe left to close on touch screens
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches && e.touches[0]) {
+      touchStartXRef.current = e.touches[0].clientX;
+      touchStartYRef.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (e.changedTouches && e.changedTouches[0]) {
+      const deltaX = touchStartXRef.current - e.changedTouches[0].clientX;
+      const deltaY = Math.abs(touchStartYRef.current - e.changedTouches[0].clientY);
+      // If swiped left at least 50px and predominantly horizontal
+      if (deltaX > 50 && deltaX > deltaY) {
+        onCloseDrawer();
+        hamburgerRef?.current?.focus();
+      }
+    }
+  };
+
+  const isRail = desktopMode === 'rail';
+
   return (
     <>
-      {/* Mobile Backdrop */}
-      {isOpen && (
+      {/* ============================================================== */}
+      {/* 1. Mobile & Tablet Off-Canvas Drawer (<1024px)                  */}
+      {/* ============================================================== */}
+      {drawerOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden"
-          onClick={onClose}
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden transition-opacity duration-200"
+          onClick={() => {
+            onCloseDrawer();
+            hamburgerRef?.current?.focus();
+          }}
           aria-hidden="true"
         />
       )}
 
-      <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-[232px] border-r border-border bg-surface flex flex-col justify-between transition-transform duration-200 ease-in-out lg:translate-x-0 select-none overflow-hidden ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+      <div
+        id="app-navigation-drawer"
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation Menu"
+        aria-hidden={!drawerOpen}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className={`fixed top-0 bottom-0 left-0 z-50 bg-surface border-r border-border flex flex-col justify-between transition-all duration-200 ease-in-out lg:hidden select-none overflow-hidden max-w-[320px] w-[88vw] ${
+          drawerOpen
+            ? 'translate-x-0 opacity-100 visible pointer-events-auto'
+            : '-translate-x-full opacity-0 invisible pointer-events-none'
         }`}
-        aria-label="Application Sidebar"
       >
-        {/* Top: Logo + Brand */}
+        {/* Drawer Header: Logo + Close Button */}
         <div>
-          <div className="h-14 border-b border-border/80 flex items-center px-4">
+          <div className="h-14 border-b border-border/80 flex items-center justify-between px-4">
             <Logo size="md" />
+            <button
+              type="button"
+              onClick={() => {
+                onCloseDrawer();
+                hamburgerRef?.current?.focus();
+              }}
+              className="p-2 -mr-2 rounded-pill text-text-muted hover:text-text hover:bg-surface-2 transition-colors touch-target flex items-center justify-center"
+              aria-label="Close navigation menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Six items: 40px row height, 8px gap (space-y-1.5), 20px icon, 14px text */}
-          <nav className="p-3 space-y-1.5" aria-label="Main Navigation">
+          {/* Drawer Navigation Items: 48px row heights */}
+          <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100dvh-130px)]" aria-label="Mobile Navigation">
             {NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 end={item.path === '/'}
-                onClick={onClose}
+                onClick={() => {
+                  onCloseDrawer();
+                  hamburgerRef?.current?.focus();
+                }}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-3 h-10 rounded-[12px] text-sm transition-colors ${
+                  `flex items-center gap-3 px-3.5 h-12 rounded-inner text-sm transition-colors touch-target ${
                     isActive
                       ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
                       : 'text-text-muted hover:text-text hover:bg-surface-2 font-medium'
@@ -76,13 +187,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </nav>
         </div>
 
-        {/* Bottom Footer: Calm About & Legal Links */}
-        <div className="p-3 border-t border-border/60 space-y-1">
+        {/* Drawer Footer: About & Compact Legal Links */}
+        <div className="p-3 border-t border-border/60 space-y-2 pb-safe bg-surface">
           <NavLink
             to="/about"
-            onClick={onClose}
+            onClick={() => {
+              onCloseDrawer();
+              hamburgerRef?.current?.focus();
+            }}
             className={({ isActive }) =>
-              `flex items-center gap-2 px-3 h-8 rounded-[10px] text-xs transition-colors ${
+              `flex items-center gap-2.5 px-3 h-10 rounded-inner text-xs transition-colors touch-target ${
                 isActive
                   ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
                   : 'text-text-muted hover:text-text hover:bg-surface-2 font-medium'
@@ -92,13 +206,108 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <Info className="w-4 h-4 shrink-0" />
             <span>About Pramaan</span>
           </NavLink>
-          <div className="flex items-center justify-between px-3 pt-1 text-[10px] text-text-muted">
-            <NavLink to="/privacy" onClick={onClose} className="hover:underline">Privacy</NavLink>
+          <div className="flex items-center justify-between px-2 pt-1 text-[11px] text-text-muted">
+            <NavLink to="/privacy" onClick={onCloseDrawer} className="hover:underline py-1">Privacy</NavLink>
             <span>·</span>
-            <NavLink to="/terms" onClick={onClose} className="hover:underline">Terms</NavLink>
+            <NavLink to="/terms" onClick={onCloseDrawer} className="hover:underline py-1">Terms</NavLink>
             <span>·</span>
-            <NavLink to="/ai-disclosure" onClick={onClose} className="hover:underline">AI Ethics</NavLink>
+            <NavLink to="/ai-disclosure" onClick={onCloseDrawer} className="hover:underline py-1">AI Ethics</NavLink>
           </div>
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* 2. Desktop Rail & Expanded Sidebar (>= 1024px)                  */}
+      {/* ============================================================== */}
+      <aside
+        id="app-navigation"
+        aria-label="Application Sidebar"
+        className={`hidden lg:flex fixed top-0 bottom-0 left-0 z-30 bg-surface border-r border-border flex-col justify-between select-none transition-all duration-200 ease-in-out ${
+          isRail ? 'w-[72px]' : 'w-[240px]'
+        }`}
+      >
+        {/* Top: Header with Logo */}
+        <div>
+          <div className={`h-14 border-b border-border/80 flex items-center ${isRail ? 'justify-center px-2' : 'px-4'}`}>
+            <Logo size="md" showText={!isRail} />
+          </div>
+
+          {/* Navigation Items: 48px rows (h-12) */}
+          <nav className="p-2 space-y-1" aria-label="Desktop Navigation">
+            {NAV_ITEMS.map((item) => (
+              <div key={item.path} className="relative group">
+                <NavLink
+                  to={item.path}
+                  end={item.path === '/'}
+                  title={isRail ? item.name : undefined}
+                  aria-label={item.name}
+                  className={({ isActive }) =>
+                    `flex items-center h-12 rounded-inner text-sm transition-colors ${
+                      isRail ? 'justify-center px-0 w-full' : 'gap-3 px-3'
+                    } ${
+                      isActive
+                        ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
+                        : 'text-text-muted hover:text-text hover:bg-surface-2 font-medium'
+                    }`
+                  }
+                >
+                  <item.icon className="w-5 h-5 shrink-0" />
+                  {!isRail && <span className="truncate">{item.name}</span>}
+                </NavLink>
+
+                {/* Accessible Floating Tooltip for Icon Rail */}
+                {isRail && (
+                  <div
+                    role="tooltip"
+                    className="absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 px-2.5 py-1 bg-surface-dark text-white dark:bg-surface-2 dark:text-text text-xs rounded-pill shadow-lg border border-border pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-50 whitespace-nowrap"
+                  >
+                    {item.name}
+                  </div>
+                )}
+              </div>
+            ))}
+          </nav>
+        </div>
+
+        {/* Bottom Footer: About & Compact Legal Links */}
+        <div className={`p-2 border-t border-border/60 ${isRail ? 'flex flex-col items-center space-y-2' : 'space-y-1.5 p-3'}`}>
+          <div className="relative group w-full">
+            <NavLink
+              to="/about"
+              title={isRail ? 'About Pramaan' : undefined}
+              aria-label="About Pramaan"
+              className={({ isActive }) =>
+                `flex items-center h-10 rounded-inner text-xs transition-colors ${
+                  isRail ? 'justify-center px-0 w-full' : 'gap-2.5 px-3'
+                } ${
+                  isActive
+                    ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
+                    : 'text-text-muted hover:text-text hover:bg-surface-2 font-medium'
+                }`
+              }
+            >
+              <Info className="w-4 h-4 shrink-0" />
+              {!isRail && <span>About Pramaan</span>}
+            </NavLink>
+            {isRail && (
+              <div
+                role="tooltip"
+                className="absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 px-2.5 py-1 bg-surface-dark text-white dark:bg-surface-2 dark:text-text text-xs rounded-pill shadow-lg border border-border pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-50 whitespace-nowrap"
+              >
+                About Pramaan
+              </div>
+            )}
+          </div>
+
+          {!isRail && (
+            <div className="flex items-center justify-between px-2 pt-1 text-[10px] text-text-muted">
+              <NavLink to="/privacy" className="hover:underline">Privacy</NavLink>
+              <span>·</span>
+              <NavLink to="/terms" className="hover:underline">Terms</NavLink>
+              <span>·</span>
+              <NavLink to="/ai-disclosure" className="hover:underline">AI Ethics</NavLink>
+            </div>
+          )}
         </div>
       </aside>
     </>

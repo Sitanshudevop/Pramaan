@@ -141,7 +141,7 @@ export const AuditDisclosure: React.FC = () => {
             Status: <span className="font-bold uppercase">{effectiveVerify.status}</span> · Total Records: {effectiveVerify.total_records}
           </div>
           <div className="text-[11px] text-text-muted break-all">
-            Head Hash: {effectiveVerify.latest_hash}
+            Head Hash (SHA-256): {effectiveVerify.latest_hash}
           </div>
         </div>
       )}

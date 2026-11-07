@@ -156,11 +156,10 @@ export const ReviewQueue: React.FC = () => {
           <button
             type="button"
             onClick={() => setViewTab('all')}
-            className={`px-3 py-1 rounded-pill font-semibold transition-colors ${
-              viewTab === 'all'
+            className={`px-3 py-1 rounded-pill font-semibold transition-colors ${viewTab === 'all'
                 ? 'bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange shadow-xs'
                 : 'text-text-muted hover:text-text'
-            }`}
+              }`}
           >
             All Reviews ({reviews?.length || 0})
           </button>
@@ -169,22 +168,20 @@ export const ReviewQueue: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setViewTab('mine')}
-                className={`px-3 py-1 rounded-pill font-semibold transition-colors ${
-                  viewTab === 'mine'
+                className={`px-3 py-1 rounded-pill font-semibold transition-colors ${viewTab === 'mine'
                     ? 'bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange shadow-xs'
                     : 'text-text-muted hover:text-text'
-                }`}
+                  }`}
               >
                 My Reviews ({myReviewsCount})
               </button>
               <button
                 type="button"
                 onClick={() => setViewTab('assigned')}
-                className={`px-3 py-1 rounded-pill font-semibold transition-colors ${
-                  viewTab === 'assigned'
+                className={`px-3 py-1 rounded-pill font-semibold transition-colors ${viewTab === 'assigned'
                     ? 'bg-surface-dark text-white dark:bg-orange-500 dark:text-on-orange shadow-xs'
                     : 'text-text-muted hover:text-text'
-                }`}
+                  }`}
               >
                 Assigned to Me ({assignedCount})
               </button>

@@ -45,7 +45,7 @@ export default {
       },
       maxWidth: {
         reading: '880px',
-        app: '1120px',
+        app: '1280px',
       },
     },
   },

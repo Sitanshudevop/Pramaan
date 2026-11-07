@@ -74,16 +74,18 @@ test.describe('Pramaan Core Interaction & Accessibility Verification', () => {
     // In default Creator role, restricted card is shown
     await expect(page.locator('text=Governance Insights Restricted')).toBeVisible();
 
-    // Switch to Reviewer via Role Switcher in TopBar
-    const roleSelect = page.locator('header select[aria-label="Demo Role Switcher"]');
-    await roleSelect.selectOption('Reviewer');
+    // Switch to Reviewer via Cast Persona Switcher in TopBar
+    const roleBtn = page.locator('header button[aria-label="Demo Role Switcher"]');
+    await roleBtn.click();
+    await page.locator('button:has-text("Rohan Mehta")').click();
 
     // Insights metrics should now be visible
     await expect(page.locator('text=Overall Rule Clarity')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('text=Repeated Violations')).toBeVisible();
 
-    // Switch to Brand Manager
-    await roleSelect.selectOption('Brand manager');
+    // Switch to Brand Manager (Anika Rao)
+    await roleBtn.click();
+    await page.locator('button:has-text("Anika Rao")').click();
     await page.goto('/app/hub');
     await expect(page.locator('h1')).toContainText('Brand Knowledge Hub');
   });
